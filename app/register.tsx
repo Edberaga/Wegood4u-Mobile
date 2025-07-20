@@ -13,32 +13,48 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User, Gift } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [invitationCode, setInvitationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const { login, isLoading } = useAuth();
+  const { register, isLoading } = useAuth();
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+  const handleRegister = async () => {
+    if (!email || !password || !displayName) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
       return;
     }
 
     try {
-      await login(email, password);
-      router.replace('/(tabs)');
+      await register(email, password, displayName, invitationCode || undefined);
+      Alert.alert('Success', 'Account created successfully!', [
+        { text: 'OK', onPress: () => router.replace('/(tabs)') }
+      ]);
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      Alert.alert('Registration Failed', error.message);
     }
   };
 
-  const goToRegister = () => {
-    router.push('/register');
+  const goToLogin = () => {
+    router.back();
   };
 
   return (
@@ -58,11 +74,23 @@ export default function LoginScreen() {
               source={require('../assets/images/site icon.png')}
               style={styles.logo}
             />
-            <Text style={styles.title}>Wegood4u</Text>
-            <Text style={styles.subtitle}>Discover, Share, Earn</Text>
+            <Text style={styles.title}>Join Wegood4u</Text>
+            <Text style={styles.subtitle}>Start your food journey today</Text>
           </View>
 
           <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <User size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#666"
+                value={displayName}
+                onChangeText={setDisplayName}
+                autoCapitalize="words"
+              />
+            </View>
+
             <View style={styles.inputContainer}>
               <Mail size={20} color="#666" style={styles.inputIcon} />
               <TextInput
@@ -98,23 +126,53 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
+            <View style={styles.inputContainer}>
+              <Lock size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Confirm Password"
+                placeholderTextColor="#666"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeIcon}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff size={20} color="#666" />
+                ) : (
+                  <Eye size={20} color="#666" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Gift size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Invitation Code (Optional)"
+                placeholderTextColor="#666"
+                value={invitationCode}
+                onChangeText={setInvitationCode}
+                autoCapitalize="characters"
+              />
+            </View>
+
             <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
+              style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+              onPress={handleRegister}
               disabled={isLoading}
             >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? 'Logging in...' : 'Login'}
+              <Text style={styles.registerButtonText}>
+                {isLoading ? 'Creating Account...' : 'Create Account'}
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.registerLink} onPress={goToRegister}>
-              <Text style={styles.registerLinkText}>
-                Don't have account yet? <Text style={styles.registerLinkHighlight}>Register here</Text>
+            <TouchableOpacity style={styles.loginLink} onPress={goToLogin}>
+              <Text style={styles.loginLinkText}>
+                Already have an account? <Text style={styles.loginLinkHighlight}>Login here</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -138,22 +196,22 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 50,
+    marginBottom: 40,
   },
   logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
   },
   formContainer: {
@@ -188,39 +246,30 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 4,
   },
-  loginButton: {
+  registerButton: {
     backgroundColor: '#F33F32',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 20,
   },
-  loginButtonDisabled: {
+  registerButtonDisabled: {
     opacity: 0.6,
   },
-  loginButtonText: {
+  registerButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
-  forgotPassword: {
+  loginLink: {
     alignItems: 'center',
     marginTop: 20,
   },
-  forgotPasswordText: {
-    color: '#F33F32',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  registerLink: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  registerLinkText: {
+  loginLinkText: {
     color: '#666',
     fontSize: 14,
   },
-  registerLinkHighlight: {
+  loginLinkHighlight: {
     color: '#F33F32',
     fontWeight: '600',
   },

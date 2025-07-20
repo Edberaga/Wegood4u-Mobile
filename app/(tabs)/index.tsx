@@ -21,8 +21,10 @@ import {
   Trophy,
   Clock,
 } from 'lucide-react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HomeScreen() {
+  const { user } = useAuth();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
   const pickImage = async () => {
@@ -55,7 +57,7 @@ export default function HomeScreen() {
         >
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Welcome back!</Text>
-            <Text style={styles.username}>John Doe</Text>
+            <Text style={styles.username}>{user?.displayName || 'User'}</Text>
             <View style={styles.pointsContainer}>
               <Star size={20} color="#FFD700" />
               <Text style={styles.points}>2,450 Points</Text>
