@@ -7,11 +7,23 @@ import {
   Alert,
   ScrollView,
   Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { MapPin, Star, Phone, Clock, Navigation } from 'lucide-react-native';
+
+// Conditionally import MapView only for native platforms
+let MapView: any = null;
+let Marker: any = null;
+let Callout: any = null;
+
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+  Callout = Maps.Callout;
+}
 
 interface PartnerStore {
   id: number;
@@ -152,46 +164,58 @@ export default function MapScreen() {
         <Text style={styles.subtitle}>{partnerStores.length} locations nearby</Text>
       </View>
 
-      <View style={styles.mapContainer}>
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude: userLocation?.latitude || 37.7849,
-            longitude: userLocation?.longitude || -122.4094,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-          showsUserLocation={true}
-          showsMyLocationButton={true}
-        >
-          {partnerStores.map((store) => (
-            <Marker
-              key={store.id}
-              coordinate={{
-                latitude: store.latitude,
-                longitude: store.longitude,
-              }}
-              onPress={() => setSelectedStore(store)}
-            >
-              <View style={styles.markerContainer}>
-                <View style={styles.marker}>
-                  <MapPin size={20} color="#F33F32" />
-                </View>
-              </View>
-              <Callout>
-                <View style={styles.calloutContainer}>
-                  <Text style={styles.calloutTitle}>{store.name}</Text>
-                  <Text style={styles.calloutType}>{store.type}</Text>
-                  <View style={styles.calloutRating}>
-                    <Star size={12} color="#FFD700" />
-                    <Text style={styles.calloutRatingText}>{store.rating}</Text>
+      {Platform.OS === 'web' ? (
+        <View style={styles.mapContainer}>
+          <View style={styles.webMapPlaceholder}>
+            <MapPin size={48} color="#F33F32" />
+            <Text style={styles.webMapText}>Map View</Text>
+            <Text style={styles.webMapSubtext}>
+              Interactive map is available on mobile devices
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: userLocation?.latitude || 37.7849,
+              longitude: userLocation?.longitude || -122.4094,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+          >
+            {partnerStores.map((store) => (
+              <Marker
+                key={store.id}
+                coordinate={{
+                  latitude: store.latitude,
+                  longitude: store.longitude,
+                }}
+                onPress={() => setSelectedStore(store)}
+              >
+                <View style={styles.markerContainer}>
+                  <View style={styles.marker}>
+                    <MapPin size={20} color="#F33F32" />
                   </View>
                 </View>
-              </Callout>
-            </Marker>
-          ))}
-        </MapView>
-      </View>
+                <Callout>
+                  <View style={styles.calloutContainer}>
+                    <Text style={styles.calloutTitle}>{store.name}</Text>
+                    <Text style={styles.calloutType}>{store.type}</Text>
+                    <View style={styles.calloutRating}>
+                      <Star size={12} color="#FFD700" />
+                      <Text style={styles.calloutRatingText}>{store.rating}</Text>
+                    </View>
+                  </View>
+                </Callout>
+              </Marker>
+            ))}
+          </MapView>
+        </View>
+      )}
 
       {selectedStore && (
         <View style={styles.storeDetailsContainer}>
@@ -284,6 +308,25 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  webMapPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  webMapText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  webMapSubtext: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
   markerContainer: {
     alignItems: 'center',
