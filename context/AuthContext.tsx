@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -60,12 +60,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
       setIsLoading(true);
       
       const response = await axios.post(`${WORDPRESS_BASE_URL}/wp-json/simple-jwt-login/v1/auth`, {
-        email,
+        username,
         password,
       });
 
