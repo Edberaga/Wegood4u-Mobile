@@ -73,16 +73,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const token = await SecureStore.getItemAsync('jwt_token');
       if (token) {
         console.log('Found stored token, checking validity...');
-        // Attempt to fetch user profile using the stored token
-        const fetchedUser = await fetchUserProfile(token);
-        if (fetchedUser) {
-          setUser(fetchedUser);
-        } else {
-          // Token might be invalid or expired, clear it
-          console.log('Token invalid, clearing stored token');
-          await SecureStore.deleteItemAsync('jwt_token');
-          setUser(null);
-        }
+        // For now, just set default user data if token exists
+        // TODO: Later implement proper token validation
+        const defaultUser: User = {
+          id: 1,
+          email: 'user@example.com',
+          displayName: 'User',
+        };
+        setUser(defaultUser);
+        console.log('Auto-login with default user data');
       } else {
         console.log('No stored token found');
       }
@@ -137,15 +136,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Store token securely
         await SecureStore.setItemAsync('jwt_token', jwtToken);
 
-        // Fetch user profile using the new token
-        const fetchedUser = await fetchUserProfile(jwtToken);
-        if (fetchedUser) {
-          setUser(fetchedUser);
-          console.log('User profile set successfully');
-        } else {
-          // If user data couldn't be fetched, consider login failed
-          throw new Error('Login successful, but failed to retrieve user profile.');
-        }
+        // Set default user data for now (skip profile fetch)
+        const defaultUser: User = {
+          id: 1,
+          email: `${username}@example.com`, // Use username as email placeholder
+          displayName: username, // Use username as display name
+        };
+        
+        setUser(defaultUser);
+        console.log('User set with default data:', defaultUser);
       } else {
         // Handle specific error messages from the plugin if available
         const errorMessage = data?.error_description || data?.message || 'Login failed. Please check your credentials.';
