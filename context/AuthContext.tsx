@@ -82,15 +82,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const token = await SecureStore.getItemAsync('jwt_token');
       if (token) {
         console.log('Found stored token, checking validity...');
-        // For now, just set default user data if token exists
-        // TODO: Later implement proper token validation
-        const defaultUser: User = {
-          id: 1,
-          email: 'user@example.com',
-          displayName: 'User',
-        };
-        setUser(defaultUser);
-        console.log('Auto-login with default user data');
+        
+        if (USE_MOCK_AUTH && token.startsWith('mock_jwt_')) {
+          // Extract user ID from mock token
+          const userId = parseInt(token.split('_')[2]);
+          const mockUser = MOCK_USERS.find(u => u.id === userId);
+          
+          if (mockUser) {
+            const userData: User = {
+              id: mockUser.id,
+              email: mockUser.email,
+              displayName: mockUser.displayName,
+            };
+            setUser(userData);
+            console.log('Auto-login with mock user:', userData);
+          } else {
+            console.log('Invalid mock token, clearing...');
+            await SecureStore.deleteItemAsync('jwt_token');
+            setUser(null);
+          }
+        } else {
+          // For real tokens, set default user data for now
+          const defaultUser: User = {
+            id: 1,
+            email: 'user@example.com',
+            displayName: 'User',
+          };
+          setUser(defaultUser);
+          console.log('Auto-login with default user data');
+        }
       } else {
         console.log('No stored token found');
       }
