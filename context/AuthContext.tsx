@@ -110,12 +110,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Origin': 'https://wegood4u.com',
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'Content-Type',
         },
         body: JSON.stringify({
           username,
           password,
         }),
         signal: controller.signal,
+        mode: 'cors',
+        credentials: 'omit',
       });
 
       clearTimeout(timeoutId);
@@ -154,7 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error.name === 'AbortError') {
         throw new Error('Login request timed out. Please check your internet connection.');
       } else if (error.message === 'Network request failed') {
-        throw new Error('Unable to connect to server. Please check your internet connection and try again.');
+        throw new Error('CORS or network issue. Please contact support if this persists.');
       } else {
         const errorMessage = error.message || 'Login failed. Please check your credentials.';
         throw new Error(errorMessage);
@@ -191,9 +196,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Origin': 'https://wegood4u.com',
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'Content-Type',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(registerData),
         signal: controller.signal,
+        mode: 'cors',
+        credentials: 'omit',
       });
 
       clearTimeout(timeoutId);
@@ -219,7 +230,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error.name === 'AbortError') {
         throw new Error('Registration request timed out. Please check your internet connection.');
       } else if (error.message === 'Network request failed') {
-        throw new Error('Unable to connect to server. Please check your internet connection and try again.');
+        throw new Error('CORS or network issue. Please contact support if this persists.');
       } else {
         const errorMessage = error.message || 'Registration failed. Please try again.';
         throw new Error(errorMessage);
