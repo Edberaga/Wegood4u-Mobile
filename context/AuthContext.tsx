@@ -21,6 +21,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Replace with your WordPress site URL
 const WORDPRESS_BASE_URL = "https://wegood4u.com";
 
+// Mock users for development - replace with real authentication later
+const MOCK_USERS = [
+  { username: 'admin', password: 'admin123', id: 1, email: 'admin@wegood4u.com', displayName: 'Admin User' },
+  { username: 'testuser', password: 'test123', id: 2, email: 'test@wegood4u.com', displayName: 'Test User' },
+  { username: 'demo', password: 'demo123', id: 3, email: 'demo@wegood4u.com', displayName: 'Demo User' },
+];
+
+const USE_MOCK_AUTH = true; // Set to false when WordPress auth is working
+
 interface AuthProviderProps {
   children: ReactNode;
 }
