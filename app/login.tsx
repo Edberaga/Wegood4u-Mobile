@@ -13,28 +13,32 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login, isLoading } = useAuth();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!username || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to main app
+    try {
+      await login(username, password);
       router.replace('/(tabs)');
-    }, 1500);
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message);
+    }
+  };
+
+  const goToRegister = () => {
+    router.push('/register');
   };
 
   return (
@@ -60,14 +64,13 @@ export default function LoginScreen() {
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Mail size={20} color="#666" style={styles.inputIcon} />
+              <User size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Email"
+                placeholder="Username"
                 placeholderTextColor="#666"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
+                value={username}
+                onChangeText={setUsername}
                 autoCapitalize="none"
               />
             </View>
@@ -106,6 +109,12 @@ export default function LoginScreen() {
 
             <TouchableOpacity style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.registerLink} onPress={goToRegister}>
+              <Text style={styles.registerLinkText}>
+                Don't have account yet? <Text style={styles.registerLinkHighlight}>Register here</Text>
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -201,5 +210,17 @@ const styles = StyleSheet.create({
     color: '#F33F32',
     fontSize: 14,
     fontWeight: '500',
+  },
+  registerLink: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  registerLinkText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  registerLinkHighlight: {
+    color: '#F33F32',
+    fontWeight: '600',
   },
 });
