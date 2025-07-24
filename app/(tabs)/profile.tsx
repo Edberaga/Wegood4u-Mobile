@@ -14,12 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { User, CreditCard as Edit3, Star, Gift, Share2, Settings, Bell, Shield, LogOut, Camera, Copy, Trophy, MapPin, Calendar } from 'lucide-react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProfileScreen() {
+  const { user, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
+    name: user?.displayName || 'John Doe',
+    email: user?.email || 'john.doe@example.com',
     phone: '+1 (555) 123-4567',
     bio: 'Food enthusiast and travel lover. Always exploring new flavors!',
     profileImage: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400',
@@ -73,13 +75,21 @@ export default function ProfileScreen() {
     );
   };
 
-  const logout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => Alert.alert('Logged out') },
+        { 
+          text: 'Logout', 
+          style: 'destructive', 
+          onPress: async () => {
+            await logout();
+            // Note: You might want to navigate to login screen here
+            // router.replace('/login');
+          }
+        },
       ]
     );
   };
@@ -292,7 +302,7 @@ export default function ProfileScreen() {
 
         {/* Logout */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <LogOut size={20} color="#EF4444" />
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
