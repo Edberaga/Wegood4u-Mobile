@@ -13,6 +13,18 @@ import * as Location from 'expo-location';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { MapPin, Star, Phone, Clock, Navigation } from 'lucide-react-native';
 
+import taitoonbaan from '../../assets/images/tai_toon_baan.jpeg';
+import white_rabbit from '../../assets/images/white_rabbit.jpeg';
+import versaile from '../../assets/images/versaile.jpeg';
+import sax from '../../assets/images/sax.jpeg';
+import matcha from '../../assets/images/matcha.jpeg';
+
+import come_true_cafe from '../../assets/images/come_true_cafe.jpeg';
+import zhang_lala from '../../assets/images/zhang_lala.jpeg';
+import fatt_kee from '@/assets/images/fatt_kee.jpeg';
+import mantra_bar from '@/assets/images/mantra_bar.jpeg';
+import mil_toast from '@/assets/images/mil_toast.jpeg';
+
 interface PartnerStore {
   id: number;
   name: string;
@@ -20,7 +32,7 @@ interface PartnerStore {
   latitude: number;
   longitude: number;
   rating: number;
-  image: string;
+  image: number;
   phone: string;
   hours: string;
   description: string;
@@ -36,63 +48,123 @@ export default function MapScreen() {
   const partnerStores: PartnerStore[] = [
     {
       id: 1,
-      name: 'Cafe Luna',
-      type: 'Coffee & Desserts',
-      latitude: 37.7849,
-      longitude: -122.4094,
+      name: 'Tai Toon Baan',
+      type: 'Restaurant',
+      latitude: 18.79210626514222, 
+      longitude: 98.99534619999957,
       rating: 4.8,
-      image: 'https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: taitoonbaan,
       phone: '+1 (555) 123-4567',
       hours: '7:00 AM - 9:00 PM',
       description: 'Premium coffee and artisanal desserts in a cozy atmosphere',
     },
     {
       id: 2,
-      name: 'Pizza Corner',
-      type: 'Italian Cuisine',
-      latitude: 37.7849,
-      longitude: -122.4114,
+      name: 'White Rabbit',
+      type: 'Beverages',
+      latitude: 18.79457375170442, 
+      longitude: 98.9871313730753,
       rating: 4.6,
-      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: white_rabbit,
       phone: '+1 (555) 234-5678',
       hours: '11:00 AM - 11:00 PM',
       description: 'Authentic Italian pizza made with fresh ingredients',
     },
     {
       id: 3,
-      name: 'Sushi Zen',
-      type: 'Japanese Food',
-      latitude: 37.7869,
-      longitude: -122.4089,
+      name: 'Versailles de Flore',
+      type: 'Restaurant',
+      latitude: 18.795686889496963, 
+      longitude: 98.97918708594416,
       rating: 4.9,
-      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: versaile,
       phone: '+1 (555) 345-6789',
       hours: '12:00 PM - 10:00 PM',
       description: 'Fresh sushi and traditional Japanese dishes',
     },
     {
       id: 4,
-      name: 'Burger Palace',
-      type: 'Fast Food',
-      latitude: 37.7829,
-      longitude: -122.4104,
+      name: 'The Sax',
+      type: 'Beverages',
+      latitude: 18.80070339757342,
+      longitude: 98.96800241540333,
       rating: 4.4,
-      image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: sax,
       phone: '+1 (555) 456-7890',
       hours: '10:00 AM - 12:00 AM',
       description: 'Gourmet burgers and crispy fries',
     },
     {
       id: 5,
-      name: 'Green Garden',
-      type: 'Healthy Food',
-      latitude: 37.7859,
-      longitude: -122.4074,
+      name: 'Matchappen',
+      type: 'Coffee & Deserts',
+      latitude: 18.83660650511071,
+      longitude: 99.0076904403956,
       rating: 4.7,
-      image: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: matcha,
       phone: '+1 (555) 567-8901',
       hours: '8:00 AM - 8:00 PM',
       description: 'Fresh salads, smoothies, and healthy options',
+    },
+    {
+      id: 6,
+      name: 'Come True Cafe',
+      type: 'Coffee & Deserts',
+      latitude: 3.1508999154009265, 
+      longitude: 101.61523084010264,
+      rating: 4.7,
+      image: come_true_cafe,
+      phone: '+60125628150',
+      hours: '8:00 AM - 8:00 PM',
+      description: 'Steps into dreams to find expression in the art of coffee brewing',
+    },
+    {
+      id: 7,
+      name: 'Zhang Lala Mee Tarik',
+      type: 'Restaurant',
+      latitude: 3.145256933974581,  
+      longitude: 101.70920651179703,
+      rating: 4.5,
+      image: zhang_lala,
+      phone: '+60176666989',
+      hours: '8:00 AM - 8:00 PM',
+      description: 'Famous Noodles Chinese Restaurant',
+    },
+    {
+      id: 8,
+      name: 'Fatt Kee Roast Fish',
+      type: 'Restaurant',
+      latitude: 3.134100932844353,   
+      longitude: 101.7178196922422,
+      rating: 3.7,
+      image: fatt_kee,
+      phone: '+60392263310',
+      hours: '8:00 AM - 8:00 PM',
+      description: 'Chinese restaurant consistently attracts food lovers with its bold, and spicy seafood offering',
+    },
+    {
+      id: 9,
+      name: 'Mantra Rooftop Bar & Lounge',
+      type: 'Beverages',
+      latitude: 3.130762841002217,     
+      longitude: 101.67153123815568,
+      rating: 4.5,
+      image: mantra_bar,
+      phone: '+60173448299',
+      hours: '8:00 AM - 8:00 PM',
+      description: 'Famous and Luxury Bar located at tallest rooftop',
+    },
+    {
+      id: 10,
+      name: 'Mil Toast House',
+      type: 'Coffee & Desserts',
+      latitude: 3.1427845661664073,      
+      longitude: 101.7187573549815,
+      rating: 4.5,
+      image: mil_toast,
+      phone: '',
+      hours: '8:00 AM - 8:00 PM',
+      description: 'A Korean Dessert Paradise in Malaysia',
     },
   ];
 
@@ -117,8 +189,8 @@ export default function MapScreen() {
       console.error('Error getting location:', error);
       // Fallback to San Francisco coordinates
       setUserLocation({
-        latitude: 37.7849,
-        longitude: -122.4094,
+        latitude: 18.79210626514222, 
+        longitude: 98.99534619999957,
       });
     }
   };
@@ -197,7 +269,7 @@ export default function MapScreen() {
         <View style={styles.storeDetailsContainer}>
           <ScrollView style={styles.storeDetails} showsVerticalScrollIndicator={false}>
             <View style={styles.storeHeader}>
-              <Image source={{ uri: selectedStore.image }} style={styles.storeImage} />
+              <Image source={selectedStore.image} style={styles.storeImage} />
               <View style={styles.storeInfo}>
                 <Text style={styles.storeName}>{selectedStore.name}</Text>
                 <Text style={styles.storeType}>{selectedStore.type}</Text>
@@ -289,9 +361,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   marker: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    padding: 10,
+    borderRadius: 50,
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
@@ -334,7 +407,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '40%',
+    maxHeight: '50%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
