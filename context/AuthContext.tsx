@@ -21,6 +21,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Replace with your WordPress site URL
 const WORDPRESS_BASE_URL = "https://wegood4u.com";
 
+const JWT_API_KEY = meta.env.JWT_API_KEY;
+
 interface AuthProviderProps {
   children: ReactNode;
 }
