@@ -19,9 +19,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Replace with your WordPress site URL
-const WORDPRESS_BASE_URL = "https://wegood4u.com";
+const WORDPRESS_BASE_URL = process.env.EXPO_PUBLIC_WEBSITE_URL;
 
-const JWT_API_KEY = meta.env.JWT_API_KEY;
+const JWT_API_KEY = process.env.EXPO_PUBLIC_JWT_API_KEY;
+
+console.log(`Web: ${WORDPRESS_BASE_URL}, APi: ${JWT_API_KEY}`);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -171,11 +173,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       console.log('Attempting registration for email:', email);
 
+      // Check if API key is available
+      if (!JWT_API_KEY) {
+        throw new Error('API key not configured. Please contact support.');
+      }
+
       const registerData: any = {
         username: displayName,
         email: email,
         password: password,
-        name: displayName,
+        apikey: JWT_API_KEY,
       };
 
       if (invitationCode) {
@@ -183,6 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       console.log('Registration URL:', `${WORDPRESS_BASE_URL}/wp-json/api/v1/mo-jwt-register`);
+      console.log('Registration data (without apikey):', { ...registerData, apikey: '[HIDDEN]' });
 
       // Add timeout to the fetch request
       const controller = new AbortController();
@@ -207,7 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (response.ok && data.jwt_token) {
         console.log('Registration successful, attempting auto-login');
         // Auto-login after successful registration
-        await login(email, password);
+        await login(displayName, password);
       } else {
         // Handle specific error messages from the plugin if available
         const errorMessage = data?.error_description || data?.message || 'Registration failed.';
