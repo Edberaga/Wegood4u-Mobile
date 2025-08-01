@@ -187,7 +187,7 @@ export default function MapScreen() {
       });
     } catch (error) {
       console.error('Error getting location:', error);
-      // Fallback to San Francisco coordinates
+      // Fallback to Thailand coordinates
       setUserLocation({
         latitude: 18.79210626514222, 
         longitude: 98.99534619999957,
