@@ -46,6 +46,12 @@ export default function MapScreen() {
     longitude: number;
   } | null>(null);
   const [selectedStore, setSelectedStore] = useState<PartnerStore | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string>('All');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [expandedCities, setExpandedCities] = useState<{[key: string]: boolean}>({
+    'Chiang Mai': false,
+    'Kuala Lumpur': false,
+  });
 
   const partnerStores: PartnerStore[] = [
     {
@@ -263,87 +269,6 @@ export default function MapScreen() {
     return `${count} locations in ${selectedFilter}`;
   };
 
-  const getFilteredStores = () => {
-    if (selectedFilter === 'All') {
-      return partnerStores;
-    }
-    
-    // Check if it's a city filter
-    if (selectedFilter === 'Chiang Mai' || selectedFilter === 'Kuala Lumpur') {
-      return partnerStores.filter(store => store.city === selectedFilter);
-    }
-    
-    // Check if it's a specific store
-    const specificStore = partnerStores.find(store => store.name === selectedFilter);
-    return specificStore ? [specificStore] : partnerStores;
-  };
-  
-  const filteredStores = getFilteredStores();
-  
-  const getDropdownDisplayText = () => {
-    if (selectedFilter === 'All') return 'All Locations';
-    
-    // Check if it's a specific store
-    const specificStore = partnerStores.find(store => store.name === selectedFilter);
-    if (specificStore) {
-      return specificStore.name;
-    }
-    
-    return selectedFilter;
-  };
-  
-  const getMapRegion = () => {
-    // If a specific store is selected, center on that store
-    const specificStore = partnerStores.find(store => store.name === selectedFilter);
-    if (specificStore) {
-      return {
-        latitude: specificStore.latitude,
-        longitude: specificStore.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      };
-    }
-    
-    if (selectedFilter === 'Kuala Lumpur') {
-      return {
-        latitude: 3.1390,
-        longitude: 101.6869,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      };
-    } else if (selectedFilter === 'Chiang Mai') {
-      return {
-        latitude: 18.7883,
-        longitude: 98.9853,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      };
-    } else {
-      // Show both cities
-      return {
-        latitude: 10.9,
-        longitude: 100.3,
-        latitudeDelta: 20,
-        longitudeDelta: 20,
-      };
-    }
-  };
-  
-  const getSubtitleText = () => {
-    const count = filteredStores.length;
-    if (selectedFilter === 'All') {
-      return `${count} locations total`;
-    }
-    
-    const specificStore = partnerStores.find(store => store.name === selectedFilter);
-    if (specificStore) {
-      return `${specificStore.city} • ${specificStore.type}`;
-    }
-    
-    return `${count} locations in ${selectedFilter}`;
-  };
-
-  const chiangMaiStores = partnerStores.filter(store => store.city === 'Chiang Mai');
   useEffect(() => {
     getUserLocation();
   }, []);
@@ -428,7 +353,7 @@ export default function MapScreen() {
           showsUserLocation={true}
           showsMyLocationButton={true}
         >
-          {filteredStores.map((store) => (
+          {partnerStores.map((store) => (
             <Marker
               key={store.id}
               coordinate={{
@@ -512,12 +437,83 @@ export default function MapScreen() {
           </TouchableOpacity>
         </View>
       )}
-    </SafeAreaView>
-  );
-}
 
-            {/* Kuala Lumpur Stores */}
-            {kualaLumpurStores.map((store) => (
+      <Modal
+        visible={showDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDropdown(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          onPress={() => setShowDropdown(false)}
+        >
+          <View style={styles.dropdownModal}>
+            <ScrollView 
+              style={styles.dropdownScrollView}
+              showsVerticalScrollIndicator={false}
+            >
+            <Text style={styles.dropdownTitle}>Select Location or Store</Text>
+            
+            {/* All Locations Option */}
+            <TouchableOpacity
+              style={[
+                styles.dropdownItem,
+                selectedFilter === 'All' && styles.selectedDropdownItem
+              ]}
+              onPress={() => {
+                setSelectedFilter('All');
+                setShowDropdown(false);
+                setSelectedStore(null);
+              }}
+            >
+              <Text style={[
+                styles.dropdownItemText,
+                selectedFilter === 'All' && styles.selectedDropdownItemText
+              ]}>
+                All Locations
+              </Text>
+              <Text style={styles.storeCount}>
+                {partnerStores.length} stores
+              </Text>
+            </TouchableOpacity>
+
+            {/* Chiang Mai Section */}
+            <TouchableOpacity
+              style={[
+                styles.dropdownItem,
+                styles.cityHeader,
+                selectedFilter === 'Chiang Mai' && styles.selectedDropdownItem
+              ]}
+              onPress={() => {
+                if (expandedCities['Chiang Mai']) {
+                  // If expanded, collapse it
+                  toggleCityExpansion('Chiang Mai');
+                } else {
+                  // If collapsed, expand it and optionally select the city
+                  toggleCityExpansion('Chiang Mai');
+                  setSelectedFilter('Chiang Mai');
+                  setSelectedStore(null);
+                }
+              }}
+            >
+              <Text style={[
+                styles.dropdownItemText,
+                styles.cityHeaderText,
+                selectedFilter === 'Chiang Mai' && styles.selectedDropdownItemText
+              ]}>
+                Chiang Mai
+              </Text>
+              <Text style={[
+                styles.storeCount,
+                selectedFilter === 'Chiang Mai' && { color: 'rgba(255,255,255,0.8)' }
+              ]}>
+                {chiangMaiStores.length} stores
+              </Text>
+            </TouchableOpacity>
+
+            {/* Chiang Mai Stores */}
+            {expandedCities['Chiang Mai'] && chiangMaiStores.map((store) => (
               <TouchableOpacity
                 key={store.id}
                 style={[
@@ -538,13 +534,85 @@ export default function MapScreen() {
                   • {store.name}
                 </Text>
                 <Text style={[
-                  styles.storeType,
+                  styles.storeTypeText,
                   selectedFilter === store.name && { color: 'rgba(255,255,255,0.8)' }
                 ]}>
                   {store.type}
                 </Text>
               </TouchableOpacity>
             ))}
+
+            {/* Kuala Lumpur Section */}
+            <TouchableOpacity
+              style={[
+                styles.dropdownItem,
+                styles.cityHeader,
+                selectedFilter === 'Kuala Lumpur' && styles.selectedDropdownItem
+              ]}
+              onPress={() => {
+                if (expandedCities['Kuala Lumpur']) {
+                  // If expanded, collapse it
+                  toggleCityExpansion('Kuala Lumpur');
+                } else {
+                  // If collapsed, expand it and optionally select the city
+                  toggleCityExpansion('Kuala Lumpur');
+                  setSelectedFilter('Kuala Lumpur');
+                  setSelectedStore(null);
+                }
+              }}
+            >
+              <Text style={[
+                styles.dropdownItemText,
+                styles.cityHeaderText,
+                selectedFilter === 'Kuala Lumpur' && styles.selectedDropdownItemText
+              ]}>
+                Kuala Lumpur
+              </Text>
+              <Text style={[
+                styles.storeCount,
+                selectedFilter === 'Kuala Lumpur' && { color: 'rgba(255,255,255,0.8)' }
+              ]}>
+                {kualaLumpurStores.length} stores
+              </Text>
+            </TouchableOpacity>
+
+            {/* Kuala Lumpur Stores */}
+            {expandedCities['Kuala Lumpur'] && kualaLumpurStores.map((store) => (
+              <TouchableOpacity
+                key={store.id}
+                style={[
+                  styles.dropdownItem,
+                  styles.storeItem,
+                  selectedFilter === store.name && styles.selectedDropdownItem
+                ]}
+                onPress={() => {
+                  setSelectedFilter(store.name);
+                  setShowDropdown(false);
+                  setSelectedStore(store);
+                }}
+              >
+                <Text style={[
+                  styles.storeItemText,
+                  selectedFilter === store.name && styles.selectedDropdownItemText
+                ]}>
+                  • {store.name}
+                </Text>
+                <Text style={[
+                  styles.storeTypeText,
+                  selectedFilter === store.name && { color: 'rgba(255,255,255,0.8)' }
+                ]}>
+                  {store.type}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -759,5 +827,84 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#64748b',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownModal: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    margin: 20,
+    maxWidth: 350,
+    width: '90%',
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  dropdownScrollView: {
+    padding: 20,
+  },
+  dropdownTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  dropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  selectedDropdownItem: {
+    backgroundColor: '#F33F32',
+  },
+  cityHeader: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  cityHeaderText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  storeItem: {
+    marginLeft: 16,
+    backgroundColor: '#fafbfc',
+    borderLeftWidth: 3,
+    borderLeftColor: '#e2e8f0',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#1e293b',
+    fontWeight: '600',
+  },
+  storeItemText: {
+    fontSize: 14,
+    color: '#475569',
+    fontWeight: '500',
+  },
+  selectedDropdownItemText: {
+    color: 'white',
+  },
+  storeCount: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  storeTypeText: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 2,
+    fontStyle: 'italic',
   },
 });
