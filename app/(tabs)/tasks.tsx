@@ -11,17 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { 
-  Upload, 
-  Camera, 
-  MapPin, 
-  Calendar, 
-  CheckCircle, 
-  Clock, 
-  ChevronDown,
-  Gift,
-  Star
-} from 'lucide-react-native';
+import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star } from 'lucide-react-native';
 
 interface Submission {
   id: number;
