@@ -6,206 +6,396 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CircleCheck as CheckCircle, Clock, MapPin, Star, Gift, Calendar, Target } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { 
+  Upload, 
+  Camera, 
+  MapPin, 
+  Calendar, 
+  CheckCircle, 
+  Clock, 
+  ChevronDown,
+  Gift,
+  Star
+} from 'lucide-react-native';
+
+interface Submission {
+  id: number;
+  submissionDate: string;
+  restaurantName: string;
+  receiptPhoto: string;
+  selfiePhoto: string;
+  status: 'approved' | 'pending';
+  points?: number;
+}
+
+interface PartnerStore {
+  id: number;
+  name: string;
+  city: string;
+  type: string;
+}
 
 export default function TasksScreen() {
-  const [activeTab, setActiveTab] = useState<'ongoing' | 'completed'>('ongoing');
+  const [activeTab, setActiveTab] = useState<'submit' | 'rewards'>('submit');
+  
+  // Form states
+  const [selectedStore, setSelectedStore] = useState<PartnerStore | null>(null);
+  const [receiptPhoto, setReceiptPhoto] = useState<string | null>(null);
+  const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
+  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const ongoingTasks = [
+  const partnerStores: PartnerStore[] = [
+    // Chiang Mai stores
+    { id: 1, name: 'Tai Toon Baan', city: 'Chiang Mai', type: 'Restaurant' },
+    { id: 2, name: 'White Rabbit', city: 'Chiang Mai', type: 'Beverages' },
+    { id: 3, name: 'Versailles de Flore', city: 'Chiang Mai', type: 'Restaurant' },
+    { id: 4, name: 'The Sax', city: 'Chiang Mai', type: 'Beverages' },
+    { id: 5, name: 'Matchappen', city: 'Chiang Mai', type: 'Coffee & Desserts' },
+    
+    // Kuala Lumpur stores
+    { id: 6, name: 'Come True Cafe', city: 'Kuala Lumpur', type: 'Coffee & Desserts' },
+    { id: 7, name: 'Zhang Lala Mee Tarik', city: 'Kuala Lumpur', type: 'Restaurant' },
+    { id: 8, name: 'Fatt Kee Roast Fish', city: 'Kuala Lumpur', type: 'Restaurant' },
+    { id: 9, name: 'Mantra Rooftop Bar & Lounge', city: 'Kuala Lumpur', type: 'Beverages' },
+    { id: 10, name: 'Mil Toast House', city: 'Kuala Lumpur', type: 'Coffee & Desserts' },
+  ];
+
+  const submissions: Submission[] = [
     {
       id: 1,
-      title: 'Visit Cafe Luna',
-      description: 'Take a photo of your meal and upload proof',
-      location: 'Downtown District',
+      submissionDate: '2024-01-12',
+      restaurantName: 'Tai Toon Baan',
+      receiptPhoto: 'https://images.pexels.com/photos/4386370/pexels-photo-4386370.jpeg?auto=compress&cs=tinysrgb&w=400',
+      selfiePhoto: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'approved',
       points: 150,
-      deadline: '2024-01-15',
-      type: 'restaurant',
     },
     {
       id: 2,
-      title: 'Try New Pizza Place',
-      description: 'Share your experience at Pizza Corner',
-      location: 'Mall Area',
-      points: 200,
-      deadline: '2024-01-20',
-      type: 'restaurant',
+      submissionDate: '2024-01-10',
+      restaurantName: 'White Rabbit',
+      receiptPhoto: 'https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=400',
+      selfiePhoto: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'pending',
     },
     {
       id: 3,
-      title: 'Weekend Brunch Challenge',
-      description: 'Visit any partner restaurant for brunch',
-      location: 'Multiple Locations',
-      points: 100,
-      deadline: '2024-01-14',
-      type: 'challenge',
-    },
-  ];
-
-  const completedTasks = [
-    {
-      id: 4,
-      title: 'Sushi Zen Experience',
-      description: 'Posted review and photos',
-      location: 'Harbor District',
-      points: 250,
-      completedDate: '2024-01-10',
-      voucher: 'Free Appetizer',
-    },
-    {
-      id: 5,
-      title: 'Coffee Shop Review',
-      description: 'Shared Instagram post',
-      location: 'City Center',
-      points: 100,
-      completedDate: '2024-01-08',
-      voucher: '10% Discount',
-    },
-    {
-      id: 6,
-      title: 'Refer a Friend',
-      description: 'Successfully referred Sarah',
-      location: 'Online',
+      submissionDate: '2024-01-08',
+      restaurantName: 'Come True Cafe',
+      receiptPhoto: 'https://images.pexels.com/photos/4386370/pexels-photo-4386370.jpeg?auto=compress&cs=tinysrgb&w=400',
+      selfiePhoto: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
+      status: 'approved',
       points: 200,
-      completedDate: '2024-01-05',
-      voucher: 'Bonus Points',
     },
   ];
 
-  const redeemVoucher = (voucher: string) => {
+  const pickImage = async (type: 'receipt' | 'selfie') => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: type === 'receipt' ? [4, 3] : [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      if (type === 'receipt') {
+        setReceiptPhoto(result.assets[0].uri);
+      } else {
+        setSelfiePhoto(result.assets[0].uri);
+      }
+    }
+  };
+
+  const takePhoto = async (type: 'receipt' | 'selfie') => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: type === 'receipt' ? [4, 3] : [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      if (type === 'receipt') {
+        setReceiptPhoto(result.assets[0].uri);
+      } else {
+        setSelfiePhoto(result.assets[0].uri);
+      }
+    }
+  };
+
+  const showImagePicker = (type: 'receipt' | 'selfie') => {
     Alert.alert(
-      'Redeem Voucher',
-      `Are you sure you want to redeem: ${voucher}?`,
+      'Select Photo',
+      'Choose how you want to add your photo',
       [
+        { text: 'Camera', onPress: () => takePhoto(type) },
+        { text: 'Gallery', onPress: () => pickImage(type) },
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Redeem', onPress: () => Alert.alert('Success', 'Voucher redeemed successfully!') },
       ]
     );
   };
 
+  const submitProof = async () => {
+    if (!selectedStore) {
+      Alert.alert('Error', 'Please select a partner store');
+      return;
+    }
+    if (!receiptPhoto) {
+      Alert.alert('Error', 'Please upload your receipt photo');
+      return;
+    }
+    if (!selfiePhoto) {
+      Alert.alert('Error', 'Please upload your selfie photo');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      Alert.alert(
+        'Success!', 
+        'Your proof of travel has been submitted successfully. You will be notified once it\'s reviewed.',
+        [
+          { 
+            text: 'OK', 
+            onPress: () => {
+              // Reset form
+              setSelectedStore(null);
+              setReceiptPhoto(null);
+              setSelfiePhoto(null);
+            }
+          }
+        ]
+      );
+    }, 2000);
+  };
+
+  const groupedStores = partnerStores.reduce((acc, store) => {
+    if (!acc[store.city]) {
+      acc[store.city] = [];
+    }
+    acc[store.city].push(store);
+    return acc;
+  }, {} as Record<string, PartnerStore[]>);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Tasks</Text>
+        <Text style={styles.title}>Travel Proof</Text>
         <View style={styles.stats}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Completed</Text>
+            <Text style={styles.statNumber}>{submissions.filter(s => s.status === 'approved').length}</Text>
+            <Text style={styles.statLabel}>Approved</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>3</Text>
-            <Text style={styles.statLabel}>Ongoing</Text>
+            <Text style={styles.statNumber}>{submissions.filter(s => s.status === 'pending').length}</Text>
+            <Text style={styles.statLabel}>Pending</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'ongoing' && styles.activeTab]}
-          onPress={() => setActiveTab('ongoing')}
+          style={[styles.tab, activeTab === 'submit' && styles.activeTab]}
+          onPress={() => setActiveTab('submit')}
         >
-          <Clock size={20} color={activeTab === 'ongoing' ? '#F33F32' : '#64748B'} />
-          <Text style={[styles.tabText, activeTab === 'ongoing' && styles.activeTabText]}>
-            Ongoing
+          <Upload size={20} color={activeTab === 'submit' ? '#F33F32' : '#64748B'} />
+          <Text style={[styles.tabText, activeTab === 'submit' && styles.activeTabText]}>
+            Submit Proof
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'completed' && styles.activeTab]}
-          onPress={() => setActiveTab('completed')}
+          style={[styles.tab, activeTab === 'rewards' && styles.activeTab]}
+          onPress={() => setActiveTab('rewards')}
         >
-          <CheckCircle size={20} color={activeTab === 'completed' ? '#F33F32' : '#64748B'} />
-          <Text style={[styles.tabText, activeTab === 'completed' && styles.activeTabText]}>
-            Completed
+          <Gift size={20} color={activeTab === 'rewards' ? '#F33F32' : '#64748B'} />
+          <Text style={[styles.tabText, activeTab === 'rewards' && styles.activeTabText]}>
+            View Rewards
           </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {activeTab === 'ongoing' ? (
-          <View style={styles.taskList}>
-            {ongoingTasks.map((task) => (
-              <View key={task.id} style={styles.taskCard}>
-                <View style={styles.taskHeader}>
-                  <View style={styles.taskType}>
-                    <Target size={16} color="#F33F32" />
-                    <Text style={styles.taskTypeText}>
-                      {task.type === 'restaurant' ? 'Restaurant' : 'Challenge'}
-                    </Text>
+        {activeTab === 'submit' ? (
+          <View style={styles.submitContainer}>
+            {/* Partner Store Selection */}
+            <View style={styles.formSection}>
+              <Text style={styles.formLabel}>Select Partner Store</Text>
+              <TouchableOpacity
+                style={styles.storeSelector}
+                onPress={() => setShowStoreDropdown(true)}
+              >
+                <Text style={[styles.storeSelectorText, !selectedStore && styles.placeholderText]}>
+                  {selectedStore ? `${selectedStore.name} (${selectedStore.city})` : 'Choose a partner store'}
+                </Text>
+                <ChevronDown size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Receipt Photo Upload */}
+            <View style={styles.formSection}>
+              <Text style={styles.formLabel}>Receipt Photo</Text>
+              <TouchableOpacity
+                style={styles.photoUpload}
+                onPress={() => showImagePicker('receipt')}
+              >
+                {receiptPhoto ? (
+                  <Image source={{ uri: receiptPhoto }} style={styles.uploadedPhoto} />
+                ) : (
+                  <View style={styles.uploadPlaceholder}>
+                    <Camera size={32} color="#64748B" />
+                    <Text style={styles.uploadPlaceholderText}>Upload Receipt</Text>
                   </View>
-                  <View style={styles.pointsBadge}>
-                    <Star size={14} color="#FFD700" />
-                    <Text style={styles.pointsText}>{task.points}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Selfie Photo Upload */}
+            <View style={styles.formSection}>
+              <Text style={styles.formLabel}>Selfie at Restaurant</Text>
+              <TouchableOpacity
+                style={styles.photoUpload}
+                onPress={() => showImagePicker('selfie')}
+              >
+                {selfiePhoto ? (
+                  <Image source={{ uri: selfiePhoto }} style={styles.uploadedPhoto} />
+                ) : (
+                  <View style={styles.uploadPlaceholder}>
+                    <Camera size={32} color="#64748B" />
+                    <Text style={styles.uploadPlaceholderText}>Upload Selfie</Text>
                   </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+              onPress={submitProof}
+              disabled={isSubmitting}
+            >
+              <Upload size={20} color="white" />
+              <Text style={styles.submitButtonText}>
+                {isSubmitting ? 'Submitting...' : 'Submit Proof'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Submissions Table */}
+            <View style={styles.tableSection}>
+              <Text style={styles.tableTitle}>Your Submissions</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.table}>
+                  {/* Table Header */}
+                  <View style={styles.tableHeader}>
+                    <Text style={[styles.tableHeaderText, styles.dateColumn]}>Date</Text>
+                    <Text style={[styles.tableHeaderText, styles.restaurantColumn]}>Restaurant</Text>
+                    <Text style={[styles.tableHeaderText, styles.photoColumn]}>Receipt</Text>
+                    <Text style={[styles.tableHeaderText, styles.photoColumn]}>Selfie</Text>
+                    <Text style={[styles.tableHeaderText, styles.statusColumn]}>Status</Text>
+                  </View>
+
+                  {/* Table Rows */}
+                  {submissions.map((submission) => (
+                    <View key={submission.id} style={styles.tableRow}>
+                      <Text style={[styles.tableCellText, styles.dateColumn]}>
+                        {submission.submissionDate}
+                      </Text>
+                      <Text style={[styles.tableCellText, styles.restaurantColumn]}>
+                        {submission.restaurantName}
+                      </Text>
+                      <View style={[styles.tableCell, styles.photoColumn]}>
+                        <Image source={{ uri: submission.receiptPhoto }} style={styles.tablePhoto} />
+                      </View>
+                      <View style={[styles.tableCell, styles.photoColumn]}>
+                        <Image source={{ uri: submission.selfiePhoto }} style={styles.tablePhoto} />
+                      </View>
+                      <View style={[styles.tableCell, styles.statusColumn]}>
+                        <View style={[
+                          styles.statusBadge,
+                          submission.status === 'approved' ? styles.approvedBadge : styles.pendingBadge
+                        ]}>
+                          {submission.status === 'approved' ? (
+                            <CheckCircle size={12} color="#22C55E" />
+                          ) : (
+                            <Clock size={12} color="#F59E0B" />
+                          )}
+                          <Text style={[
+                            styles.statusText,
+                            submission.status === 'approved' ? styles.approvedText : styles.pendingText
+                          ]}>
+                            {submission.status === 'approved' ? 'Approved' : 'Pending'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
                 </View>
-
-                <Text style={styles.taskTitle}>{task.title}</Text>
-                <Text style={styles.taskDescription}>{task.description}</Text>
-
-                <View style={styles.taskDetails}>
-                  <View style={styles.taskDetail}>
-                    <MapPin size={14} color="#64748B" />
-                    <Text style={styles.taskDetailText}>{task.location}</Text>
-                  </View>
-                  <View style={styles.taskDetail}>
-                    <Calendar size={14} color="#64748B" />
-                    <Text style={styles.taskDetailText}>Due: {task.deadline}</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity style={styles.taskButton}>
-                  <Text style={styles.taskButtonText}>Start Task</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+              </ScrollView>
+            </View>
           </View>
         ) : (
-          <View style={styles.taskList}>
-            {completedTasks.map((task) => (
-              <View key={task.id} style={styles.completedTaskCard}>
-                <View style={styles.taskHeader}>
-                  <View style={styles.completedBadge}>
-                    <CheckCircle size={16} color="#22C55E" />
-                    <Text style={styles.completedText}>Completed</Text>
-                  </View>
-                  <View style={styles.pointsBadge}>
-                    <Star size={14} color="#FFD700" />
-                    <Text style={styles.pointsText}>{task.points}</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.taskTitle}>{task.title}</Text>
-                <Text style={styles.taskDescription}>{task.description}</Text>
-
-                <View style={styles.taskDetails}>
-                  <View style={styles.taskDetail}>
-                    <MapPin size={14} color="#64748B" />
-                    <Text style={styles.taskDetailText}>{task.location}</Text>
-                  </View>
-                  <View style={styles.taskDetail}>
-                    <Calendar size={14} color="#64748B" />
-                    <Text style={styles.taskDetailText}>Completed: {task.completedDate}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.voucherContainer}>
-                  <View style={styles.voucherInfo}>
-                    <Gift size={16} color="#F33F32" />
-                    <Text style={styles.voucherText}>{task.voucher}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.redeemButton}
-                    onPress={() => redeemVoucher(task.voucher)}
-                  >
-                    <Text style={styles.redeemButtonText}>Redeem</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
+          <View style={styles.rewardsContainer}>
+            <Text style={styles.rewardsTitle}>View Rewards</Text>
+            <Text style={styles.rewardsSubtitle}>Coming soon...</Text>
           </View>
         )}
       </ScrollView>
+
+      {/* Store Selection Modal */}
+      {showStoreDropdown && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.storeModal}>
+            <Text style={styles.modalTitle}>Select Partner Store</Text>
+            <ScrollView style={styles.storeList} showsVerticalScrollIndicator={false}>
+              {Object.entries(groupedStores).map(([city, stores]) => (
+                <View key={city}>
+                  <Text style={styles.cityHeader}>{city}</Text>
+                  {stores.map((store) => (
+                    <TouchableOpacity
+                      key={store.id}
+                      style={[
+                        styles.storeItem,
+                        selectedStore?.id === store.id && styles.selectedStoreItem
+                      ]}
+                      onPress={() => {
+                        setSelectedStore(store);
+                        setShowStoreDropdown(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.storeItemText,
+                        selectedStore?.id === store.id && styles.selectedStoreItemText
+                      ]}>
+                        • {store.name}
+                      </Text>
+                      <Text style={[
+                        styles.storeTypeText,
+                        selectedStore?.id === store.id && styles.selectedStoreTypeText
+                      ]}>
+                        {store.type}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowStoreDropdown(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -282,145 +472,280 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  taskList: {
+  submitContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  taskCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  formSection: {
+    marginBottom: 24,
   },
-  completedTaskCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: '#22C55E',
+  formLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 12,
   },
-  taskHeader: {
+  storeSelector: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  taskType: {
+  storeSelectorText: {
+    fontSize: 16,
+    color: '#1e293b',
+  },
+  placeholderText: {
+    color: '#64748b',
+  },
+  photoUpload: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  uploadedPhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  uploadPlaceholder: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  uploadPlaceholderText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    backgroundColor: '#F33F32',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  tableSection: {
+    marginTop: 32,
+  },
+  tableTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  table: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  tableHeaderText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#475569',
+    textTransform: 'uppercase',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  tableCell: {
+    justifyContent: 'center',
+  },
+  tableCellText: {
+    fontSize: 14,
+    color: '#1e293b',
+  },
+  dateColumn: {
+    width: 80,
+  },
+  restaurantColumn: {
+    width: 120,
+  },
+  photoColumn: {
+    width: 60,
+  },
+  statusColumn: {
+    width: 80,
+  },
+  tablePhoto: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 12,
     gap: 4,
   },
-  taskTypeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#F33F32',
-  },
-  completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  approvedBadge: {
     backgroundColor: '#f0fdf4',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
   },
-  completedText: {
-    fontSize: 12,
+  pendingBadge: {
+    backgroundColor: '#fefce8',
+  },
+  statusText: {
+    fontSize: 10,
     fontWeight: '600',
+  },
+  approvedText: {
     color: '#22C55E',
   },
-  pointsBadge: {
-    flexDirection: 'row',
+  pendingText: {
+    color: '#F59E0B',
+  },
+  rewardsContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff7ed',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
+    paddingHorizontal: 20,
   },
-  pointsText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#f59e0b',
-  },
-  taskTitle: {
-    fontSize: 16,
+  rewardsTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1e293b',
     marginBottom: 8,
   },
-  taskDescription: {
-    fontSize: 14,
-    color: '#64748b',
-    marginBottom: 16,
-  },
-  taskDetails: {
-    gap: 8,
-    marginBottom: 16,
-  },
-  taskDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  taskDetailText: {
-    fontSize: 12,
+  rewardsSubtitle: {
+    fontSize: 16,
     color: '#64748b',
   },
-  taskButton: {
-    backgroundColor: '#F33F32',
-    paddingVertical: 12,
-    borderRadius: 8,
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
   },
-  taskButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
+  storeModal: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    margin: 20,
+    maxWidth: 350,
+    width: '90%',
+    maxHeight: '70%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  voucherContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  voucherInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  voucherText: {
-    fontSize: 14,
-    fontWeight: '600',
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#1e293b',
+    padding: 20,
+    paddingBottom: 16,
+    textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
   },
-  redeemButton: {
+  storeList: {
+    maxHeight: 300,
+  },
+  cityHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#F33F32',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#fef2f2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#fecaca',
+  },
+  storeItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  selectedStoreItem: {
     backgroundColor: '#F33F32',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
   },
-  redeemButtonText: {
+  storeItemText: {
+    fontSize: 14,
+    color: '#1e293b',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  selectedStoreItemText: {
     color: 'white',
+  },
+  storeTypeText: {
     fontSize: 12,
+    color: '#64748b',
+  },
+  selectedStoreTypeText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  modalCloseButton: {
+    backgroundColor: '#f8fafc',
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    color: '#64748b',
     fontWeight: '600',
   },
 });
