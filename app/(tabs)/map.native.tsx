@@ -840,7 +840,8 @@ const styles = StyleSheet.create({
     margin: 20,
     maxWidth: 350,
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '75%',
+    paddingVertical: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -848,20 +849,20 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   dropdownScrollView: {
-    padding: 20,
+    paddingHorizontal: 20,
   },
   dropdownTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e293b',
-    marginBottom: 20,
+    marginBottom: 10,
     textAlign: 'center',
   },
   dropdownItem: {
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 8,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   selectedDropdownItem: {
     backgroundColor: '#F33F32',
