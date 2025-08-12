@@ -8,26 +8,14 @@ import {
   ScrollView,
   Image,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { MapPin, Star, Phone, Clock, Navigation, ChevronDown } from 'lucide-react-native';
-import { db } from '../firebase';
-import { getDocs, collection } from 'firebase/firestore';
-
-import taitoonbaan from '../../assets/images/tai_toon_baan.jpeg';
-import white_rabbit from '../../assets/images/white_rabbit.jpeg';
-import versaile from '../../assets/images/versaile.jpeg';
-import sax from '../../assets/images/sax.jpeg';
-import matcha from '../../assets/images/matcha.jpeg';
-
-import come_true_cafe from '../../assets/images/come_true_cafe.jpeg';
-import zhang_lala from '../../assets/images/zhang_lala.jpeg';
-import fatt_kee from '@/assets/images/fatt_kee.jpeg';
-import mantra_bar from '@/assets/images/mantra_bar.jpeg';
-import mil_toast from '@/assets/images/mil_toast.jpeg';
-
+import { db } from '@/config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 interface PartnerStore {
   id: number;
   name: string;
@@ -57,14 +45,14 @@ export default function MapScreen() {
     'Kuala Lumpur': false,
   });
 
-   const fetchPartnerStores = async () => {
+  // Fetch partner stores from Firestore
+  const fetchPartnerStores = async () => {
     try {
       setLoading(true);
       const querySnapshot = await getDocs(collection(db, 'partner_store'));
       const stores: PartnerStore[] = [];
-      console.log("Fetching data...");
-
       let index = 1;
+      
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         stores.push({
@@ -84,8 +72,7 @@ export default function MapScreen() {
       });
       
       setPartnerStores(stores);
-      console.log('Fetched partner stores:', stores);
-      console.log('Total Fetched partner stores:', stores.length);
+      console.log('Fetched partner stores:', stores.length);
     } catch (error) {
       console.error('Error fetching partner stores:', error);
       Alert.alert('Error', 'Failed to load partner stores. Please try again.');
@@ -240,6 +227,13 @@ export default function MapScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#F33F32" />
+          <Text style={styles.loadingText}>Loading partner stores...</Text>
+        </View>
+      )}
+      
       <View style={styles.header}>
         <Text style={styles.title}>Partner Stores</Text>
         <Text style={styles.subtitle}>{getSubtitleText()}</Text>
@@ -296,7 +290,7 @@ export default function MapScreen() {
         <View style={styles.storeDetailsContainer}>
           <ScrollView style={styles.storeDetails} showsVerticalScrollIndicator={false}>
             <View style={styles.storeHeader}>
-              <Image source={{uri: selectedStore.image}} style={styles.storeImage} />
+              <Image source={{ uri: selectedStore.image }} style={styles.storeImage} />
               <View style={styles.storeInfo}>
                 <Text style={styles.storeName}>{selectedStore.name}</Text>
                 <Text style={styles.storeType}>{selectedStore.type}</Text>
@@ -526,6 +520,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(248, 250, 252, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#64748b',
+    fontWeight: '600',
   },
   header: {
     paddingHorizontal: 20,
