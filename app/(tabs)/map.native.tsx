@@ -64,11 +64,12 @@ export default function MapScreen() {
       setLoading(true);
       const querySnapshot = await getDocs(collection(db, 'partner_store'));
       const stores: PartnerStore[] = [];
+      let index = 1;
       
-      querySnapshot.forEach((doc, index) => {
+      querySnapshot.forEach((doc) => {
         const data = doc.data();
         stores.push({
-          id: index + 1, // Generate sequential ID
+          id: index, // Generate sequential ID
           name: data.name,
           type: data.type,
           city: data.city,
@@ -80,6 +81,7 @@ export default function MapScreen() {
           hours: data.hours,
           description: data.description,
         });
+        index++;
       });
       
       setPartnerStores(stores);
