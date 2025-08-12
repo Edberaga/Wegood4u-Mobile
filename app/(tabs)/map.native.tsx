@@ -8,11 +8,14 @@ import {
   ScrollView,
   Image,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { MapPin, Star, Phone, Clock, Navigation, ChevronDown } from 'lucide-react-native';
+import { db } from '@/config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 import taitoonbaan from '../../assets/images/tai_toon_baan.jpeg';
 import white_rabbit from '../../assets/images/white_rabbit.jpeg';
@@ -34,7 +37,7 @@ interface PartnerStore {
   latitude: number;
   longitude: number;
   rating: number;
-  image: number;
+  image: string;
   phone: string;
   hours: string;
   description: string;
@@ -45,6 +48,8 @@ export default function MapScreen() {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedStore, setSelectedStore] = useState<PartnerStore | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('All');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -53,138 +58,39 @@ export default function MapScreen() {
     'Kuala Lumpur': false,
   });
 
-  const partnerStores: PartnerStore[] = [
-    {
-      id: 1,
-      name: 'Tai Toon Baan',
-      type: 'Restaurant',
-      city: 'Chiang Mai',
-      latitude: 18.79210626514222, 
-      longitude: 98.99534619999957,
-      rating: 4.8,
-      image: taitoonbaan,
-      phone: '+1 (555) 123-4567',
-      hours: '7:00 AM - 9:00 PM',
-      description: 'Premium coffee and artisanal desserts in a cozy atmosphere',
-    },
-    {
-      id: 2,
-      name: 'White Rabbit',
-      type: 'Beverages',
-      city: 'Chiang Mai',
-      latitude: 18.79457375170442, 
-      longitude: 98.9871313730753,
-      rating: 4.6,
-      image: white_rabbit,
-      phone: '+1 (555) 234-5678',
-      hours: '11:00 AM - 11:00 PM',
-      description: 'Authentic Italian pizza made with fresh ingredients',
-    },
-    {
-      id: 3,
-      name: 'Versailles de Flore',
-      type: 'Restaurant',
-      city: 'Chiang Mai',
-      latitude: 18.795686889496963, 
-      longitude: 98.97918708594416,
-      rating: 4.9,
-      image: versaile,
-      phone: '+1 (555) 345-6789',
-      hours: '12:00 PM - 10:00 PM',
-      description: 'Fresh sushi and traditional Japanese dishes',
-    },
-    {
-      id: 4,
-      name: 'The Sax',
-      type: 'Beverages',
-      city: 'Chiang Mai',
-      latitude: 18.80070339757342,
-      longitude: 98.96800241540333,
-      rating: 4.4,
-      image: sax,
-      phone: '+1 (555) 456-7890',
-      hours: '10:00 AM - 12:00 AM',
-      description: 'Gourmet burgers and crispy fries',
-    },
-    {
-      id: 5,
-      name: 'Matchappen',
-      type: 'Coffee & Deserts',
-      city: 'Chiang Mai',
-      latitude: 18.83660650511071,
-      longitude: 99.0076904403956,
-      rating: 4.7,
-      image: matcha,
-      phone: '+1 (555) 567-8901',
-      hours: '8:00 AM - 8:00 PM',
-      description: 'Fresh salads, smoothies, and healthy options',
-    },
-    {
-      id: 6,
-      name: 'Come True Cafe',
-      type: 'Coffee & Deserts',
-      city: 'Kuala Lumpur',
-      latitude: 3.1508999154009265, 
-      longitude: 101.61523084010264,
-      rating: 4.7,
-      image: come_true_cafe,
-      phone: '+60125628150',
-      hours: '8:00 AM - 8:00 PM',
-      description: 'Steps into dreams to find expression in the art of coffee brewing',
-    },
-    {
-      id: 7,
-      name: 'Zhang Lala Mee Tarik',
-      type: 'Restaurant',
-      city: 'Kuala Lumpur',
-      latitude: 3.145256933974581,  
-      longitude: 101.70920651179703,
-      rating: 4.5,
-      image: zhang_lala,
-      phone: '+60176666989',
-      hours: '8:00 AM - 8:00 PM',
-      description: 'Famous Noodles Chinese Restaurant',
-    },
-    {
-      id: 8,
-      name: 'Fatt Kee Roast Fish',
-      type: 'Restaurant',
-      city: 'Kuala Lumpur',
-      latitude: 3.134100932844353,   
-      longitude: 101.7178196922422,
-      rating: 3.7,
-      image: fatt_kee,
-      phone: '+60392263310',
-      hours: '8:00 AM - 8:00 PM',
-      description: 'Chinese restaurant consistently attracts food lovers with its bold, and spicy seafood offering',
-    },
-    {
-      id: 9,
-      name: 'Mantra Rooftop Bar & Lounge',
-      type: 'Beverages',
-      city: 'Kuala Lumpur',
-      latitude: 3.130762841002217,     
-      longitude: 101.67153123815568,
-      rating: 4.5,
-      image: mantra_bar,
-      phone: '+60173448299',
-      hours: '8:00 AM - 8:00 PM',
-      description: 'Famous and Luxury Bar located at tallest rooftop',
-    },
-    {
-      id: 10,
-      name: 'Mil Toast House',
-      type: 'Coffee & Desserts',
-      city: 'Kuala Lumpur',
-      latitude: 3.1427845661664073,      
-      longitude: 101.7187573549815,
-      rating: 4.5,
-      image: mil_toast,
-      phone: '',
-      hours: '8:00 AM - 8:00 PM',
-      description: 'A Korean Dessert Paradise in Malaysia',
-    },
-  ];
+  // Fetch partner stores from Firestore
+  const fetchPartnerStores = async () => {
+    try {
+      setLoading(true);
+      const querySnapshot = await getDocs(collection(db, 'partner_store'));
+      const stores: PartnerStore[] = [];
+      
+      querySnapshot.forEach((doc, index) => {
+        const data = doc.data();
+        stores.push({
+          id: index + 1, // Generate sequential ID
+          name: data.name,
+          type: data.type,
+          city: data.city,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          rating: data.rating,
+          image: data.image,
+          phone: data.phone,
+          hours: data.hours,
+          description: data.description,
+        });
+      });
+      
+      setPartnerStores(stores);
+      console.log('Fetched partner stores:', stores.length);
+    } catch (error) {
+      console.error('Error fetching partner stores:', error);
+      Alert.alert('Error', 'Failed to load partner stores. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const chiangMaiStores = partnerStores.filter(store => store.city === 'Chiang Mai');
   const kualaLumpurStores = partnerStores.filter(store => store.city === 'Kuala Lumpur');
@@ -271,6 +177,7 @@ export default function MapScreen() {
 
   useEffect(() => {
     getUserLocation();
+    fetchPartnerStores();
   }, []);
 
   const getUserLocation = async () => {
@@ -331,6 +238,13 @@ export default function MapScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#F33F32" />
+          <Text style={styles.loadingText}>Loading partner stores...</Text>
+        </View>
+      )}
+      
       <View style={styles.header}>
         <Text style={styles.title}>Partner Stores</Text>
         <Text style={styles.subtitle}>{getSubtitleText()}</Text>
@@ -387,7 +301,7 @@ export default function MapScreen() {
         <View style={styles.storeDetailsContainer}>
           <ScrollView style={styles.storeDetails} showsVerticalScrollIndicator={false}>
             <View style={styles.storeHeader}>
-              <Image source={selectedStore.image} style={styles.storeImage} />
+              <Image source={{ uri: selectedStore.image }} style={styles.storeImage} />
               <View style={styles.storeInfo}>
                 <Text style={styles.storeName}>{selectedStore.name}</Text>
                 <Text style={styles.storeType}>{selectedStore.type}</Text>
@@ -617,6 +531,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(248, 250, 252, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#64748b',
+    fontWeight: '600',
   },
   header: {
     paddingHorizontal: 20,
