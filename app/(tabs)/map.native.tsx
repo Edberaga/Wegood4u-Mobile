@@ -120,8 +120,8 @@ export default function MapScreen() {
       return {
         latitude: specificStore.latitude,
         longitude: specificStore.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
       };
     }
     
@@ -129,23 +129,23 @@ export default function MapScreen() {
       return {
         latitude: 3.1390,
         longitude: 101.6869,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
       };
     } else if (selectedFilter === 'Chiang Mai') {
       return {
         latitude: 18.7883,
         longitude: 98.9853,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
       };
     } else {
       // Show both cities
       return {
-        latitude: 10.9,
-        longitude: 100.3,
-        latitudeDelta: 20,
-        longitudeDelta: 20,
+        latitude: 10.5,
+        longitude: 100.0,
+        latitudeDelta: 18,
+        longitudeDelta: 18,
       };
     }
   };
@@ -253,16 +253,34 @@ export default function MapScreen() {
         <MapView
           style={styles.map}
           region={getMapRegion()}
+          mapType="standard"
+          showsCompass={true}
+          showsScale={true}
+          showsBuildings={true}
+          showsTraffic={false}
+          showsIndoors={true}
+          loadingEnabled={true}
+          loadingIndicatorColor="#F33F32"
+          loadingBackgroundColor="#f8fafc"
           showsUserLocation={true}
           showsMyLocationButton={true}
+          followsUserLocation={false}
+          scrollEnabled={true}
+          zoomEnabled={true}
+          pitchEnabled={true}
+          rotateEnabled={true}
+          onMapReady={() => console.log('Map is ready')}
+          onRegionChangeComplete={(region) => console.log('Region changed:', region)}
         >
-          {partnerStores.map((store) => (
+          {filteredStores.map((store) => (
             <Marker
               key={store.id}
               coordinate={{
                 latitude: store.latitude,
                 longitude: store.longitude,
               }}
+              title={store.name}
+              description={`${store.type} • ${store.city}`}
               onPress={() => setSelectedStore(store)}
             >
               <View style={styles.markerContainer}>
@@ -284,6 +302,13 @@ export default function MapScreen() {
             </Marker>
           ))}
         </MapView>
+        
+        {loading && (
+          <View style={styles.mapLoadingOverlay}>
+            <ActivityIndicator size="large" color="#F33F32" />
+            <Text style={styles.mapLoadingText}>Loading map...</Text>
+          </View>
+        )}
       </View>
 
       {selectedStore && (
@@ -588,9 +613,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    backgroundColor: '#f8fafc',
   },
   map: {
     flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  mapLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(248, 250, 252, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  mapLoadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '600',
   },
   markerContainer: {
     alignItems: 'center',
