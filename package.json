@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 expo start",
+    "dev": "expo start",
     "build:web": "expo export --platform web",
     "lint": "expo lint"
   },
@@ -13,6 +13,7 @@
     "@lucide/lab": "^0.1.2",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
+    "@supabase/supabase-js": "^2.56.0",
     "axios": "^1.10.0",
     "expo": "53.0.20",
     "expo-blur": "~14.1.5",
