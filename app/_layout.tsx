@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 
 export default function RootLayout() {
   useFrameworkReady();
-  
+
   return (
     <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
