@@ -5,29 +5,28 @@ import type { Database } from '@/lib/supabase';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-interface AuthContextType {
+interface SupabaseAuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  loading: boolean;
   signUp: (email: string, password: string, invitationCode?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
+interface SupabaseAuthProviderProps {
   children: ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
@@ -37,7 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
-        setIsLoading(false);
+        setLoading(false);
       }
     });
 
@@ -51,7 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
-          setIsLoading(false);
+          setLoading(false);
         }
       }
     );
@@ -75,28 +74,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      throw new Error(error.message);
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, invitationCode?: string) => {
-    setIsLoading(true);
+    setLoading(true);
     try {
       // First, check if invitation code exists (if provided)
       let inviterId: string | undefined;
@@ -134,19 +117,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error: any) {
       throw new Error(error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      throw new Error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error: any) {
       throw new Error(error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -168,64 +167,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Legacy compatibility - map new auth to old interface
-  const login = async (username: string, password: string) => {
-    // Assume username is email for now
-    await signIn(username, password);
-  };
-
-  const register = async (email: string, password: string, displayName: string, invitationCode?: string) => {
-    await signUp(email, password, invitationCode);
-    
-    // Update profile with display name after signup
-    if (user) {
-      await updateProfile({ full_name: displayName });
-    }
-  };
-
-  const logout = async () => {
-    await signOut();
-  };
-
-  // Create a legacy user object for backward compatibility
-  const legacyUser = user && profile ? {
-    id: parseInt(user.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number
-    email: user.email || '',
-    displayName: profile.full_name || profile.username || 'User',
-  } : null;
-
-  const value: AuthContextType = {
+  const value: SupabaseAuthContextType = {
     user,
     profile,
     session,
-    isLoading,
-    isAuthenticated: !!user,
-    signIn,
+    loading,
     signUp,
+    signIn,
     signOut,
     updateProfile,
   };
 
-  // For backward compatibility, also provide legacy methods
-  const legacyValue = {
-    ...value,
-    user: legacyUser,
-    login,
-    register,
-    logout,
-  };
-
   return (
-    <AuthContext.Provider value={legacyValue as any}>
+    <SupabaseAuthContext.Provider value={value}>
       {children}
-    </AuthContext.Provider>
+    </SupabaseAuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+export function useSupabaseAuth() {
+  const context = useContext(SupabaseAuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider');
   }
   return context;
 }
