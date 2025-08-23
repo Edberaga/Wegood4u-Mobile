@@ -1,29 +1,23 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { supabase } from '@/lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
+import type { Database } from '@/lib/supabase';
 
-interface User {
-  id: number;
-  email: string;
-  displayName: string;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface AuthContextType {
   user: User | null;
+  profile: Profile | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
-  logout: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, invitationCode?: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Replace with your WordPress site URL
-const WORDPRESS_BASE_URL = process.env.EXPO_PUBLIC_WEBSITE_URL;
-
-const JWT_API_KEY = process.env.EXPO_PUBLIC_JWT_API_KEY;
-
-console.log(`Web: ${WORDPRESS_BASE_URL}, APi: ${JWT_API_KEY}`);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -31,117 +25,202 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Helper function to fetch user profile after successful authentication
-  const fetchUserProfile = async (token: string): Promise<User | null> => {
-    try {
-      console.log('Fetching user profile with token...');
-      
-      const response = await fetch(`${WORDPRESS_BASE_URL}/wp-json/wp/v2/users/me`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('User profile response status:', response.status);
-
-      if (response.ok) {
-        const wpUser = await response.json();
-        console.log('User profile fetched successfully:', wpUser.name);
-        return {
-          id: wpUser.id,
-          email: wpUser.email,
-          displayName: wpUser.name,
-        };
-      } else {
-        console.log('Failed to fetch user profile, status:', response.status);
-        const errorText = await response.text();
-        console.log('Error response:', errorText);
-      }
-      return null;
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
-    checkAuthStatus();
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setIsLoading(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const fetchProfile = async (userId: string) => {
     try {
-      const token = await SecureStore.getItemAsync('jwt_token');
-      if (token) {
-        console.log('Found stored token, checking validity...');
-        // Attempt to fetch user profile using the stored token
-        const fetchedUser = await fetchUserProfile(token);
-        if (fetchedUser) {
-          setUser(fetchedUser);
-        } else {
-          // Token might be invalid or expired, clear it
-          console.log('Token invalid, clearing stored token');
-          await SecureStore.deleteItemAsync('jwt_token');
-          setUser(null);
-        }
-      } else {
-        console.log('No stored token found');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
       }
+
+      setProfile(data);
     } catch (error) {
-      console.error('Auto-login failed:', error);
-      await SecureStore.deleteItemAsync('jwt_token');
-      setUser(null);
+      console.error('Error fetching profile:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (username: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      console.log('Attempting login for username:', username);
-      console.log('Login URL:', `${WORDPRESS_BASE_URL}/wp-json/api/v1/mo-jwt`);
-
-      // Add timeout to the fetch request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      const response = await fetch(`${WORDPRESS_BASE_URL}/wp-json/api/v1/mo-jwt`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-        signal: controller.signal,
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      clearTimeout(timeoutId);
-      console.log('Login response status:', response.status);
-      console.log('Login response headers:', response.headers);
+      if (error) throw error;
+    } catch (error: any) {
+      throw new Error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const data = await response.json();
-      console.log('Login response data:', data);
+  const signUp = async (email: string, password: string, invitationCode?: string) => {
+    setIsLoading(true);
+    try {
+      // First, check if invitation code exists (if provided)
+      let inviterId: string | undefined;
+      
+      if (invitationCode) {
+        const { data: inviteData, error: inviteError } = await supabase
+          .from('invitation_codes')
+          .select('user_id')
+          .eq('code', invitationCode)
+          .eq('is_active', true)
+          .single();
 
-       if (response.ok && data.jwt_token) {
-        const jwtToken = data.jwt_token;
-        console.log('Login successful, token received');
+        if (inviteError) {
+          throw new Error('Invalid invitation code');
+        }
+        inviterId = inviteData.user_id;
+      }
 
-        // Store token securely
-        await SecureStore.setItemAsync('jwt_token', jwtToken);
+      // Sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-        // Set default user data for now (skip profile fetch)
-        const defaultUser: User = {
-          id: 1,
-          email: `${username}@example.com`, // Use username as email placeholder
-          displayName: username, // Use username as display name
-        };
+      if (error) throw error;
+
+      // If we have an inviter, update the profile with inviter_id
+      if (data.user && inviterId) {
+        await supabase
+          .from('profiles')
+          .update({ inviter_id: inviterId })
+          .eq('id', data.user.id);
+      }
+
+    } catch (error: any) {
+      throw new Error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error: any) {
+      throw new Error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!user) throw new Error('No user logged in');
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  };
+
+  // Legacy compatibility - map new auth to old interface
+  const login = async (username: string, password: string) => {
+    // Assume username is email for now
+    await signIn(username, password);
+  };
+
+  const register = async (email: string, password: string, displayName: string, invitationCode?: string) => {
+    await signUp(email, password, invitationCode);
+    
+    // Update profile with display name after signup
+    if (user) {
+      await updateProfile({ full_name: displayName });
+    }
+  };
+
+  const logout = async () => {
+    await signOut();
+  };
+
+  // Create a legacy user object for backward compatibility
+  const legacyUser = user && profile ? {
+    id: parseInt(user.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number
+    email: user.email || '',
+    displayName: profile.full_name || profile.username || 'User',
+  } : null;
+
+  const value: AuthContextType = {
+    user,
+    profile,
+    session,
+    isLoading,
+    isAuthenticated: !!user,
+    signIn,
+    signUp,
+    signOut,
+    updateProfile,
+  };
+
+  // For backward compatibility, also provide legacy methods
+  const legacyValue = {
+    ...value,
+    user: legacyUser,
+    login,
+    register,
+    logout,
+  };
+
+  return (
+    <AuthContext.Provider value={legacyValue as any}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
         
         setUser(defaultUser);
         console.log('User set with default data:', defaultUser);
