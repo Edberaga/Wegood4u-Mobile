@@ -15,11 +15,6 @@ interface AuthContextType {
   signUp: (email: string, password: string, invitationCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
-  // Legacy compatibility methods
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
-  logout: () => Promise<void>;
-  // Legacy compatibility methods
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
   logout: () => Promise<void>;
