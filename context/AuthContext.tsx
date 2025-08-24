@@ -119,10 +119,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: 'wegood4u://auth/callback',
+        },
       });
 
       if (error) throw error;
 
+      // Check if user needs to verify email
+      if (data.user && !data.user.email_confirmed_at) {
+        throw new Error('Please check your email and click the verification link to complete registration.');
+      }
       // If we have an inviter, update the profile with inviter_id
       if (data.user && inviterId) {
         await supabase
