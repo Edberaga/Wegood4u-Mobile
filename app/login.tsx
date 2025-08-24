@@ -21,7 +21,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, user } = useAuth();
 
   const handleLogin = async () => {
     if (!username || !password) {
