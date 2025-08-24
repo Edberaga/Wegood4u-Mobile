@@ -24,7 +24,9 @@ export function EmailVerificationGuard({ children }: EmailVerificationGuardProps
         type: 'signup',
         email: user.email!,
         options: {
-          emailRedirectTo: 'wegood4u://auth/callback',
+          emailRedirectTo: typeof window !== 'undefined' 
+            ? `${window.location.origin}/auth/callback`
+            : 'wegood4u://auth/callback',
         },
       });
 
