@@ -124,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password,
         options: {
           emailRedirectTo: typeof window !== 'undefined' 
-            ? `${window.location.origin}/auth/callback`
+            ? 'https://wegood4u.com/auth/callback'
             : 'wegood4u://auth/callback',
         },
       });
