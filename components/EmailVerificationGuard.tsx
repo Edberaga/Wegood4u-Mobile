@@ -69,12 +69,15 @@ export function EmailVerificationGuard({ children }: EmailVerificationGuardProps
           
           <Text style={styles.title}>Verify Your Email</Text>
           <Text style={styles.subtitle}>
+            🎉 Your account has been successfully registered!
+          </Text>
+          <Text style={styles.subtitle}>
             We've sent a verification link to:
           </Text>
           <Text style={styles.email}>{user.email}</Text>
           
           <Text style={styles.description}>
-            Please check your email and click the verification link to complete your registration.
+            Please check your email and click the verification link to complete your registration and start using the app.
           </Text>
 
           <View style={styles.actions}>

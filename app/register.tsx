@@ -20,7 +20,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [invitationCode, setInvitationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -28,7 +28,7 @@ export default function RegisterScreen() {
   const { register, isLoading } = useAuth();
 
   const handleRegister = async () => {
-    if (!email || !password || !displayName) {
+    if (!email || !password || !username) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -44,10 +44,10 @@ export default function RegisterScreen() {
     }
 
     try {
-      await register(email, password, displayName, invitationCode || undefined);
+      await register(email, password, username, invitationCode || undefined);
       Alert.alert(
-        'Check Your Email', 
-        'We\'ve sent you a verification link. Please check your email and click the link to verify your account before logging in.',
+        'Registration Successful!', 
+        'Your account has been created successfully! We\'ve sent you a verification email. Please check your email and click the link to verify your account.',
         [
           { text: 'OK', onPress: () => router.replace('/login') }
         ]
@@ -87,11 +87,11 @@ export default function RegisterScreen() {
               <User size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Full Name"
+                placeholder="Username"
                 placeholderTextColor="#666"
-                value={displayName}
-                onChangeText={setDisplayName}
-                autoCapitalize="words"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
               />
             </View>
 
