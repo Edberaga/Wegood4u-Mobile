@@ -19,6 +19,10 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
   logout: () => Promise<void>;
+  // Legacy compatibility methods
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -215,19 +219,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
     updateProfile,
-  };
-
-  // For backward compatibility, also provide legacy methods
-  const legacyValue = {
-    ...value,
-    user: legacyUser,
     login,
     register,
     logout,
   };
 
   return (
-    <AuthContext.Provider value={legacyValue as any}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
