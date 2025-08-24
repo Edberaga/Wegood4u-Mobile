@@ -46,14 +46,14 @@ export default function RegisterScreen() {
     try {
       await register(email, password, username, invitationCode || undefined);
       Alert.alert(
-        'Registration Successful!', 
-        'Before creating your account, We\'ve sent you a verification email. Please check your email and click the link to verify your account.',
+        'Account Created Successfully! 🎉', 
+        'We\'ve sent a verification email to your inbox. Please check your email and click the verification link to activate your account.',
         [
           { text: 'OK', onPress: () => router.replace('/login') }
         ]
       );
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message);
+      Alert.alert('Unable to Create Account', error.message);
     }
   };
 

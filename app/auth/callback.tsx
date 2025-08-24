@@ -34,9 +34,26 @@ export default function AuthCallbackScreen() {
       if (session?.user?.email_confirmed_at) {
         setIsSuccess(true);
         
-        // Auto-redirect to app after 3 seconds
+        // Try to redirect to mobile app first, then fallback to web after 3 seconds
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // Immediately try to open the mobile app
+          window.location.href = 'wegood4u://auth/callback';
+          
+          // Fallback: If app doesn't open in 2 seconds, show continue button
+          setTimeout(() => {
+            setIsVerifying(false);
+          }, 2000);
+        }
+        
+        // Auto-redirect to web app after 3 seconds (for web users or fallback)
         setTimeout(() => {
-          router.replace('/(tabs)');
+          if (typeof window !== 'undefined') {
+            window.location.href = '/';
+          } else {
+            router.replace('/(tabs)');
+          }
         }, 3000);
       } else {
         setError('Email verification failed. Please try again.');
@@ -44,7 +61,11 @@ export default function AuthCallbackScreen() {
     } catch (err: any) {
       setError(err.message || 'Something went wrong during verification.');
     } finally {
-      setIsVerifying(false);
+      // Only set loading to false if we're not trying mobile redirect
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (!isMobile) {
+        setIsVerifying(false);
+      }
     }
   };
 
@@ -126,7 +147,7 @@ export default function AuthCallbackScreen() {
           
           <Text style={styles.title}>Email Verified Successfully! 🎉</Text>
           <Text style={styles.subtitle}>
-            Your account has been confirmed and you're ready to start your food journey with Wegood4u!
+            Your account has been successfully registered and verified! You're now ready to start your amazing food journey with Wegood4u.
           </Text>
           
           <View style={styles.features}>
@@ -136,13 +157,22 @@ export default function AuthCallbackScreen() {
             <Text style={styles.featureText}>👥 Invite friends and earn referral bonuses</Text>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={goToApp}>
-            <Text style={styles.buttonText}>Enter App</Text>
-            <ArrowRight size={20} color="#F33F32" />
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.button} onPress={goToApp}>
+              <Text style={styles.buttonText}>Enter App</Text>
+              <ArrowRight size={20} color="#F33F32" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.mobileButton} 
+              onPress={() => window.location.href = 'wegood4u://auth/callback'}
+            >
+              <Text style={styles.mobileButtonText}>Open Mobile App</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.autoRedirectText}>
-            You'll be automatically redirected in a few seconds...
+            Mobile users: The app should open automatically. Web users will be redirected shortly.
           </Text>
         </View>
       </LinearGradient>
@@ -230,5 +260,26 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  buttonContainer: {
+    width: '100%',
+    gap: 12,
+    marginBottom: 20,
+  },
+  mobileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  mobileButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
   },
 });
