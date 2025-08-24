@@ -91,7 +91,7 @@ export default function RegisterScreen() {
                 placeholderTextColor="#666"
                 value={username}
                 onChangeText={setUsername}
-                autoCapitalize="none"
+                autoCapitalize="words"
               />
             </View>
 
