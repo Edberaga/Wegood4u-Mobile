@@ -14,7 +14,7 @@ import {
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mail, Lock, Eye, EyeOff, User, Gift } from 'lucide-react-native';
-import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -24,8 +24,29 @@ export default function RegisterScreen() {
   const [invitationCode, setInvitationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
-  const { register, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  const validatePassword = (password: string) => {
+    const errors: string[] = [];
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('lowercase letter');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('uppercase letter');
+    }
+    if (!/\d/.test(password)) {
+      errors.push('digit');
+    }
+    
+    return errors;
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    setPasswordErrors(validatePassword(text));
+  };
 
   const handleRegister = async () => {
     if (!email || !password || !username) {
@@ -43,18 +64,80 @@ export default function RegisterScreen() {
       return;
     }
 
-    try {
-      await register(email, password, username, invitationCode || undefined);
+    const passwordValidationErrors = validatePassword(password);
+    if (passwordValidationErrors.length > 0) {
       Alert.alert(
-        'Account Created Successfully! 🎉', 
-        'We\'ve sent a verification email to your inbox. Please check your email and click the verification link to activate your account.',
-        [
-          { text: 'OK', onPress: () => router.replace('/login') }
-        ]
+        'Invalid Password', 
+        `Password must contain: ${passwordValidationErrors.join(', ')}`
       );
-    } catch (error: any) {
-      Alert.alert('Unable to Create Account', error.message);
+      return;
     }
+
+    setIsLoading(true);
+
+    try {
+      // First, check if invitation code exists (if provided)
+      if (invitationCode) {
+        const { data: inviteData, error: inviteError } = await supabase
+          .from('invitation_codes')
+          .select('user_id')
+          .eq('code', invitationCode)
+          .eq('is_active', true)
+          .single();
+
+        if (inviteError) {
+          throw new Error('Invalid invitation code');
+        }
+      }
+
+      // Sign up the user (this will send OTP)
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username,
+            full_name: username,
+          }
+        },
+      });
+
+      if (error) throw error;
+
+      // Navigate to OTP verification screen
+      router.push({
+        pathname: '/verify-otp',
+        params: {
+          email,
+          password,
+          username,
+          invitationCode: invitationCode || '',
+        },
+      });
+
+    } catch (error: any) {
+      Alert.alert('Registration Failed', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getPasswordHelperText = () => {
+    if (!password) return null;
+    
+    if (passwordErrors.length === 0) {
+      return (
+        <Text style={styles.passwordHelperValid}>
+          ✓ Password meets all requirements
+        </Text>
+      );
+    }
+    
+    return (
+      <Text style={styles.passwordHelperInvalid}>
+        Missing: {passwordErrors.join(', ')}
+      </Text>
+    );
   };
 
   const goToLogin = () => {
