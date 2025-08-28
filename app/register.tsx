@@ -360,4 +360,18 @@ const styles = StyleSheet.create({
     color: '#F33F32',
     fontWeight: '600',
   },
+  passwordHelperValid: {
+    fontSize: 12,
+    color: '#22C55E',
+    marginBottom: 16,
+    marginTop: -8,
+    paddingHorizontal: 16,
+  },
+  passwordHelperInvalid: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginBottom: 16,
+    marginTop: -8,
+    paddingHorizontal: 16,
+  },
 });

@@ -187,59 +187,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const register = async (email: string, password: string, username: string, invitationCode?: string) => {
-    // First, check if invitation code exists (if provided)
-    let inviterId: string | undefined;
-    
-    if (invitationCode) {
-      const { data: inviteData, error: inviteError } = await supabase
-        .from('invitation_codes')
-        .select('user_id')
-        .eq('code', invitationCode)
-        .eq('is_active', true)
-        .single();
-
-      if (inviteError) {
-        throw new Error('Invalid invitation code');
-      }
-      inviterId = inviteData.user_id;
-    }
-
-    // Sign up the user with username in user_metadata
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: 'wegood4u://auth/callback',
-        data: {
-          username: username,
-          full_name: username,
-        }
-      },
-    });
-
-    if (error) throw error;
-
-    // Check if user needs to verify email
-    if (data.user && !data.user.email_confirmed_at) {
-      throw new Error('Please check your email and click the verification link to complete registration.');
-    }
-
-    // If we have an inviter, update the profile with inviter_id and username
-    if (data.user) {
-      const updates: any = { 
-        username: username,
-        full_name: username 
-      };
-      
-      if (inviterId) {
-        updates.inviter_id = inviterId;
-      }
-      
-      await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', data.user.id);
-    }
+    // This method is now handled in the verify-otp screen
+    // The actual user creation happens after OTP verification
+    throw new Error('Use the OTP verification flow instead');
   };
 
   const logout = async () => {
