@@ -4,7 +4,7 @@ Wegood4u is a membership portal designed to connect bloggers and content creator
 ## 1. User Authentication & Roles
 The app will have a clear role-based system to manage user permissions.
 
-Standard Registration: Users can sign up and log in using standard authentication methods.
+Registration throught Email OTP Verification: To sign up the user required to verify their email address with OTP, and can also register with Google and Facebook Providers. Users can log in using standard authentication methods.
 
 Role Progression: Users progress through distinct roles:
 
