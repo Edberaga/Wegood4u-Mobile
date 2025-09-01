@@ -17,7 +17,7 @@ import { User, CreditCard as Edit3, Star, Gift, Share2, Settings, Bell, Shield, 
 import { useAuth } from '@/context/AuthContext';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.displayName || 'John Doe',
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
           text: 'Logout', 
           style: 'destructive', 
           onPress: async () => {
-            await logout();
+            await signOut();
             // Note: You might want to navigate to login screen here
             // router.replace('/login');
           }
