@@ -154,6 +154,20 @@ ALTER TABLE public.badges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_badges ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
+-- Add INSERT policy for profiles table
+CREATE POLICY "Allow profile creation via trigger"
+  ON public.profiles
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+-- Also add a policy for users to insert their own profile (as fallback)
+CREATE POLICY "Users can insert own profile"
+  ON public.profiles
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
+  
 CREATE POLICY "Users can read own profile"
   ON public.profiles
   FOR SELECT
