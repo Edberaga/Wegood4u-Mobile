@@ -20,7 +20,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [invitationCode, setInvitationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -68,7 +68,7 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password || !username) {
+    if (!email || !password || !displayName) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -93,7 +93,7 @@ export default function RegisterScreen() {
     }
 
     try {
-      await signUp(email, password, username, invitationCode || undefined);
+      await signUp(email, password, displayName, invitationCode || undefined);
       
       Alert.alert(
         'Account Created Successfully! 🎉',
@@ -137,10 +137,10 @@ export default function RegisterScreen() {
               <User size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Username"
+                placeholder="Display Name"
                 placeholderTextColor="#666"
-                value={username}
-                onChangeText={setUsername}
+                value={displayName}
+                onChangeText={setDisplayName}
                 autoCapitalize="none"
               />
             </View>

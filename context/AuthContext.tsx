@@ -12,11 +12,11 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, username: string, invitationCode?: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, username: string, invitationCode?: string) => Promise<void>;
+  register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
