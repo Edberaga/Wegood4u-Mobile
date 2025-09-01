@@ -31,16 +31,6 @@ export default function LoginScreen() {
 
     try {
       await login(username, password);
-      // Check if email is verified before allowing access
-      if (user && !user.email_confirmed_at) {
-        Alert.alert(
-          'Email Not Verified',
-          'Please check your email and click the verification link before logging in.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-      
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Login Failed', error.message);

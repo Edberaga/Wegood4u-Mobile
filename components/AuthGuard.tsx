@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { EmailVerificationGuard } from './EmailVerificationGuard';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -30,11 +29,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return null;
   }
 
-  return (
-    <EmailVerificationGuard>
-      {children}
-    </EmailVerificationGuard>
-  );
+  return <>{children}</>;
 }
 
 const styles = StyleSheet.create({

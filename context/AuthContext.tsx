@@ -12,11 +12,11 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, invitationCode?: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string, invitationCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
+  register: (email: string, password: string, username: string, invitationCode?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signUp = async (email: string, password: string, invitationCode?: string) => {
+  const signUp = async (email: string, password: string, username: string, invitationCode?: string) => {
     setIsLoading(true);
     try {
       // First, check if invitation code exists (if provided)
@@ -118,30 +118,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
         inviterId = inviteData.user_id;
       }
 
-      // Sign up the user
+      // Sign up the user directly (no email confirmation)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: typeof window !== 'undefined' 
-            ? 'https://wegood4u.com/auth/callback'
-            : 'wegood4u://auth/callback',
+          data: {
+            username: username,
+            full_name: username,
+          },
         },
       });
 
       if (error) throw error;
 
-      // Check if user needs to verify email
-      if (data.user && !data.user.email_confirmed_at) {
-        throw new Error('Please check your email and click the verification link to complete registration.');
+      if (!data.user) {
+        throw new Error('Failed to create user account');
       }
-      // If we have an inviter, update the profile with inviter_id
-      if (data.user && inviterId) {
-        await supabase
-          .from('profiles')
-          .update({ inviter_id: inviterId })
-          .eq('id', data.user.id);
+
+      // Update the profile with username and inviter_id if provided
+      const profileUpdates: any = {
+        username: username,
+        full_name: username,
+        role: 'subscriber', // Default role
+      };
+
+      if (inviterId) {
+        profileUpdates.inviter_id = inviterId;
       }
+
+      // Update the profile that was created by the trigger
+      await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', data.user.id);
 
     } catch (error: any) {
       throw new Error(error.message);
@@ -180,28 +190,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Legacy compatibility - map new auth to old interface
-  const login = async (username: string, password: string) => {
-    // Assume username is email for now
-    await signIn(username, password);
-  };
-
-  const register = async (email: string, password: string, username: string, invitationCode?: string) => {
-    // This method is now handled in the verify-otp screen
-    // The actual user creation happens after OTP verification
-    throw new Error('Use the OTP verification flow instead');
-  };
-
-  const logout = async () => {
-    await signOut();
-  };
-
-  // Create a legacy user object for backward compatibility
-  const legacyUser = user && profile ? {
-    id: parseInt(user.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number
-    email: user.email || '',
-    displayName: profile.full_name || profile.username || 'User',
-  } : null;
+  // Legacy compatibility methods
+  const login = signIn;
+  const register = signUp;
+  const logout = signOut;
 
   const value: AuthContextType = {
     user,

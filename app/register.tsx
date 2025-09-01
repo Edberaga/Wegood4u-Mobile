@@ -14,7 +14,7 @@ import {
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mail, Lock, Eye, EyeOff, User, Gift } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -24,8 +24,9 @@ export default function RegisterScreen() {
   const [invitationCode, setInvitationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  const { signUp, isLoading } = useAuth();
 
   const validatePassword = (password: string) => {
     const errors: string[] = [];
@@ -46,6 +47,24 @@ export default function RegisterScreen() {
   const handlePasswordChange = (text: string) => {
     setPassword(text);
     setPasswordErrors(validatePassword(text));
+  };
+
+  const getPasswordHelperText = () => {
+    if (!password) return null;
+    
+    if (passwordErrors.length === 0) {
+      return (
+        <Text style={styles.passwordHelperValid}>
+          ✓ Password meets all requirements
+        </Text>
+      );
+    }
+    
+    return (
+      <Text style={styles.passwordHelperInvalid}>
+        Missing: {passwordErrors.join(', ')}
+      </Text>
+    );
   };
 
   const handleRegister = async () => {
@@ -73,76 +92,19 @@ export default function RegisterScreen() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // First, check if invitation code exists (if provided)
-      if (invitationCode) {
-        const { data: inviteData, error: inviteError } = await supabase
-          .from('invitation_codes')
-          .select('user_id')
-          .eq('code', invitationCode)
-          .eq('is_active', true)
-          .single();
-
-        if (inviteError) {
-          throw new Error('Invalid invitation code');
-        }
-      }
-
-      // Sign up the user (this will send OTP)
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username,
-            full_name: username,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      // If for any reason a session is returned (email confirmation disabled), sign out to enforce OTP verification
-      if (data?.session) {
-        await supabase.auth.signOut();
-      }
-
-      // Navigate to OTP verification screen
-      router.push({
-        pathname: '/verify-otp',
-        params: {
-          email,
-          password,
-          username,
-          invitationCode: invitationCode || '',
-        },
-      });
-
+      await signUp(email, password, username, invitationCode || undefined);
+      
+      Alert.alert(
+        'Account Created Successfully! 🎉',
+        'Welcome to Wegood4u! You can now start exploring partner stores and earning rewards.',
+        [
+          { text: 'Continue', onPress: () => router.replace('/(tabs)') }
+        ]
+      );
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const getPasswordHelperText = () => {
-    if (!password) return null;
-    
-    if (passwordErrors.length === 0) {
-      return (
-        <Text style={styles.passwordHelperValid}>
-          ✓ Password meets all requirements
-        </Text>
-      );
-    }
-    
-    return (
-      <Text style={styles.passwordHelperInvalid}>
-        Missing: {passwordErrors.join(', ')}
-      </Text>
-    );
   };
 
   const goToLogin = () => {
@@ -179,7 +141,7 @@ export default function RegisterScreen() {
                 placeholderTextColor="#666"
                 value={username}
                 onChangeText={setUsername}
-                autoCapitalize="words"
+                autoCapitalize="none"
               />
             </View>
 
@@ -203,7 +165,7 @@ export default function RegisterScreen() {
                 placeholder="Password"
                 placeholderTextColor="#666"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={handlePasswordChange}
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity
@@ -217,6 +179,8 @@ export default function RegisterScreen() {
                 )}
               </TouchableOpacity>
             </View>
+            
+            {getPasswordHelperText()}
 
             <View style={styles.inputContainer}>
               <Lock size={20} color="#666" style={styles.inputIcon} />
@@ -338,6 +302,20 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 4,
   },
+  passwordHelperValid: {
+    fontSize: 12,
+    color: '#22C55E',
+    marginBottom: 16,
+    marginTop: -8,
+    paddingHorizontal: 16,
+  },
+  passwordHelperInvalid: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginBottom: 16,
+    marginTop: -8,
+    paddingHorizontal: 16,
+  },
   registerButton: {
     backgroundColor: '#F33F32',
     borderRadius: 12,
@@ -364,19 +342,5 @@ const styles = StyleSheet.create({
   loginLinkHighlight: {
     color: '#F33F32',
     fontWeight: '600',
-  },
-  passwordHelperValid: {
-    fontSize: 12,
-    color: '#22C55E',
-    marginBottom: 16,
-    marginTop: -8,
-    paddingHorizontal: 16,
-  },
-  passwordHelperInvalid: {
-    fontSize: 12,
-    color: '#EF4444',
-    marginBottom: 16,
-    marginTop: -8,
-    paddingHorizontal: 16,
   },
 });
