@@ -21,7 +21,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  const { login, isLoading, user } = useAuth();
+  const { signIn, isLoading, user } = useAuth();
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -30,7 +30,7 @@ export default function LoginScreen() {
     }
 
     try {
-      await login(username, password);
+      await signIn(username, password);
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Login Failed', error.message);
