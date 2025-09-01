@@ -312,8 +312,8 @@ CREATE POLICY "System can award badges"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, role)
-  VALUES (NEW.id, 'subscriber');
+  INSERT INTO public.profiles (id, username, role)
+  VALUES (NEW.id, NEW.raw_user_meta_data ->> 'username', 'subscriber');
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
