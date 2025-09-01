@@ -109,11 +109,10 @@ export default function VerifyOTPScreen() {
           }
         }
 
-        // Update the profile
+        // Create or update the profile
         await supabase
           .from('profiles')
-          .update(profileUpdates)
-          .eq('id', data.user.id);
+          .upsert({ id: data.user.id, ...profileUpdates }, { onConflict: 'id' });
 
         Alert.alert(
           'Account Created Successfully! 🎉',
@@ -137,15 +136,9 @@ export default function VerifyOTPScreen() {
     if (!canResend) return;
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
         email: email!,
-        password: password!,
-        options: {
-          data: {
-            username: username,
-            full_name: username,
-          }
-        },
       });
 
       if (error) throw error;
@@ -209,7 +202,7 @@ export default function VerifyOTPScreen() {
               {otp.map((digit, index) => (
                 <TextInput
                   key={index}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
+                  ref={(ref) => { inputRefs.current[index] = ref; }}
                   style={[
                     styles.otpInput,
                     digit && styles.otpInputFilled,

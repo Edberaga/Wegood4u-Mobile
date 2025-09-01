@@ -91,18 +91,23 @@ export default function RegisterScreen() {
       }
 
       // Sign up the user (this will send OTP)
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             username: username,
             full_name: username,
-          }
+          },
         },
       });
 
       if (error) throw error;
+
+      // If for any reason a session is returned (email confirmation disabled), sign out to enforce OTP verification
+      if (data?.session) {
+        await supabase.auth.signOut();
+      }
 
       // Navigate to OTP verification screen
       router.push({
@@ -158,7 +163,7 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.logoContainer}>
             <Image
-              source={require('../assets/images/site icon.png')}
+              source={require('../assets/images/icon.png')}
               style={styles.logo}
             />
             <Text style={styles.title}>Join Wegood4u</Text>
