@@ -136,22 +136,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Failed to create user account');
       }
 
-      // Update the profile with username and inviter_id if provided
-      const profileUpdates: any = {
-        username: username,
-        full_name: username,
-        role: 'subscriber', // Default role
-      };
-
+      // If we have an inviter, update the profile with inviter_id only
       if (inviterId) {
-        profileUpdates.inviter_id = inviterId;
+        await supabase
+          .from('profiles')
+          .update({ inviter_id: inviterId })
+          .eq('id', data.user.id);
       }
-
-      // Update the profile that was created by the trigger
-      await supabase
-        .from('profiles')
-        .update(profileUpdates)
-        .eq('id', data.user.id);
 
     } catch (error: any) {
       throw new Error(error.message);
