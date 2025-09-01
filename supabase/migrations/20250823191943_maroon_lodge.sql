@@ -1,3 +1,27 @@
+-- Profiles policies
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can read all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
+
+-- Invitation codes policies
+DROP POLICY IF EXISTS "Affiliates can read own invitation code" ON public.invitation_codes;
+DROP POLICY IF EXISTS "Admins can manage all invitation codes" ON public.invitation_codes;
+
+-- Submissions policies
+DROP POLICY IF EXISTS "Users can read own submissions" ON public.submissions;
+DROP POLICY IF EXISTS "Members can create submissions" ON public.submissions;
+DROP POLICY IF EXISTS "Admins can read all submissions" ON public.submissions;
+DROP POLICY IF EXISTS "Admins can update submissions" ON public.submissions;
+
+-- Badges policies
+DROP POLICY IF EXISTS "Authenticated users can read badges" ON public.badges;
+
+-- User badges policies
+DROP POLICY IF EXISTS "Users can read own badges" ON public.user_badges;
+DROP POLICY IF EXISTS "System can award badges" ON public.user_badges;
+
 /*
   # Wegood4u Membership Portal Database Schema
 
@@ -154,14 +178,6 @@ ALTER TABLE public.badges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_badges ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
--- Add INSERT policy for profiles table
-CREATE POLICY "Allow profile creation via trigger"
-  ON public.profiles
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
-
--- Also add a policy for users to insert their own profile (as fallback)
 CREATE POLICY "Users can insert own profile"
   ON public.profiles
   FOR INSERT
