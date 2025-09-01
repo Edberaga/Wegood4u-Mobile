@@ -95,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signUp = async (email: string, password: string, username: string, invitationCode?: string) => {
+  const signUp = async (email: string, password: string, displayName: string, invitationCode?: string) => {
     setIsLoading(true);
     try {
       // First, check if invitation code exists (if provided)
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         inviterId = inviteData.user_id;
       }
 
-      // Create user account with username in metadata for trigger
+      // Create user account with displayName in metadata for trigger
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -145,31 +145,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (updateError) {
           console.error('Error setting inviter:', updateError);
           // Don't throw error here - profile was created successfully
-        }
-        profileUpdates.inviter_id = inviterId;
-      }
-
-      // Update the profile that was created by the trigger
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(profileUpdates)
-        .eq('id', data.user.id);
-
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        // If update fails, try to insert the profile manually
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            username: username,
-            full_name: username,
-            role: 'subscriber',
-            inviter_id: inviterId,
-          });
-        
-        if (insertError) {
-          console.error('Profile insert error:', insertError);
         }
       }
 
@@ -210,11 +185,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Legacy compatibility methods
-  const login = signIn;
-  const register = signUp;
-  const logout = signOut;
-
   const value: AuthContextType = {
     user,
     profile,
@@ -225,9 +195,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
     updateProfile,
-    login,
-    register,
-    logout,
   };
 
   return (
