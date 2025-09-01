@@ -14,8 +14,8 @@
 
 -- Create function to insert user profile directly
 CREATE OR REPLACE FUNCTION public.insert_user_profile(
-  user_id uuid,
-  user_name text,
+  id uuid,
+  username text,
   user_role text DEFAULT 'subscriber',
   inviter_user_id uuid DEFAULT NULL
 )
