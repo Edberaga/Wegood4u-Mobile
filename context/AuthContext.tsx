@@ -115,10 +115,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         inviterId = inviteData.user_id;
       }
 
-      // Sign up the user directly (no email confirmation)
+      // Create user account with username in metadata for trigger
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            username: displayName,
+          },
+        },
         options: {
           data: {
             username: username,
@@ -133,17 +138,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Failed to create user account');
       }
 
-      // Wait a moment for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update the profile with username and inviter_id if provided
-      const profileUpdates: any = {
-        username: username,
-        full_name: username,
-        role: 'subscriber', // Default role
-      };
-
+      // If invitation code was provided, update the profile with inviter_id
       if (inviterId) {
+        // Wait a moment for the trigger to create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ inviter_id: inviterId })
+          .eq('id', data.user.id);
+
+        if (updateError) {
+          console.error('Error setting inviter:', updateError);
+          // Don't throw error here - profile was created successfully
+        }
         profileUpdates.inviter_id = inviterId;
       }
 
