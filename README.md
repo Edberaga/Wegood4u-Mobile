@@ -4,11 +4,13 @@ Wegood4u is a membership portal designed to connect bloggers and content creator
 ## 1. User Authentication & Roles
 The app will have a clear role-based system to manage user permissions.
 
-Registration throught Email OTP Verification: To sign up the user required to verify their email address with OTP, and can also register with Google and Facebook Providers. Users can log in using standard authentication methods.
+User able to register immediately but once they have register they can enter the App and can go to profile page to confirm their email address.
+
+The new register will have Subcriber role. To change to Email address they are required to confirm their email address!
 
 Role Progression: Users progress through distinct roles:
 
-- Subscriber: Default role after register. 
+- Subscriber: Default role after register. User with this role only able to view our partner stores location, blogs, and checking the setting.
 
 - Member: After completing membership verification. Members can participate in the core activities.
 
