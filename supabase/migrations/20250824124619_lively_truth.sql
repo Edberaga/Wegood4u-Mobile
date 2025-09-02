@@ -14,16 +14,18 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (
-    id, 
-    username, 
-    full_name,
-    role
+    id,
+    username,
+    role,
+    dob,
+    gender
   )
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'username', NULL),
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'username', NULL),
-    'subscriber'
+    NEW.raw_user_meta_data ->> 'username',
+    'subscriber',
+    (NEW.raw_user_meta_data ->> 'dob')::date,          -- cast to DATE
+    NEW.raw_user_meta_data ->> 'gender'               -- stored as text
   );
   RETURN NEW;
 END;
