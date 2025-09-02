@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff, User, Gift } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User, Gift, Calendar, Users } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterScreen() {
@@ -21,12 +21,17 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState('');
   const [invitationCode, setInvitationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
   const { signUp, isLoading } = useAuth();
+
+  const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
   const validatePassword = (password: string) => {
     const errors: string[] = [];
@@ -68,8 +73,23 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password || !displayName) {
+    if (!email || !password || !displayName || !dateOfBirth || !gender) {
       Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    // Validate date of birth format (YYYY-MM-DD)
+    const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dobRegex.test(dateOfBirth)) {
+      Alert.alert('Error', 'Please enter date of birth in YYYY-MM-DD format');
+      return;
+    }
+
+    // Validate date is not in the future
+    const dobDate = new Date(dateOfBirth);
+    const today = new Date();
+    if (dobDate > today) {
+      Alert.alert('Error', 'Date of birth cannot be in the future');
       return;
     }
 
@@ -93,7 +113,7 @@ export default function RegisterScreen() {
     }
 
     try {
-      await signUp(email, password, displayName, invitationCode || undefined);
+      await signUp(email, password, displayName, dateOfBirth, gender, invitationCode || undefined);
       
       Alert.alert(
         'Account Created Successfully! 🎉',
@@ -205,6 +225,30 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
+              <Calendar size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Date of Birth (YYYY-MM-DD)"
+                placeholderTextColor="#666"
+                value={dateOfBirth}
+                onChangeText={setDateOfBirth}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Users size={20} color="#666" style={styles.inputIcon} />
+              <TouchableOpacity
+                style={styles.genderSelector}
+                onPress={() => setShowGenderDropdown(true)}
+              >
+                <Text style={[styles.genderSelectorText, !gender && styles.placeholderText]}>
+                  {gender || 'Select Gender'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
               <Gift size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
@@ -234,6 +278,41 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
+
+      {/* Gender Selection Modal */}
+      {showGenderDropdown && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.genderModal}>
+            <Text style={styles.modalTitle}>Select Gender</Text>
+            {genderOptions.map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.genderOption,
+                  gender === option && styles.selectedGenderOption
+                ]}
+                onPress={() => {
+                  setGender(option);
+                  setShowGenderDropdown(false);
+                }}
+              >
+                <Text style={[
+                  styles.genderOptionText,
+                  gender === option && styles.selectedGenderOptionText
+                ]}>
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowGenderDropdown(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -341,6 +420,79 @@ const styles = StyleSheet.create({
   },
   loginLinkHighlight: {
     color: '#F33F32',
+    fontWeight: '600',
+  },
+  genderSelector: {
+    flex: 1,
+    paddingVertical: 4,
+  },
+  genderSelectorText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  placeholderText: {
+    color: '#666',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  genderModal: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    margin: 20,
+    width: '80%',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    padding: 20,
+    paddingBottom: 16,
+    textAlign: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  genderOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  selectedGenderOption: {
+    backgroundColor: '#F33F32',
+  },
+  genderOptionText: {
+    fontSize: 16,
+    color: '#1e293b',
+    textAlign: 'center',
+  },
+  selectedGenderOptionText: {
+    color: 'white',
+  },
+  modalCloseButton: {
+    backgroundColor: '#f8fafc',
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    color: '#64748b',
     fontWeight: '600',
   },
 });

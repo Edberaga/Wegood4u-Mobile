@@ -12,7 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string, invitationCode?: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, dateOfBirth: string, gender: string, invitationCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signUp = async (email: string, password: string, displayName: string, invitationCode?: string) => {
+  const signUp = async (email: string, password: string, displayName: string, dateOfBirth: string, gender: string, invitationCode?: string) => {
     setIsLoading(true);
     try {
       // First, check if invitation code exists (if provided)
@@ -115,13 +115,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         inviterId = inviteData.user_id;
       }
 
-      // Create user account with displayName in metadata for trigger
+      // Create user account with all required data in metadata for trigger
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             username: displayName,
+            dob: dateOfBirth,
+            gender: gender,
           },
         },
       });
@@ -132,7 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Failed to create user account');
       }
 
-      // If invitation code was provided, update the profile with inviter_id
+      // If invitation code was provided, update the profile with inviter_id after trigger creates it
       if (inviterId) {
         // Wait a moment for the trigger to create the profile
         await new Promise(resolve => setTimeout(resolve, 1000));
