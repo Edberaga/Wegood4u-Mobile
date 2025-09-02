@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff, User, Gift, Calendar, Users } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User, Gift, Calendar, Users, ChevronDown } from 'lucide-react-native';
+import DatePicker from 'react-native-date-picker';
 import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterScreen() {
@@ -21,13 +22,14 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState(new Date());
   const [gender, setGender] = useState('');
   const [invitationCode, setInvitationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const { signUp, isLoading } = useAuth();
 
@@ -78,17 +80,9 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Validate date of birth format (YYYY-MM-DD)
-    const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dobRegex.test(dateOfBirth)) {
-      Alert.alert('Error', 'Please enter date of birth in YYYY-MM-DD format');
-      return;
-    }
-
     // Validate date is not in the future
-    const dobDate = new Date(dateOfBirth);
     const today = new Date();
-    if (dobDate > today) {
+    if (dateOfBirth > today) {
       Alert.alert('Error', 'Date of birth cannot be in the future');
       return;
     }
@@ -113,7 +107,9 @@ export default function RegisterScreen() {
     }
 
     try {
-      await signUp(email, password, displayName, dateOfBirth, gender, invitationCode || undefined);
+      // Format date as YYYY-MM-DD for database
+      const formattedDate = dateOfBirth.toISOString().split('T')[0];
+      await signUp(email, password, displayName, formattedDate, gender, invitationCode || undefined);
       
       Alert.alert(
         'Account Created Successfully! 🎉',
@@ -150,6 +146,32 @@ export default function RegisterScreen() {
             />
             <Text style={styles.title}>Join Wegood4u</Text>
             <Text style={styles.subtitle}>Start your food journey today</Text>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Calendar size={20} color="#666" style={styles.inputIcon} />
+            <TouchableOpacity
+              style={styles.dateSelector}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={styles.dateSelectorText}>
+                {dateOfBirth.toLocaleDateString()}
+              </Text>
+              <ChevronDown size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Users size={20} color="#666" style={styles.inputIcon} />
+            <TouchableOpacity
+              style={styles.genderSelector}
+              onPress={() => setShowGenderDropdown(true)}
+            >
+              <Text style={[styles.genderSelectorText, !gender && styles.placeholderText]}>
+                {gender || 'Select Gender'}
+              </Text>
+              <ChevronDown size={20} color="#666" />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.formContainer}>
@@ -225,30 +247,6 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Calendar size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Date of Birth "
-                placeholderTextColor="#666"
-                value={dateOfBirth}
-                onChangeText={setDateOfBirth}
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Users size={20} color="#666" style={styles.inputIcon} />
-              <TouchableOpacity
-                style={styles.genderSelector}
-                onPress={() => setShowGenderDropdown(true)}
-              >
-                <Text style={[styles.genderSelectorText, !gender && styles.placeholderText]}>
-                  {gender || 'Select Gender'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.inputContainer}>
               <Gift size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
@@ -278,6 +276,22 @@ export default function RegisterScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
+
+      {/* Date Picker Modal */}
+      <DatePicker
+        modal
+        open={showDatePicker}
+        date={dateOfBirth}
+        mode="date"
+        maximumDate={new Date()}
+        onConfirm={(date) => {
+          setShowDatePicker(false);
+          setDateOfBirth(date);
+        }}
+        onCancel={() => {
+          setShowDatePicker(false);
+        }}
+      />
 
       {/* Gender Selection Modal */}
       {showGenderDropdown && (
@@ -425,8 +439,22 @@ const styles = StyleSheet.create({
   genderSelector: {
     flex: 1,
     paddingVertical: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   genderSelectorText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dateSelector: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  dateSelectorText: {
     fontSize: 16,
     color: '#333',
   },

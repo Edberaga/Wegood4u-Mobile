@@ -115,10 +115,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         inviterId = inviteData.user_id;
       }
 
-      // Create user account with all required data in metadata for trigger
+      // Create user account with metadata for trigger
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            username: displayName,
+            dob: dateOfBirth,
+            gender: gender,
+          },
+        },
         options: {
           data: {
             username: displayName,
