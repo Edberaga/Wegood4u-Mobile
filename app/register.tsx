@@ -30,7 +30,6 @@ export default function RegisterScreen() {
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const { signUp, isLoading } = useAuth();
 
