@@ -126,13 +126,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             gender: gender,
           },
         },
-        options: {
-          data: {
-            username: displayName,
-            dob: dateOfBirth,
-            gender: gender,
-          },
-        },
       });
 
       if (error) throw error;
