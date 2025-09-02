@@ -228,7 +228,7 @@ export default function RegisterScreen() {
               <Calendar size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Date of Birth (YYYY-MM-DD)"
+                placeholder="Date of Birth "
                 placeholderTextColor="#666"
                 value={dateOfBirth}
                 onChangeText={setDateOfBirth}
