@@ -30,6 +30,7 @@ export default function RegisterScreen() {
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const { signUp, isLoading } = useAuth();
 
@@ -278,20 +279,20 @@ export default function RegisterScreen() {
       </LinearGradient>
 
       {/* Date Picker Modal */}
-      <DateTimePicker
-        modal
-        open={showDatePicker}
-        date={dateOfBirth}
-        mode="date"
-        maximumDate={new Date()}
-        onConfirm={(event: any, date: Date) => {
-          setShowDatePicker(false);
-          setDateOfBirth(date);
-        }}
-        onCancel={() => {
-          setShowDatePicker(false);
-        }}
-      />
+      {showDatePicker && (
+        <DateTimePicker
+          value={dateOfBirth}
+          mode="date"
+          display="default"
+          maximumDate={new Date()}
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) {
+              setDateOfBirth(selectedDate);
+            }
+          }}
+        />
+      )}
 
       {/* Gender Selection Modal */}
       {showGenderDropdown && (
