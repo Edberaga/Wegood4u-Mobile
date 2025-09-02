@@ -14,7 +14,7 @@ import {
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Mail, Lock, Eye, EyeOff, User, Gift, Calendar, Users, ChevronDown } from 'lucide-react-native';
-import DatePicker from 'react-native-date-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterScreen() {
@@ -148,38 +148,12 @@ export default function RegisterScreen() {
             <Text style={styles.subtitle}>Start your food journey today</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Calendar size={20} color="#666" style={styles.inputIcon} />
-            <TouchableOpacity
-              style={styles.dateSelector}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.dateSelectorText}>
-                {dateOfBirth.toLocaleDateString()}
-              </Text>
-              <ChevronDown size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Users size={20} color="#666" style={styles.inputIcon} />
-            <TouchableOpacity
-              style={styles.genderSelector}
-              onPress={() => setShowGenderDropdown(true)}
-            >
-              <Text style={[styles.genderSelectorText, !gender && styles.placeholderText]}>
-                {gender || 'Select Gender'}
-              </Text>
-              <ChevronDown size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
               <User size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Display Name"
+                placeholder="Username"
                 placeholderTextColor="#666"
                 value={displayName}
                 onChangeText={setDisplayName}
@@ -198,6 +172,32 @@ export default function RegisterScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Calendar size={20} color="#666" style={styles.inputIcon} />
+              <TouchableOpacity
+                style={styles.dateSelector}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={styles.dateSelectorText}>
+                  {dateOfBirth.toLocaleDateString()}
+                </Text>
+                <ChevronDown size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Users size={20} color="#666" style={styles.inputIcon} />
+              <TouchableOpacity
+                style={styles.genderSelector}
+                onPress={() => setShowGenderDropdown(true)}
+              >
+                <Text style={[styles.genderSelectorText, !gender && styles.placeholderText]}>
+                  {gender || 'Select Gender'}
+                </Text>
+                <ChevronDown size={20} color="#666" />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.inputContainer}>
@@ -278,13 +278,13 @@ export default function RegisterScreen() {
       </LinearGradient>
 
       {/* Date Picker Modal */}
-      <DatePicker
+      <DateTimePicker
         modal
         open={showDatePicker}
         date={dateOfBirth}
         mode="date"
         maximumDate={new Date()}
-        onConfirm={(date) => {
+        onConfirm={(event: any, date: Date) => {
           setShowDatePicker(false);
           setDateOfBirth(date);
         }}
