@@ -83,7 +83,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   verification_completed boolean DEFAULT false,
   affiliate_request_status text CHECK (affiliate_request_status IN ('pending', 'approved', 'rejected')) DEFAULT NULL,
   created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
+  updated_at timestamptz DEFAULT now(),
+  avatar_url text
 );
 
 COMMENT ON TABLE public.profiles IS 'Stores all public user data and questionnaire responses.';
