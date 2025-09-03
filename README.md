@@ -10,11 +10,18 @@ The new register will have Subcriber role. To change to Email address they are r
 
 Role Progression: Users progress through distinct roles:
 
-- Subscriber: Default role after register. User with this role only able to view our partner stores location, blogs, and checking the setting.
+-- Subscriber: Default role after register. User with this role only able to view our partner stores location, blogs, and checking the setting. They are not able to participate member activities such as upload proof or travel or requesting for invitation code.
 
-- Member: After completing membership verification. Members can participate in the core activities.
+In order to be member, User with Subscriber requires to:
+1. Required to confirm email address
+2. Required to confirm phone number
+3. Required to fill the questionnaires form
 
-- Affiliate Member: A Member who has been approved by an admin and granted a unique invitation code. This role unlocks the affiliate system features.
+The Confirm email address and phone number will be located at the account tab, while questionnaires form at Task tab
+
+-- Member: After completing membership questionnaire form and confirm email and phone number. Members can participate in the core activities.
+
+-- Affiliate Member: A Member who has been approved by an admin and granted a unique invitation code. This role unlocks the affiliate system features.
 
 Admin: A privileged user who manages the approval workflow and the affiliate system.
 
