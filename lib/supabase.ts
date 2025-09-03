@@ -54,6 +54,7 @@ export type Database = {
           full_name: string | null;
           dob: string | null;
           country_of_residence: string | null;
+          gender: string | null;
           preferred_communication_channel: 'WhatsApp' | 'Telegram' | 'Line' | 'WeChat' | null;
           communication_contact_details: string | null;
           travel_destination_category: string | null;
@@ -64,6 +65,7 @@ export type Database = {
           role: 'subscriber' | 'member' | 'affiliate' | 'admin';
           verification_completed: boolean;
           affiliate_request_status: 'pending' | 'approved' | 'rejected' | null;
+          avatar_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -74,6 +76,7 @@ export type Database = {
           full_name?: string | null;
           dob?: string | null;
           country_of_residence?: string | null;
+          gender?: string | null;
           preferred_communication_channel?: 'WhatsApp' | 'Telegram' | 'Line' | 'WeChat' | null;
           communication_contact_details?: string | null;
           travel_destination_category?: string | null;
@@ -84,6 +87,7 @@ export type Database = {
           role?: 'subscriber' | 'member' | 'affiliate' | 'admin';
           verification_completed?: boolean;
           affiliate_request_status?: 'pending' | 'approved' | 'rejected' | null;
+          avatar_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -94,6 +98,7 @@ export type Database = {
           full_name?: string | null;
           dob?: string | null;
           country_of_residence?: string | null;
+          gender?: string | null;
           preferred_communication_channel?: 'WhatsApp' | 'Telegram' | 'Line' | 'WeChat' | null;
           communication_contact_details?: string | null;
           travel_destination_category?: string | null;
@@ -104,6 +109,7 @@ export type Database = {
           role?: 'subscriber' | 'member' | 'affiliate' | 'admin';
           verification_completed?: boolean;
           affiliate_request_status?: 'pending' | 'approved' | 'rejected' | null;
+          avatar_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
