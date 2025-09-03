@@ -19,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { countries, type Country } from '@/data/countries';
 import { supabase } from '@/lib/supabase';
+import { useUser } from '@/context/UserContext';
 
 interface FormData {
   fullName: string;
@@ -44,6 +45,7 @@ interface FormData {
 }
 
 export default function QuestionnairePage() {
+  const { userData } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
@@ -145,7 +147,7 @@ export default function QuestionnairePage() {
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      if (!user) {
+      if (!userData) {
         Alert.alert('Authentication Required', 'Please sign in to submit the questionnaire');
         return;
       }
@@ -206,7 +208,7 @@ export default function QuestionnairePage() {
         const { error } = await supabase
           .from('profiles')
           .upsert({
-            id: user.id,
+            id: userData.id,
             full_name: formData.fullName,
             country_of_residence: formData.countryOfResidence,
             preferred_communication_channel: formData.communicationChannel as any,

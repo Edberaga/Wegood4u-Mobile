@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star, Award, Coffee, UtensilsCrossed, Store } from 'lucide-react-native';
+import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star, Award, Coffee, UtensilsCrossed, Store, Mail, Phone, FileText, X, RefreshCw } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { useUser } from '@/context/UserContext';
 
 interface Submission {
   id: number;
@@ -47,6 +49,7 @@ interface BadgeCategory {
 }
 
 export default function TasksScreen() {
+  const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
   const [activeTab, setActiveTab] = useState<'submit' | 'rewards'>('submit');
   
   // Form states
@@ -55,6 +58,7 @@ export default function TasksScreen() {
   const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   const partnerStores: PartnerStore[] = [
     // Chiang Mai stores
@@ -240,6 +244,191 @@ export default function TasksScreen() {
     }, 2000);
   };
 
+  const handleResendEmail = async () => {
+    setIsResendingEmail(true);
+    try {
+      await resendEmailConfirmation();
+      Alert.alert('Success', 'Confirmation email sent! Please check your inbox.');
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
+
+  const navigateToQuestionnaire = () => {
+    router.push('/question');
+  };
+
+  // Show loading state
+  if (userLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state if no user data
+  if (!userData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Unable to load user data</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refreshUserData}>
+            <RefreshCw size={16} color="#F33F32" />
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Render verification checklist for subscribers
+  if (userData.role === 'subscriber') {
+    const isEmailConfirmed = !!userData.emailConfirmedAt;
+    const isPhoneConfirmed = !!userData.phoneConfirmedAt;
+    const isQuestionnaireComplete = userData.verificationCompleted;
+
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Unverified Member</Text>
+          <Text style={styles.subtitle}>Complete verification to unlock all features</Text>
+        </View>
+
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.verificationContainer}>
+            <Text style={styles.verificationTitle}>Verification Checklist</Text>
+            <Text style={styles.verificationSubtitle}>
+              Complete all steps below to become a verified member and unlock travel proof uploads and rewards.
+            </Text>
+
+            {/* Email Confirmation */}
+            <View style={styles.checklistItem}>
+              <View style={styles.checklistHeader}>
+                <View style={styles.checklistIconContainer}>
+                  <Mail size={20} color={isEmailConfirmed ? '#22C55E' : '#64748B'} />
+                </View>
+                <View style={styles.checklistContent}>
+                  <Text style={styles.checklistTitle}>Confirm Email Address</Text>
+                  <Text style={styles.checklistDescription}>
+                    {isEmailConfirmed 
+                      ? 'Your email has been confirmed' 
+                      : 'Please check your email and click the confirmation link'
+                    }
+                  </Text>
+                </View>
+                <View style={styles.checklistStatus}>
+                  {isEmailConfirmed ? (
+                    <CheckCircle size={24} color="#22C55E" />
+                  ) : (
+                    <X size={24} color="#EF4444" />
+                  )}
+                </View>
+              </View>
+              {!isEmailConfirmed && (
+                <TouchableOpacity
+                  style={[styles.actionButton, isResendingEmail && styles.actionButtonDisabled]}
+                  onPress={handleResendEmail}
+                  disabled={isResendingEmail}
+                >
+                  <Mail size={16} color="#F33F32" />
+                  <Text style={styles.actionButtonText}>
+                    {isResendingEmail ? 'Sending...' : 'Resend Confirmation Email'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Phone Confirmation */}
+            <View style={styles.checklistItem}>
+              <View style={styles.checklistHeader}>
+                <View style={styles.checklistIconContainer}>
+                  <Phone size={20} color={isPhoneConfirmed ? '#22C55E' : '#64748B'} />
+                </View>
+                <View style={styles.checklistContent}>
+                  <Text style={styles.checklistTitle}>Confirm Phone Number</Text>
+                  <Text style={styles.checklistDescription}>
+                    {isPhoneConfirmed 
+                      ? 'Your phone number has been confirmed' 
+                      : 'Phone number confirmation is required'
+                    }
+                  </Text>
+                </View>
+                <View style={styles.checklistStatus}>
+                  {isPhoneConfirmed ? (
+                    <CheckCircle size={24} color="#22C55E" />
+                  ) : (
+                    <X size={24} color="#EF4444" />
+                  )}
+                </View>
+              </View>
+              {!isPhoneConfirmed && (
+                <TouchableOpacity style={styles.actionButton}>
+                  <Phone size={16} color="#F33F32" />
+                  <Text style={styles.actionButtonText}>Add Phone Number</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Questionnaire */}
+            <View style={styles.checklistItem}>
+              <View style={styles.checklistHeader}>
+                <View style={styles.checklistIconContainer}>
+                  <FileText size={20} color={isQuestionnaireComplete ? '#22C55E' : '#64748B'} />
+                </View>
+                <View style={styles.checklistContent}>
+                  <Text style={styles.checklistTitle}>Fill the Questionnaire Form</Text>
+                  <Text style={styles.checklistDescription}>
+                    {isQuestionnaireComplete 
+                      ? 'Questionnaire has been completed' 
+                      : 'Complete the travel questionnaire to help us serve you better'
+                    }
+                  </Text>
+                </View>
+                <View style={styles.checklistStatus}>
+                  {isQuestionnaireComplete ? (
+                    <CheckCircle size={24} color="#22C55E" />
+                  ) : (
+                    <X size={24} color="#EF4444" />
+                  )}
+                </View>
+              </View>
+              {!isQuestionnaireComplete && (
+                <TouchableOpacity style={styles.actionButton} onPress={navigateToQuestionnaire}>
+                  <FileText size={16} color="#F33F32" />
+                  <Text style={styles.actionButtonText}>Fill Out Verification Form</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Progress Summary */}
+            <View style={styles.progressSummary}>
+              <Text style={styles.progressTitle}>Verification Progress</Text>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { 
+                      width: `${((isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0)) / 3 * 100}%` 
+                    }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.progressText}>
+                {((isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0))} of 3 steps completed
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // Render main task view for members and affiliates
   const groupedStores = partnerStores.reduce((acc, store) => {
     if (!acc[store.city]) {
       acc[store.city] = [];
@@ -802,6 +991,156 @@ const styles = StyleSheet.create({
   },
   pendingText: {
     color: '#F59E0B',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#64748B',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#F33F32',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#F33F32',
+    fontWeight: '600',
+  },
+  verificationContainer: {
+    padding: 20,
+  },
+  verificationTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  verificationSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 32,
+  },
+  checklistItem: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  checklistHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  checklistIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f8fafc',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  checklistContent: {
+    flex: 1,
+  },
+  checklistTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  checklistDescription: {
+    fontSize: 14,
+    color: '#64748B',
+    lineHeight: 18,
+  },
+  checklistStatus: {
+    marginLeft: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#F33F32',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  actionButtonDisabled: {
+    opacity: 0.6,
+  },
+  actionButtonText: {
+    color: '#F33F32',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  progressSummary: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#F33F32',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    fontWeight: '600',
   },
   rewardsContainer: {
     paddingHorizontal: 20,
