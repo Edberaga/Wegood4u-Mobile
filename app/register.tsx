@@ -17,14 +17,26 @@ import { Mail, Lock, Eye, EyeOff, User, Gift, Calendar, Users, ChevronDown } fro
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '@/context/AuthContext';
 
+interface FormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  displayName: string;
+  dateOfBirth: Date;
+  gender: string;
+  invitationCode: string;
+}
+
 export default function RegisterScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState(new Date());
-  const [gender, setGender] = useState('');
-  const [invitationCode, setInvitationCode] = useState('');
+  const [formData, setFormData] = useState<FormData>({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    displayName: '',
+    dateOfBirth: new Date(),
+    gender: '',
+    invitationCode: '',
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
@@ -34,6 +46,10 @@ export default function RegisterScreen() {
   const { signUp, isLoading } = useAuth();
 
   const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
+
+  const updateFormData = <K extends keyof FormData>(key: K, value: FormData[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
 
   const validatePassword = (password: string) => {
     const errors: string[] = [];
@@ -52,12 +68,12 @@ export default function RegisterScreen() {
   };
 
   const handlePasswordChange = (text: string) => {
-    setPassword(text);
+    updateFormData('password', text);
     setPasswordErrors(validatePassword(text));
   };
 
   const getPasswordHelperText = () => {
-    if (!password) return null;
+    if (!formData.password) return null;
     
     if (passwordErrors.length === 0) {
       return (
@@ -75,29 +91,29 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!email || !password || !displayName || !dateOfBirth || !gender) {
+    if (!formData.email || !formData.password || !formData.displayName || !formData.dateOfBirth || !formData.gender) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
     // Validate date is not in the future
     const today = new Date();
-    if (dateOfBirth > today) {
+    if (formData.dateOfBirth > today) {
       Alert.alert('Error', 'Date of birth cannot be in the future');
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
-    if (password.length < 6) {
+    if (formData.password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters long');
       return;
     }
 
-    const passwordValidationErrors = validatePassword(password);
+    const passwordValidationErrors = validatePassword(formData.password);
     if (passwordValidationErrors.length > 0) {
       Alert.alert(
         'Invalid Password', 
@@ -108,8 +124,15 @@ export default function RegisterScreen() {
 
     try {
       // Format date as YYYY-MM-DD for database
-      const formattedDate = dateOfBirth.toISOString().split('T')[0];
-      await signUp(email, password, displayName, formattedDate, gender, invitationCode || undefined);
+      const formattedDate = formData.dateOfBirth.toISOString().split('T')[0];
+      await signUp(
+        formData.email, 
+        formData.password, 
+        formData.displayName, 
+        formattedDate, 
+        formData.gender, 
+        formData.invitationCode || undefined
+      );
       
       Alert.alert(
         'Account Created Successfully! 🎉',
@@ -155,8 +178,8 @@ export default function RegisterScreen() {
                 style={styles.input}
                 placeholder="Username"
                 placeholderTextColor="#666"
-                value={displayName}
-                onChangeText={setDisplayName}
+                value={formData.displayName}
+                onChangeText={(text) => updateFormData('displayName', text)}
                 autoCapitalize="none"
               />
             </View>
@@ -167,8 +190,8 @@ export default function RegisterScreen() {
                 style={styles.input}
                 placeholder="Email"
                 placeholderTextColor="#666"
-                value={email}
-                onChangeText={setEmail}
+                value={formData.email}
+                onChangeText={(text) => updateFormData('email', text)}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -181,7 +204,7 @@ export default function RegisterScreen() {
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.dateSelectorText}>
-                  {dateOfBirth.toLocaleDateString()}
+                  {formData.dateOfBirth.toLocaleDateString()}
                 </Text>
                 <ChevronDown size={20} color="#666" />
               </TouchableOpacity>
@@ -193,8 +216,8 @@ export default function RegisterScreen() {
                 style={styles.genderSelector}
                 onPress={() => setShowGenderDropdown(true)}
               >
-                <Text style={[styles.genderSelectorText, !gender && styles.placeholderText]}>
-                  {gender || 'Select Gender'}
+                <Text style={[styles.genderSelectorText, !formData.gender && styles.placeholderText]}>
+                  {formData.gender || 'Select Gender'}
                 </Text>
                 <ChevronDown size={20} color="#666" />
               </TouchableOpacity>
@@ -206,7 +229,7 @@ export default function RegisterScreen() {
                 style={[styles.input, { flex: 1 }]}
                 placeholder="Password"
                 placeholderTextColor="#666"
-                value={password}
+                value={formData.password}
                 onChangeText={handlePasswordChange}
                 secureTextEntry={!showPassword}
               />
@@ -230,8 +253,8 @@ export default function RegisterScreen() {
                 style={[styles.input, { flex: 1 }]}
                 placeholder="Confirm Password"
                 placeholderTextColor="#666"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                value={formData.confirmPassword}
+                onChangeText={(text) => updateFormData('confirmPassword', text)}
                 secureTextEntry={!showConfirmPassword}
               />
               <TouchableOpacity
@@ -252,8 +275,8 @@ export default function RegisterScreen() {
                 style={styles.input}
                 placeholder="Invitation Code (Optional)"
                 placeholderTextColor="#666"
-                value={invitationCode}
-                onChangeText={setInvitationCode}
+                value={formData.invitationCode}
+                onChangeText={(text) => updateFormData('invitationCode', text)}
                 autoCapitalize="characters"
               />
             </View>
@@ -280,14 +303,14 @@ export default function RegisterScreen() {
       {/* Date Picker Modal */}
       {showDatePicker && (
         <DateTimePicker
-          value={dateOfBirth}
+          value={formData.dateOfBirth}
           mode="date"
           display="default"
           maximumDate={new Date()}
           onChange={(event, selectedDate) => {
             setShowDatePicker(false);
             if (selectedDate) {
-              setDateOfBirth(selectedDate);
+              updateFormData('dateOfBirth', selectedDate);
             }
           }}
         />
@@ -303,16 +326,16 @@ export default function RegisterScreen() {
                 key={option}
                 style={[
                   styles.genderOption,
-                  gender === option && styles.selectedGenderOption
+                  formData.gender === option && styles.selectedGenderOption
                 ]}
                 onPress={() => {
-                  setGender(option);
+                  updateFormData('gender', option);
                   setShowGenderDropdown(false);
                 }}
               >
                 <Text style={[
                   styles.genderOptionText,
-                  gender === option && styles.selectedGenderOptionText
+                  formData.gender === option && styles.selectedGenderOptionText
                 ]}>
                   {option}
                 </Text>
