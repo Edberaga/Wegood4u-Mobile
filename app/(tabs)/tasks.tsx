@@ -296,7 +296,6 @@ export default function TasksScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Unverified Member</Text>
-          <Text style={styles.subtitle}>Complete verification to unlock all features</Text>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
