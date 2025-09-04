@@ -11,7 +11,8 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronDown, Search, X } from 'lucide-react-native';
+import { ChevronDown, ChevronLeft, Search, X } from 'lucide-react-native';
+import { router } from 'expo-router';
 import Animated, { 
   FadeInDown, 
   FadeOutUp, 
@@ -337,6 +338,9 @@ export default function QuestionnairePage() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ChevronLeft size={24} color="#ffffff" />
+          </TouchableOpacity>
           <Text style={styles.title}>Travel Questionnaire</Text>
           <Text style={styles.subtitle}>Help us plan your perfect trip</Text>
         </View>
@@ -617,8 +621,14 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 24,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#F38632',
     alignItems: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 16,
+    top: 16,
+    padding: 8,
   },
   title: {
     fontSize: 28,
@@ -706,13 +716,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   radioButtonSelected: {
-    borderColor: '#3B82F6',
+    borderColor: '#F38632',
   },
   radioButtonInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#F38632',
   },
   radioText: {
     fontSize: 16,
@@ -756,12 +766,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   submitButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#F38632',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 20,
-    shadowColor: '#3B82F6',
+    shadowColor: '#F38632',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
