@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { User, CreditCard as Edit3, Star, Gift, Share2, Settings, Bell, Shield, LogOut, Camera, Copy, Trophy, MapPin, Calendar, Mail, Phone, CheckCircle, X, RefreshCw } from 'lucide-react-native';
+import { User, CreditCard as Edit3, Star, Gift, Share2, Settings, Bell, Shield, LogOut, Camera, Copy, Trophy, MapPin, Calendar, Mail, Phone, CircleCheck as CheckCircle, X, RefreshCw } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
 
