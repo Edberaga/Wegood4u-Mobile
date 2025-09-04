@@ -50,7 +50,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
       // Get current user from auth
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
+      console.log('user: ', user);
       if (authError) {
         throw authError;
       }

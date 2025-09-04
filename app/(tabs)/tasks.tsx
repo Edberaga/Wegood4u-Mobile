@@ -291,6 +291,14 @@ export default function TasksScreen() {
     const isEmailConfirmed = !!userData.emailConfirmedAt;
     const isPhoneConfirmed = !!userData.phoneConfirmedAt;
     const isQuestionnaireComplete = userData.verificationCompleted;
+    const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
+    const allStepsCompleted = stepsCompleted === 3;
+    const handleRequestMember = () => {
+      Alert.alert(
+        'Request Submitted',
+        'Your request to become a Member has been recorded. Our team will review it shortly.'
+      );
+    };
 
     return (
       <SafeAreaView style={styles.container}>
@@ -407,19 +415,34 @@ export default function TasksScreen() {
             {/* Progress Summary */}
             <View style={styles.progressSummary}>
               <Text style={styles.progressTitle}>Verification Progress</Text>
+              <Text style={styles.progressDescription}>
+                Once you have complete all the verification requirement, please click the button to request the Member Role
+              </Text>
               <View style={styles.progressBar}>
                 <View 
                   style={[
                     styles.progressFill, 
                     { 
-                      width: `${((isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0)) / 3 * 100}%` 
+                      width: `${stepsCompleted / 3 * 100}%` 
                     }
                   ]} 
                 />
               </View>
               <Text style={styles.progressText}>
-                {((isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0))} of 3 steps completed
+                {stepsCompleted} of 3 steps completed
               </Text>
+
+              <TouchableOpacity
+                style={[styles.requestButton, !allStepsCompleted && styles.requestButtonDisabled]}
+                onPress={handleRequestMember}
+                disabled={!allStepsCompleted}
+              >
+                <Text style={styles.requestButtonText}>Request to be Member</Text>
+              </TouchableOpacity>
+
+              {!allStepsCompleted && (
+                <Text style={styles.requestHintText}>X Please complete all requirement to be a member</Text>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -437,8 +460,8 @@ export default function TasksScreen() {
   }, {} as Record<string, PartnerStore[]>);
 
   const renderProgressBar = (progress: number, color: string) => (
-    <View style={styles.progressBar}>
-      <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: color }]} />
+    <View style={styles.progressBarSmall}>
+      <View style={[styles.progressFillSmall, { width: `${progress}%`, backgroundColor: color }]} />
     </View>
   );
 
@@ -1141,6 +1164,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  progressDescription: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  requestButton: {
+    marginTop: 12,
+    backgroundColor: '#F33F32',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  requestButtonDisabled: {
+    opacity: 0.6,
+  },
+  requestButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  requestHintText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#EF4444',
+    textAlign: 'center',
+  },
   rewardsContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -1295,14 +1346,14 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
-  progressBar: {
+  progressBarSmall: {
     height: 4,
     backgroundColor: '#e2e8f0',
     borderRadius: 2,
     marginTop: 8,
     overflow: 'hidden',
   },
-  progressFill: {
+  progressFillSmall: {
     height: '100%',
     borderRadius: 2,
   },

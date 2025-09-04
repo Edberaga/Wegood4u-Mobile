@@ -17,23 +17,28 @@ import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   
-  const { signIn, isLoading, user } = useAuth();
+  const { signIn } = useAuth();
 
   const handleLogin = async () => {
-    if (!username || !password) {
+    if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     try {
-      await signIn(username, password);
+      setSubmitting(true);
+      await signIn(email, password);
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Login Failed', error.message);
+    }
+    finally {
+      setSubmitting(false);
     }
   };
 
@@ -64,14 +69,15 @@ export default function LoginScreen() {
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <User size={20} color="#666" style={styles.inputIcon} />
+              <Mail size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Username"
+                placeholder="Email"
                 placeholderTextColor="#666"
-                value={username}
-                onChangeText={setUsername}
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
+                keyboardType="email-address"
               />
             </View>
 
@@ -98,12 +104,12 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+              style={[styles.loginButton, submitting && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              disabled={isLoading}
+              disabled={submitting}
             >
               <Text style={styles.loginButtonText}>
-                {isLoading ? 'Logging in...' : 'Login'}
+                {submitting ? 'Logging in...' : 'Login'}
               </Text>
             </TouchableOpacity>
 

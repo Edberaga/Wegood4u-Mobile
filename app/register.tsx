@@ -43,7 +43,8 @@ export default function RegisterScreen() {
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const { signUp, isLoading } = useAuth();
+  const { signUp } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
 
   const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
@@ -123,6 +124,7 @@ export default function RegisterScreen() {
     }
 
     try {
+      setSubmitting(true);
       // Format date as YYYY-MM-DD for database
       const formattedDate = formData.dateOfBirth.toISOString().split('T')[0];
       await signUp(
@@ -143,6 +145,9 @@ export default function RegisterScreen() {
       );
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message);
+    }
+    finally {
+      setSubmitting(false);
     }
   };
 
@@ -282,12 +287,12 @@ export default function RegisterScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+              style={[styles.registerButton, submitting && styles.registerButtonDisabled]}
               onPress={handleRegister}
-              disabled={isLoading}
+              disabled={submitting}
             >
               <Text style={styles.registerButtonText}>
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+                {submitting ? 'Creating Account...' : 'Create Account'}
               </Text>
             </TouchableOpacity>
 
