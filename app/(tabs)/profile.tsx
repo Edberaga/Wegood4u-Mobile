@@ -9,23 +9,20 @@ import {
   TextInput,
   Alert,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { User, CreditCard as Edit3, Star, Gift, Share2, Settings, Bell, Shield, LogOut, Camera, Copy, Trophy, MapPin, Calendar } from 'lucide-react-native';
+import { User, CreditCard as Edit3, Star, Gift, Share2, Settings, Bell, Shield, LogOut, Camera, Copy, Trophy, MapPin, Calendar, Mail, Phone, CheckCircle, X, RefreshCw } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
+import { useUser } from '@/context/UserContext';
 
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
+  const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: user?.displayName || 'John Doe',
-    email: user?.email || 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    bio: 'Food enthusiast and travel lover. Always exploring new flavors!',
-    profileImage: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400',
-  });
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [settings, setSettings] = useState({
     notifications: true,
     locationServices: true,
@@ -46,6 +43,36 @@ export default function ProfileScreen() {
     { id: 3, title: 'Social Butterfly', description: 'Referred 3 friends', date: '2024-01-05' },
   ];
 
+  // Show loading state
+  if (userLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#F33F32" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state if no user data
+  if (!userData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Unable to load profile data</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refreshUserData}>
+            <RefreshCw size={16} color="#F33F32" />
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const isEmailConfirmed = !!userData.emailConfirmedAt;
+  const hasPhoneNumber = !!userData.phone;
+
   const pickProfileImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -55,13 +82,9 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled) {
-      setProfileData({ ...profileData, profileImage: result.assets[0].uri });
+      // TODO: Upload image to Supabase storage and update avatar_url
+      Alert.alert('Feature Coming Soon', 'Profile image upload will be available soon!');
     }
-  };
-
-  const saveProfile = () => {
-    setIsEditing(false);
-    Alert.alert('Success', 'Profile updated successfully!');
   };
 
   const copyReferralCode = () => {
@@ -75,6 +98,22 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleResendEmail = async () => {
+    setIsResendingEmail(true);
+    try {
+      await resendEmailConfirmation();
+      Alert.alert('Success', 'Confirmation email sent! Please check your inbox.');
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
+
+  const handleAddPhoneNumber = () => {
+    Alert.alert('Add Phone Number', 'Phone number verification feature coming soon!');
+  };
+
   const handleLogout = async () => {
     Alert.alert(
       'Logout',
@@ -86,12 +125,30 @@ export default function ProfileScreen() {
           style: 'destructive', 
           onPress: async () => {
             await signOut();
-            // Note: You might want to navigate to login screen here
-            // router.replace('/login');
           }
         },
       ]
     );
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'subscriber': return 'Subscriber';
+      case 'member': return 'Member';
+      case 'affiliate': return 'Affiliate Member';
+      case 'admin': return 'Admin';
+      default: return 'User';
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'subscriber': return '#64748B';
+      case 'member': return '#22C55E';
+      case 'affiliate': return '#F59E0B';
+      case 'admin': return '#EF4444';
+      default: return '#64748B';
+    }
   };
 
   return (
@@ -105,14 +162,25 @@ export default function ProfileScreen() {
           style={styles.header}
         >
           <TouchableOpacity style={styles.profileImageContainer} onPress={pickProfileImage}>
-            <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
+            <Image 
+              source={{ 
+                uri: userData.avatarUrl || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400' 
+              }} 
+              style={styles.profileImage} 
+            />
             <View style={styles.cameraIcon}>
               <Camera size={16} color="white" />
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.userName}>{profileData.name}</Text>
-          <Text style={styles.userEmail}>{profileData.email}</Text>
+          <Text style={styles.userName}>{userData.username || 'User'}</Text>
+          <Text style={styles.userEmail}>{userData.email}</Text>
+          
+          <View style={styles.roleContainer}>
+            <Text style={[styles.roleText, { color: getRoleColor(userData.role) }]}>
+              {getRoleDisplayName(userData.role)}
+            </Text>
+          </View>
 
           <View style={styles.pointsContainer}>
             <Star size={20} color="#FFD700" />
@@ -168,74 +236,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Profile Information */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Profile Information</Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setIsEditing(!isEditing)}
-            >
-              <Edit3 size={16} color="#F33F32" />
-              <Text style={styles.editButtonText}>
-                {isEditing ? 'Cancel' : 'Edit'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.profileForm}>
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Name</Text>
-              <TextInput
-                style={[styles.formInput, !isEditing && styles.disabledInput]}
-                value={profileData.name}
-                onChangeText={(text) => setProfileData({ ...profileData, name: text })}
-                editable={isEditing}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Email</Text>
-              <TextInput
-                style={[styles.formInput, !isEditing && styles.disabledInput]}
-                value={profileData.email}
-                onChangeText={(text) => setProfileData({ ...profileData, email: text })}
-                editable={isEditing}
-                keyboardType="email-address"
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Phone</Text>
-              <TextInput
-                style={[styles.formInput, !isEditing && styles.disabledInput]}
-                value={profileData.phone}
-                onChangeText={(text) => setProfileData({ ...profileData, phone: text })}
-                editable={isEditing}
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Bio</Text>
-              <TextInput
-                style={[styles.formInput, styles.textArea, !isEditing && styles.disabledInput]}
-                value={profileData.bio}
-                onChangeText={(text) => setProfileData({ ...profileData, bio: text })}
-                editable={isEditing}
-                multiline
-                numberOfLines={3}
-              />
-            </View>
-
-            {isEditing && (
-              <TouchableOpacity style={styles.saveButton} onPress={saveProfile}>
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
         {/* Recent Achievements */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Achievements</Text>
@@ -259,6 +259,45 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
           <View style={styles.settingsContainer}>
+            {/* Email Confirmation */}
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={isEmailConfirmed ? undefined : handleResendEmail}
+              disabled={isEmailConfirmed || isResendingEmail}
+            >
+              <View style={styles.settingInfo}>
+                <Mail size={20} color="#64748B" />
+                <Text style={styles.settingLabel}>Confirm Email Address</Text>
+              </View>
+              <View style={styles.settingStatus}>
+                {isResendingEmail ? (
+                  <ActivityIndicator size="small" color="#F33F32" />
+                ) : isEmailConfirmed ? (
+                  <CheckCircle size={20} color="#22C55E" />
+                ) : (
+                  <X size={20} color="#EF4444" />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Phone Number */}
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={handleAddPhoneNumber}
+            >
+              <View style={styles.settingInfo}>
+                <Phone size={20} color="#64748B" />
+                <Text style={styles.settingLabel}>Add Phone Number</Text>
+              </View>
+              <View style={styles.settingStatus}>
+                {hasPhoneNumber ? (
+                  <CheckCircle size={20} color="#22C55E" />
+                ) : (
+                  <X size={20} color="#EF4444" />
+                )}
+              </View>
+            </TouchableOpacity>
+
             <View style={styles.settingItem}>
               <View style={styles.settingInfo}>
                 <Bell size={20} color="#64748B" />
@@ -356,7 +395,21 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 8,
+  },
+  roleContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
     marginBottom: 16,
+  },
+  roleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   pointsContainer: {
     flexDirection: 'row',
@@ -593,28 +646,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
   },
   settingLabel: {
     fontSize: 16,
     color: '#1e293b',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    borderRadius: 16,
-    paddingVertical: 16,
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  logoutButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#EF4444',
   },
 });
