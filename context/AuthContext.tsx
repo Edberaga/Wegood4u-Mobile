@@ -122,6 +122,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         options: {
           data: {
             username: displayName,
+            full_name: displayName,
             dob: dateOfBirth,
             gender: gender,
           },
