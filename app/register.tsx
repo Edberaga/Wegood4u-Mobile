@@ -137,10 +137,10 @@ export default function RegisterScreen() {
       );
       
       Alert.alert(
-        'Account Created Successfully! 🎉',
-        'Welcome to Wegood4u! You can now start exploring partner stores and earning rewards.',
+        'Check your email to verify',
+        'We sent a confirmation link to your inbox. Tap it to verify and log in.',
         [
-          { text: 'Continue', onPress: () => router.replace('/(tabs)') }
+          { text: 'OK', onPress: () => router.replace((`/confirm-email?email=${encodeURIComponent(formData.email)}` as any)) }
         ]
       );
     } catch (error: any) {
