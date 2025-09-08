@@ -291,8 +291,8 @@ export default function TasksScreen() {
     const isEmailConfirmed = !!userData.emailConfirmedAt;
     const isPhoneConfirmed = !!userData.phoneConfirmedAt;
     const isQuestionnaireComplete = userData.verificationCompleted;
-    const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
-    const allStepsCompleted = stepsCompleted === 3;
+    const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
+    const allStepsCompleted = stepsCompleted === 2;
     const handleRequestMember = () => {
       Alert.alert(
         'Request Submitted',
