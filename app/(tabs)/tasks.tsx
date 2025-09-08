@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star, Award, Coffee, UtensilsCrossed, Store, Mail, Phone, FileText, X, RefreshCw } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
+import { supabase } from '@/lib/supabase';
 
 interface Submission {
   id: number;
@@ -292,11 +293,48 @@ export default function TasksScreen() {
     const isQuestionnaireComplete = userData.verificationCompleted;
     const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
     const allStepsCompleted = stepsCompleted === 2;
-    const handleRequestMember = () => {
-      Alert.alert(
-        'Request Submitted',
-        'Your request to become a Member has been recorded. Our team will review it shortly.'
-      );
+    const handleRequestMember = async () => {
+      // Check if both requirements are met
+      if (!isEmailConfirmed || !isQuestionnaireComplete) {
+        const missingRequirements = [];
+        if (!isEmailConfirmed) missingRequirements.push('Email confirmation');
+        if (!isQuestionnaireComplete) missingRequirements.push('Questionnaire completion');
+        
+        Alert.alert(
+          'Requirements Not Met',
+          `Please complete the following requirements first:\n• ${missingRequirements.join('\n• ')}`
+        );
+        return;
+      }
+
+      try {
+        // Update user role to 'member' in the database
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: 'member' })
+          .eq('id', userData.id);
+
+        if (error) {
+          throw error;
+        }
+
+        // Refresh user data to reflect the role change
+        await refreshUserData();
+
+        Alert.alert(
+          'Congratulations! 🎉',
+          'Your role has been successfully upgraded to Member! You can now upload proof of travel and earn badges.',
+          [
+            { text: 'OK', onPress: () => console.log('Role upgraded to member') }
+          ]
+        );
+      } catch (error: any) {
+        console.error('Error updating role:', error);
+        Alert.alert(
+          'Update Failed',
+          'Failed to update your role. Please try again later.'
+        );
+      }
     };
 
     return (
