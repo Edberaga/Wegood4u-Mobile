@@ -289,7 +289,6 @@ export default function TasksScreen() {
   // Render verification checklist for subscribers
   if (userData.role === 'subscriber') {
     const isEmailConfirmed = !!userData.emailConfirmedAt;
-    const isPhoneConfirmed = !!userData.phoneConfirmedAt;
     const isQuestionnaireComplete = userData.verificationCompleted;
     const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
     const allStepsCompleted = stepsCompleted === 2;
@@ -373,10 +372,15 @@ export default function TasksScreen() {
                   )}
                 </View>
               </View>
-              {!isQuestionnaireComplete && (
+              {!isQuestionnaireComplete ? (
                 <TouchableOpacity style={styles.actionButton} onPress={navigateToQuestionnaire}>
                   <FileText size={16} color="#F33F32" />
                   <Text style={styles.actionButtonText}>Fill Out Verification Form</Text>
+                </TouchableOpacity> 
+                ) : (
+                <TouchableOpacity style={styles.actionButton}>
+                  <FileText size={16} color="#22C55E" />
+                  <Text style={styles.actionButtonText}>Verification Form Finished</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -398,7 +402,7 @@ export default function TasksScreen() {
                 />
               </View>
               <Text style={styles.progressText}>
-                {stepsCompleted} of 2 steps completed
+                {stepsCompleted} of 2 steps completed.
               </Text>
 
               <TouchableOpacity
