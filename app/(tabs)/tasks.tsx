@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star, Award, Coffee, UtensilsCrossed, Store, Mail, Phone, FileText, X, RefreshCw } from 'lucide-react-native';
+import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star, Award, Coffee, UtensilsCrossed, Store, Mail, Phone, FileText, X, RefreshCw, Search, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 import { supabase } from '@/lib/supabase';
@@ -57,6 +57,8 @@ export default function TasksScreen() {
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [storeSearchQuery, setStoreSearchQuery] = useState('');
+  const [expandedCities, setExpandedCities] = useState<{[key: string]: boolean}>({});
 
   const isEmailConfirmed = !!userData.emailConfirmedAt;
 
@@ -88,6 +90,32 @@ export default function TasksScreen() {
       points: 200,
     },
   ];
+  // Filter stores based on search query
+  const getFilteredStores = () => {
+    if (!storeSearchQuery.trim()) {
+      return groupedStores;
+    }
+    
+    const filtered: {[key: string]: PartnerStore[]} = {};
+    Object.entries(groupedStores).forEach(([city, stores]) => {
+      const filteredStores = stores.filter(store =>
+        store.name.toLowerCase().includes(storeSearchQuery.toLowerCase())
+      );
+      if (filteredStores.length > 0) {
+        filtered[city] = filteredStores;
+      }
+    });
+    return filtered;
+  };
+
+  const filteredGroupedStores = getFilteredStores();
+
+  const toggleCityExpansion = (city: string) => {
+    setExpandedCities(prev => ({
+      ...prev,
+      [city]: !prev[city]
+    }));
+  };
 
   useEffect(() => {
     loadPartnerStores();
@@ -104,6 +132,15 @@ export default function TasksScreen() {
       setStoresError('Failed to load partner stores');
     } finally {
       setStoresLoading(false);
+      
+      // Initialize expanded cities state
+      const stores = await fetchPartnerStores();
+      const cities = [...new Set(stores.map(store => store.city))];
+      const initialExpandedState = cities.reduce((acc, city) => {
+        acc[city] = false;
+        return acc;
+      }, {} as {[key: string]: boolean});
+      setExpandedCities(initialExpandedState);
     }
   };
 
@@ -727,10 +764,47 @@ export default function TasksScreen() {
           <View style={styles.storeModal}>
             <Text style={styles.modalTitle}>Select Partner Store</Text>
             <ScrollView style={styles.storeList} showsVerticalScrollIndicator={false}>
-              {Object.entries(groupedStores).map(([city, stores]) => (
-                <View key={city}>
-                  <Text style={styles.cityHeader}>{city}</Text>
-                  {stores.map((store) => (
+              
+              {/* Search Bar */}
+              <View style={styles.searchContainer}>
+                <Search size={20} color="#9CA3AF" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search partner stores..."
+                  value={storeSearchQuery}
+                  onChangeText={setStoreSearchQuery}
+                />
+                {storeSearchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setStoreSearchQuery('')}>
+                    <X size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Store List */}
+              {Object.entries(filteredGroupedStores).map(([city, stores]) => (
+                <React.Fragment key={city}>
+                  {/* City Header - Collapsible */}
+                  <TouchableOpacity 
+                    style={styles.cityHeader}
+                    onPress={() => toggleCityExpansion(city)}
+                  >
+                    <View style={styles.cityHeaderContent}>
+                      <Text style={styles.cityHeaderText}>{city}</Text>
+                      <Text style={styles.cityStoreCount}>({stores.length} stores)</Text>
+                    </View>
+                    <ChevronRight 
+                      size={20} 
+                      color="#64748B" 
+                      style={[
+                        styles.cityChevron,
+                        expandedCities[city] && styles.cityChevronExpanded
+                      ]}
+                    />
+                  </TouchableOpacity>
+
+                  {/* Store Items - Show when expanded */}
+                  {expandedCities[city] && stores.map((store) => (
                     <TouchableOpacity
                       key={store.id}
                       style={[
@@ -740,28 +814,56 @@ export default function TasksScreen() {
                       onPress={() => {
                         setSelectedStore(store);
                         setShowStoreDropdown(false);
+                        setStoreSearchQuery('');
                       }}
                     >
-                      <Text style={[
-                        styles.storeItemText,
-                        selectedStore?.id === store.id && styles.selectedStoreItemText
-                      ]}>
-                        • {store.name}
-                      </Text>
-                      <Text style={[
-                        styles.storeTypeText,
-                        selectedStore?.id === store.id && styles.selectedStoreTypeText
-                      ]}>
-                        {store.type}
-                      </Text>
+                      <View style={styles.storeItemContent}>
+                        <Text style={[
+                          styles.storeItemText,
+                          selectedStore?.id === store.id && styles.selectedStoreItemText
+                        ]}>
+                          • {store.name}
+                        </Text>
+                        <Text style={[
+                          styles.storeTypeText,
+                          selectedStore?.id === store.id && styles.selectedStoreTypeText
+                        ]}>
+                          {store.type}
+                        </Text>
+                      </View>
+                      <View style={styles.storeRating}>
+                        <Star size={12} color="#FFD700" fill="#FFD700" />
+                        <Text style={[
+                          styles.storeRatingText,
+                          selectedStore?.id === store.id && styles.selectedStoreRatingText
+                        ]}>
+                          {store.rating}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                   ))}
-                </View>
+                </React.Fragment>
               ))}
+
+              {/* No Results Message */}
+              {Object.keys(filteredGroupedStores).length === 0 && storeSearchQuery.length > 0 && (
+                <View style={styles.noResultsContainer}>
+                  <Text style={styles.noResultsText}>No stores found matching "{storeSearchQuery}"</Text>
+                  <TouchableOpacity 
+                    style={styles.clearSearchButton}
+                    onPress={() => setStoreSearchQuery('')}
+                  >
+                    <Text style={styles.clearSearchButtonText}>Clear Search</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </ScrollView>
             <TouchableOpacity
               style={styles.modalCloseButton}
-              onPress={() => setShowStoreDropdown(false)}
+              onPress={() => {
+                setShowStoreDropdown(false);
+                setStoreSearchQuery('');
+              }}
             >
               <Text style={styles.modalCloseButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -1450,17 +1552,17 @@ const styles = StyleSheet.create({
     maxHeight: 300,
   },
   cityHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#F33F32',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fef2f2',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#fef2f2',
-    borderBottomWidth: 1,
-    borderBottomColor: '#fecaca',
   },
   storeItem: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
     paddingHorizontal: 32,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
@@ -1494,6 +1596,94 @@ const styles = StyleSheet.create({
   modalCloseButtonText: {
     fontSize: 16,
     color: '#64748b',
+    fontWeight: '600',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  cityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  cityHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  cityHeaderText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#F33F32',
+    marginRight: 8,
+  },
+  cityStoreCount: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  cityChevron: {
+    transform: [{ rotate: '0deg' }],
+  },
+  cityChevronExpanded: {
+    transform: [{ rotate: '90deg' }],
+  },
+  storeItemContent: {
+    flex: 1,
+  },
+  storeRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  storeRatingText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  selectedStoreRatingText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  clearSearchButton: {
+    backgroundColor: '#F33F32',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  clearSearchButtonText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
   loadingOverlay: {
