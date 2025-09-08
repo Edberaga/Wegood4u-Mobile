@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -60,7 +60,7 @@ export default function TasksScreen() {
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
   const [expandedCities, setExpandedCities] = useState<{[key: string]: boolean}>({});
 
-  const isEmailConfirmed = !!userData.emailConfirmedAt;
+  const isEmailConfirmed = !!userData?.emailConfirmedAt;
 
   const submissions: Submission[] = [
     {
@@ -90,6 +90,10 @@ export default function TasksScreen() {
       points: 200,
     },
   ];
+
+  // Group stores by city - moved to the top
+  const groupedStores = groupStoresByCity(partnerStores);
+
   // Filter stores based on search query
   const getFilteredStores = () => {
     if (!storeSearchQuery.trim()) {
@@ -127,20 +131,19 @@ export default function TasksScreen() {
       setStoresError(null);
       const stores = await fetchPartnerStores();
       setPartnerStores(stores);
-    } catch (err) {
-      console.error('Error loading partner stores:', err);
-      setStoresError('Failed to load partner stores');
-    } finally {
-      setStoresLoading(false);
       
       // Initialize expanded cities state
-      const stores = await fetchPartnerStores();
       const cities = [...new Set(stores.map(store => store.city))];
       const initialExpandedState = cities.reduce((acc, city) => {
         acc[city] = false;
         return acc;
       }, {} as {[key: string]: boolean});
       setExpandedCities(initialExpandedState);
+    } catch (err) {
+      console.error('Error loading partner stores:', err);
+      setStoresError('Failed to load partner stores');
+    } finally {
+      setStoresLoading(false);
     }
   };
 
@@ -500,8 +503,6 @@ export default function TasksScreen() {
   }
 
   // Render main task view for members and affiliates
-  const groupedStores = groupStoresByCity(partnerStores);
-
   const renderProgressBar = (progress: number, color: string) => (
     <View style={styles.progressBarSmall}>
       <View style={[styles.progressFillSmall, { width: `${progress}%`, backgroundColor: color }]} />
@@ -822,22 +823,13 @@ export default function TasksScreen() {
                           styles.storeItemText,
                           selectedStore?.id === store.id && styles.selectedStoreItemText
                         ]}>
-                          • {store.name}
+                          {store.name}
                         </Text>
                         <Text style={[
                           styles.storeTypeText,
                           selectedStore?.id === store.id && styles.selectedStoreTypeText
                         ]}>
-                          {store.type}
-                        </Text>
-                      </View>
-                      <View style={styles.storeRating}>
-                        <Star size={12} color="#FFD700" fill="#FFD700" />
-                        <Text style={[
-                          styles.storeRatingText,
-                          selectedStore?.id === store.id && styles.selectedStoreRatingText
-                        ]}>
-                          {store.rating}
+                          {store.type === "Coffee & Desserts" ? "Cafe" : store.type}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -1555,9 +1547,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fef2f2',
+    backgroundColor: '#f8fafc',
     paddingHorizontal: 20,
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
   },
   storeItem: {
     flexDirection: 'row',
@@ -1615,16 +1609,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     color: '#1f2937',
-  },
-  cityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
   },
   cityHeaderContent: {
     flexDirection: 'row',
