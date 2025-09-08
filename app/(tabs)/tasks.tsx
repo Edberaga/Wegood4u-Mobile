@@ -60,8 +60,7 @@ export default function TasksScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
 
-  const partnerStores: PartnerStore[] = [
-    // Chiang Mai stores
+  const isEmailConfirmed = !!userData.emailConfirmedAt;
     { id: 1, name: 'Tai Toon Baan', city: 'Chiang Mai', type: 'Restaurant' },
     { id: 2, name: 'White Rabbit', city: 'Chiang Mai', type: 'Beverages' },
     { id: 3, name: 'Versailles de Flore', city: 'Chiang Mai', type: 'Restaurant' },
@@ -252,9 +251,6 @@ export default function TasksScreen() {
     } catch (error: any) {
       Alert.alert('Error', error.message);
     } finally {
-      setIsResendingEmail(false);
-    }
-  };
 
   const navigateToQuestionnaire = () => {
     router.push('/question');
@@ -291,8 +287,8 @@ export default function TasksScreen() {
     const isEmailConfirmed = !!userData.emailConfirmedAt;
     const isPhoneConfirmed = !!userData.phoneConfirmedAt;
     const isQuestionnaireComplete = userData.verificationCompleted;
-    const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
-    const allStepsCompleted = stepsCompleted === 3;
+    const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
+    const allStepsCompleted = stepsCompleted === 2;
     const handleRequestMember = () => {
       Alert.alert(
         'Request Submitted',
@@ -348,41 +344,6 @@ export default function TasksScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
-            </View>
-
-            {/* Phone Confirmation */}
-            <View style={styles.checklistItem}>
-              <View style={styles.checklistHeader}>
-                <View style={styles.checklistIconContainer}>
-                  <Phone size={20} color={isPhoneConfirmed ? '#22C55E' : '#64748B'} />
-                </View>
-                <View style={styles.checklistContent}>
-                  <Text style={styles.checklistTitle}>Confirm Phone Number</Text>
-                  <Text style={styles.checklistDescription}>
-                    {isPhoneConfirmed 
-                      ? 'Your phone number has been confirmed' 
-                      : 'Phone number confirmation is required'
-                    }
-                  </Text>
-                </View>
-                <View style={styles.checklistStatus}>
-                  {isPhoneConfirmed ? (
-                    <CheckCircle size={24} color="#22C55E" />
-                  ) : (
-                    <X size={24} color="#EF4444" />
-                  )}
-                </View>
-              </View>
-              {!isPhoneConfirmed && (
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => router.push(('/confirm-phone' as any))}
-                >
-                  <Phone size={16} color="#F33F32" />
-                  <Text style={styles.actionButtonText}>Add Phone Number</Text>
-                </TouchableOpacity>
-              )}
-            </View>
 
             {/* Questionnaire */}
             <View style={styles.checklistItem}>
@@ -419,20 +380,20 @@ export default function TasksScreen() {
             <View style={styles.progressSummary}>
               <Text style={styles.progressTitle}>Verification Progress</Text>
               <Text style={styles.progressDescription}>
-                Once you have complete all the verification requirement, please click the button to request the Member Role
+                Once you have completed all the verification requirements, please click the button to request the Member Role
               </Text>
               <View style={styles.progressBar}>
                 <View 
                   style={[
                     styles.progressFill, 
                     { 
-                      width: `${stepsCompleted / 3 * 100}%` 
+                      width: `${stepsCompleted / 2 * 100}%` 
                     }
                   ]} 
                 />
               </View>
               <Text style={styles.progressText}>
-                {stepsCompleted} of 3 steps completed
+                {stepsCompleted} of 2 steps completed
               </Text>
 
               <TouchableOpacity
@@ -444,7 +405,7 @@ export default function TasksScreen() {
               </TouchableOpacity>
 
               {!allStepsCompleted && (
-                <Text style={styles.requestHintText}>X Please complete all requirement to be a member</Text>
+                <Text style={styles.requestHintText}>✗ Please complete all requirements to be a member</Text>
               )}
             </View>
           </View>

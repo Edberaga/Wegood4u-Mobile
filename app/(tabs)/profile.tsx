@@ -71,7 +71,6 @@ export default function ProfileScreen() {
   }
 
   const isEmailConfirmed = !!userData.emailConfirmedAt;
-  const hasPhoneNumber = !!userData.phone;
 
   const pickProfileImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -280,23 +279,6 @@ export default function ProfileScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Phone Number */}
-            <TouchableOpacity 
-              style={styles.settingItem}
-              onPress={handleAddPhoneNumber}
-            >
-              <View style={styles.settingInfo}>
-                <Phone size={20} color="#64748B" />
-                <Text style={styles.settingLabel}>Add Phone Number</Text>
-              </View>
-              <View style={styles.settingStatus}>
-                {hasPhoneNumber ? (
-                  <CheckCircle size={20} color="#22C55E" />
-                ) : (
-                  <X size={20} color="#EF4444" />
-                )}
-              </View>
-            </TouchableOpacity>
 
             <View style={styles.settingItem}>
               <View style={styles.settingInfo}>
