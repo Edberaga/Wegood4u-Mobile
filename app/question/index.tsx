@@ -230,6 +230,7 @@ export default function QuestionnairePage() {
           Alert.alert('Success', 'Questionnaire submitted successfully!', [
             { text: 'OK', onPress: () => console.log('Profile updated successfully') }
           ]);
+          router.push('/tasks');
         }
       } catch (error) {
         console.error('Submission error:', error);
