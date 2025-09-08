@@ -1600,6 +1600,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginHorizontal: 20,
+    marginTop: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#e5e7eb',
