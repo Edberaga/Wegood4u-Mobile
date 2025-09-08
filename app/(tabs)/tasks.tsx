@@ -15,6 +15,7 @@ import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, Ch
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 import { supabase } from '@/lib/supabase';
+import { fetchPartnerStores, type PartnerStore, groupStoresByCity } from '@/data/partnerStore';
 
 interface Submission {
   id: number;
@@ -24,13 +25,6 @@ interface Submission {
   selfiePhoto: string;
   status: 'approved' | 'pending';
   points?: number;
-}
-
-interface PartnerStore {
-  id: number;
-  name: string;
-  city: string;
-  type: string;
 }
 
 interface BadgeLevel {
@@ -52,6 +46,9 @@ interface BadgeCategory {
 export default function TasksScreen() {
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
   const [activeTab, setActiveTab] = useState<'submit' | 'rewards'>('submit');
+  const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
+  const [storesLoading, setStoresLoading] = useState(true);
+  const [storesError, setStoresError] = useState<string | null>(null);
   
   // Form states
   const [selectedStore, setSelectedStore] = useState<PartnerStore | null>(null);
@@ -62,20 +59,6 @@ export default function TasksScreen() {
   const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   const isEmailConfirmed = !!userData.emailConfirmedAt;
-  const partnerStores: PartnerStore[] = [
-    { id: 1, name: 'Tai Toon Baan', city: 'Chiang Mai', type: 'Restaurant' },
-    { id: 2, name: 'White Rabbit', city: 'Chiang Mai', type: 'Beverages' },
-    { id: 3, name: 'Versailles de Flore', city: 'Chiang Mai', type: 'Restaurant' },
-    { id: 4, name: 'The Sax', city: 'Chiang Mai', type: 'Beverages' },
-    { id: 5, name: 'Matchappen', city: 'Chiang Mai', type: 'Coffee & Desserts' },
-    
-    // Kuala Lumpur stores
-    { id: 6, name: 'Come True Cafe', city: 'Kuala Lumpur', type: 'Coffee & Desserts' },
-    { id: 7, name: 'Zhang Lala Mee Tarik', city: 'Kuala Lumpur', type: 'Restaurant' },
-    { id: 8, name: 'Fatt Kee Roast Fish', city: 'Kuala Lumpur', type: 'Restaurant' },
-    { id: 9, name: 'Mantra Rooftop Bar & Lounge', city: 'Kuala Lumpur', type: 'Beverages' },
-    { id: 10, name: 'Mil Toast House', city: 'Kuala Lumpur', type: 'Coffee & Desserts' },
-  ];
 
   const submissions: Submission[] = [
     {
@@ -105,6 +88,24 @@ export default function TasksScreen() {
       points: 200,
     },
   ];
+
+  useEffect(() => {
+    loadPartnerStores();
+  }, []);
+
+  const loadPartnerStores = async () => {
+    try {
+      setStoresLoading(true);
+      setStoresError(null);
+      const stores = await fetchPartnerStores();
+      setPartnerStores(stores);
+    } catch (err) {
+      console.error('Error loading partner stores:', err);
+      setStoresError('Failed to load partner stores');
+    } finally {
+      setStoresLoading(false);
+    }
+  };
 
   // Calculate achievements
   const approvedSubmissions = submissions.filter(s => s.status === 'approved');
@@ -462,13 +463,7 @@ export default function TasksScreen() {
   }
 
   // Render main task view for members and affiliates
-  const groupedStores = partnerStores.reduce((acc, store) => {
-    if (!acc[store.city]) {
-      acc[store.city] = [];
-    }
-    acc[store.city].push(store);
-    return acc;
-  }, {} as Record<string, PartnerStore[]>);
+  const groupedStores = groupStoresByCity(partnerStores);
 
   const renderProgressBar = (progress: number, color: string) => (
     <View style={styles.progressBarSmall}>
@@ -771,6 +766,13 @@ export default function TasksScreen() {
               <Text style={styles.modalCloseButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      )}
+
+      {/* Loading overlay for stores */}
+      {storesLoading && (
+        <View style={styles.loadingOverlay}>
+          <Text style={styles.loadingText}>Loading partner stores...</Text>
         </View>
       )}
     </SafeAreaView>
@@ -1493,5 +1495,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#64748b',
     fontWeight: '600',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1001,
   },
 });
