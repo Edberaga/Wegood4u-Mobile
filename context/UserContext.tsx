@@ -42,6 +42,7 @@ export function UserProvider({ children }: UserProviderProps) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
 
   const fetchUserData = async () => {
     try {
@@ -104,6 +105,34 @@ export function UserProvider({ children }: UserProviderProps) {
     await fetchUserData();
   };
 
+  // Set up real-time subscription for profile changes
+  const setupRealtimeSubscription = (userId: string) => {
+    // Clean up existing subscription
+    if (realtimeChannel) {
+      supabase.removeChannel(realtimeChannel);
+    }
+
+    // Create new subscription for profile changes
+    const channel = supabase
+      .channel(`profile-changes-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log('Profile updated in real-time:', payload);
+          // Refresh user data when profile changes
+          fetchUserData();
+        }
+      )
+      .subscribe();
+
+    setRealtimeChannel(channel);
+  };
   const resendEmailConfirmation = async () => {
     try {
       if (!userData?.email) {
@@ -125,28 +154,15 @@ export function UserProvider({ children }: UserProviderProps) {
 
   // Set up real-time subscription for profile changes
   useEffect(() => {
-    if (!userData?.id) return;
+    if (userData?.id) {
+      setupRealtimeSubscription(userData.id);
+    }
 
-    const profileSubscription = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${userData.id}`,
-        },
-        (payload) => {
-          console.log('Profile updated:', payload);
-          // Refresh user data when profile changes
-          fetchUserData();
-        }
-      )
-      .subscribe();
-
+    // Cleanup on unmount or user change
     return () => {
-      supabase.removeChannel(profileSubscription);
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
     };
   }, [userData?.id]);
 
@@ -157,7 +173,7 @@ export function UserProvider({ children }: UserProviderProps) {
     // Listen for auth changes that might affect email confirmation
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'SIGNED_IN') {
           console.log('Auth state changed:', event);
           // Refresh user data when auth state changes
           await fetchUserData();
@@ -166,7 +182,8 @@ export function UserProvider({ children }: UserProviderProps) {
     );
 
     return () => subscription.unsubscribe();
-  }, [userData?.id]);
+  }, []);
+
   useEffect(() => {
     fetchUserData();
 

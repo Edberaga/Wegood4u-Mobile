@@ -230,9 +230,12 @@ export default function QuestionnairePage() {
           // Refresh user data to get the latest verification status
           await refreshUserData();
           
-          Alert.alert('Success', 'Questionnaire submitted successfully!', [
-            { text: 'OK', onPress: () => router.push('/tasks') }
-          ]);
+          // Small delay to ensure the UI updates properly
+          setTimeout(() => {
+            Alert.alert('Success', 'Questionnaire submitted successfully!', [
+              { text: 'OK', onPress: () => router.push('/tasks') }
+            ]);
+          }, 500);
         }
       } catch (error) {
         console.error('Submission error:', error);
