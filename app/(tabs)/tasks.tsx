@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star, Award, Coffee, UtensilsCrossed, Store, Mail, Phone, FileText, X, RefreshCw, Search, ChevronRight, ActivityIndicator } from 'lucide-react-native';
+import { Upload, Camera, MapPin, Calendar, CircleCheck as CheckCircle, Clock, ChevronDown, Gift, Star, Award, Coffee, UtensilsCrossed, Store, Mail, Phone, FileText, X, RefreshCw, Search, ChevronRight, Activity as ActivityIndicator } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 import { supabase } from '@/lib/supabase';
