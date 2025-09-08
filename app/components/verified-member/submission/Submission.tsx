@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock } from 'lucide-react-native';
-import PartnerStoreModal from '../partnerStore/PartnerStoreModal';
 import { type PartnerStore } from '@/data/partnerStore';
 
 interface Submission {
@@ -132,7 +131,7 @@ export default function Submission({
           <Text style={styles.formLabel}>Select Partner Store</Text>
           <TouchableOpacity
             style={styles.storeSelector}
-            onPress={() => setShowStoreDropdown(true)}
+            onPress={() => {/* This will be handled by parent component */}}
           >
             <Text style={[styles.storeSelectorText, !selectedStore && styles.placeholderText]}>
               {selectedStore ? `${selectedStore.name} (${selectedStore.city})` : 'Choose a partner store'}
@@ -242,18 +241,6 @@ export default function Submission({
           </ScrollView>
         </View>
       </View>
-
-      {/* Partner Store Modal */}
-      <PartnerStoreModal
-        visible={showStoreDropdown}
-        partnerStores={partnerStores}
-        selectedStore={selectedStore}
-        onSelectStore={(store) => {
-          setSelectedStore(store);
-          setShowStoreDropdown(false);
-        }}
-        onClose={() => setShowStoreDropdown(false)}
-      />
 
       {/* Loading overlay for stores */}
       {storesLoading && (
