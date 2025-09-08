@@ -1,0 +1,463 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock } from 'lucide-react-native';
+import PartnerStoreModal from '../partnerStore/PartnerStoreModal';
+import { type PartnerStore } from '@/data/partnerStore';
+
+interface Submission {
+  id: number;
+  submissionDate: string;
+  restaurantName: string;
+  receiptPhoto: string;
+  selfiePhoto: string;
+  status: 'approved' | 'pending';
+  points?: number;
+}
+
+interface SubmissionProps {
+  partnerStores: PartnerStore[];
+  submissions: Submission[];
+  storesLoading: boolean;
+  storesError: string | null;
+}
+
+export default function Submission({
+  partnerStores,
+  submissions,
+  storesLoading,
+  storesError,
+}: SubmissionProps) {
+  const [selectedStore, setSelectedStore] = useState<PartnerStore | null>(null);
+  const [receiptPhoto, setReceiptPhoto] = useState<string | null>(null);
+  const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
+  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const pickImage = async (type: 'receipt' | 'selfie') => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: type === 'receipt' ? [4, 3] : [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      if (type === 'receipt') {
+        setReceiptPhoto(result.assets[0].uri);
+      } else {
+        setSelfiePhoto(result.assets[0].uri);
+      }
+    }
+  };
+
+  const takePhoto = async (type: 'receipt' | 'selfie') => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: type === 'receipt' ? [4, 3] : [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      if (type === 'receipt') {
+        setReceiptPhoto(result.assets[0].uri);
+      } else {
+        setSelfiePhoto(result.assets[0].uri);
+      }
+    }
+  };
+
+  const showImagePicker = (type: 'receipt' | 'selfie') => {
+    Alert.alert(
+      'Select Photo',
+      'Choose how you want to add your photo',
+      [
+        { text: 'Camera', onPress: () => takePhoto(type) },
+        { text: 'Gallery', onPress: () => pickImage(type) },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const submitProof = async () => {
+    if (!selectedStore) {
+      Alert.alert('Error', 'Please select a partner store');
+      return;
+    }
+    if (!receiptPhoto) {
+      Alert.alert('Error', 'Please upload your receipt photo');
+      return;
+    }
+    if (!selfiePhoto) {
+      Alert.alert('Error', 'Please upload your selfie photo');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      Alert.alert(
+        'Success!', 
+        'Your proof of travel has been submitted successfully. You will be notified once it\'s reviewed.',
+        [
+          { 
+            text: 'OK', 
+            onPress: () => {
+              // Reset form
+              setSelectedStore(null);
+              setReceiptPhoto(null);
+              setSelfiePhoto(null);
+            }
+          }
+        ]
+      );
+    }, 2000);
+  };
+
+  return (
+    <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.submitContainer}>
+        {/* Partner Store Selection */}
+        <View style={styles.formSection}>
+          <Text style={styles.formLabel}>Select Partner Store</Text>
+          <TouchableOpacity
+            style={styles.storeSelector}
+            onPress={() => setShowStoreDropdown(true)}
+          >
+            <Text style={[styles.storeSelectorText, !selectedStore && styles.placeholderText]}>
+              {selectedStore ? `${selectedStore.name} (${selectedStore.city})` : 'Choose a partner store'}
+            </Text>
+            <ChevronDown size={20} color="#64748B" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Receipt Photo Upload */}
+        <View style={styles.formSection}>
+          <Text style={styles.formLabel}>Receipt Photo</Text>
+          <TouchableOpacity
+            style={styles.photoUpload}
+            onPress={() => showImagePicker('receipt')}
+          >
+            {receiptPhoto ? (
+              <Image source={{ uri: receiptPhoto }} style={styles.uploadedPhoto} />
+            ) : (
+              <View style={styles.uploadPlaceholder}>
+                <Camera size={32} color="#64748B" />
+                <Text style={styles.uploadPlaceholderText}>Upload Receipt</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Selfie Photo Upload */}
+        <View style={styles.formSection}>
+          <Text style={styles.formLabel}>Selfie at Restaurant</Text>
+          <TouchableOpacity
+            style={styles.photoUpload}
+            onPress={() => showImagePicker('selfie')}
+          >
+            {selfiePhoto ? (
+              <Image source={{ uri: selfiePhoto }} style={styles.uploadedPhoto} />
+            ) : (
+              <View style={styles.uploadPlaceholder}>
+                <Camera size={32} color="#64748B" />
+                <Text style={styles.uploadPlaceholderText}>Upload Selfie</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          onPress={submitProof}
+          disabled={isSubmitting}
+        >
+          <Upload size={20} color="white" />
+          <Text style={styles.submitButtonText}>
+            {isSubmitting ? 'Submitting...' : 'Submit Proof'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Submissions Table */}
+        <View style={styles.tableSection}>
+          <Text style={styles.tableTitle}>Your Submissions</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.table}>
+              {/* Table Header */}
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderText, styles.dateColumn]}>Date</Text>
+                <Text style={[styles.tableHeaderText, styles.restaurantColumn]}>Restaurant</Text>
+                <Text style={[styles.tableHeaderText, styles.photoColumn]}>Receipt</Text>
+                <Text style={[styles.tableHeaderText, styles.photoColumn]}>Selfie</Text>
+                <Text style={[styles.tableHeaderText, styles.statusColumn]}>Status</Text>
+              </View>
+
+              {/* Table Rows */}
+              {submissions.map((submission) => (
+                <View key={submission.id} style={styles.tableRow}>
+                  <Text style={[styles.tableCellText, styles.dateColumn]}>
+                    {submission.submissionDate}
+                  </Text>
+                  <Text style={[styles.tableCellText, styles.restaurantColumn]}>
+                    {submission.restaurantName}
+                  </Text>
+                  <View style={[styles.tableCell, styles.photoColumn]}>
+                    <Image source={{ uri: submission.receiptPhoto }} style={styles.tablePhoto} />
+                  </View>
+                  <View style={[styles.tableCell, styles.photoColumn]}>
+                    <Image source={{ uri: submission.selfiePhoto }} style={styles.tablePhoto} />
+                  </View>
+                  <View style={[styles.tableCell, styles.statusColumn]}>
+                    <View style={[
+                      styles.statusBadge,
+                      submission.status === 'approved' ? styles.approvedBadge : styles.pendingBadge
+                    ]}>
+                      {submission.status === 'approved' ? (
+                        <CheckCircle size={12} color="#22C55E" />
+                      ) : (
+                        <Clock size={12} color="#F59E0B" />
+                      )}
+                      <Text style={[
+                        styles.statusText,
+                        submission.status === 'approved' ? styles.approvedText : styles.pendingText
+                      ]}>
+                        {submission.status === 'approved' ? 'Approved' : 'Pending'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+
+      {/* Partner Store Modal */}
+      <PartnerStoreModal
+        visible={showStoreDropdown}
+        partnerStores={partnerStores}
+        selectedStore={selectedStore}
+        onSelectStore={(store) => {
+          setSelectedStore(store);
+          setShowStoreDropdown(false);
+        }}
+        onClose={() => setShowStoreDropdown(false)}
+      />
+
+      {/* Loading overlay for stores */}
+      {storesLoading && (
+        <View style={styles.loadingOverlay}>
+          <Text style={styles.loadingText}>Loading partner stores...</Text>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: {
+    flex: 1,
+  },
+  submitContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  formSection: {
+    marginBottom: 24,
+  },
+  formLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
+  storeSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  storeSelectorText: {
+    fontSize: 16,
+    color: '#1e293b',
+  },
+  placeholderText: {
+    color: '#64748b',
+  },
+  photoUpload: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  uploadedPhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  uploadPlaceholder: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  uploadPlaceholderText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F33F32',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  tableSection: {
+    marginTop: 32,
+  },
+  tableTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  table: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  tableHeaderText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#475569',
+    textTransform: 'uppercase',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  tableCell: {
+    justifyContent: 'center',
+  },
+  tableCellText: {
+    fontSize: 14,
+    color: '#1e293b',
+  },
+  dateColumn: {
+    width: 80,
+  },
+  restaurantColumn: {
+    width: 120,
+  },
+  photoColumn: {
+    width: 60,
+  },
+  statusColumn: {
+    width: 80,
+  },
+  tablePhoto: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  approvedBadge: {
+    backgroundColor: '#f0fdf4',
+  },
+  pendingBadge: {
+    backgroundColor: '#fefce8',
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  approvedText: {
+    color: '#22C55E',
+  },
+  pendingText: {
+    color: '#F59E0B',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1001,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#64748B',
+  },
+});
