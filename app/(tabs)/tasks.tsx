@@ -61,6 +61,7 @@ export default function TasksScreen() {
   const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   const isEmailConfirmed = !!userData.emailConfirmedAt;
+  const partnerStores: PartnerStore[] = [
     { id: 1, name: 'Tai Toon Baan', city: 'Chiang Mai', type: 'Restaurant' },
     { id: 2, name: 'White Rabbit', city: 'Chiang Mai', type: 'Beverages' },
     { id: 3, name: 'Versailles de Flore', city: 'Chiang Mai', type: 'Restaurant' },
@@ -251,6 +252,9 @@ export default function TasksScreen() {
     } catch (error: any) {
       Alert.alert('Error', error.message);
     } finally {
+      setIsResendingEmail(false);
+    }
+  };
 
   const navigateToQuestionnaire = () => {
     router.push('/question');
@@ -287,8 +291,8 @@ export default function TasksScreen() {
     const isEmailConfirmed = !!userData.emailConfirmedAt;
     const isPhoneConfirmed = !!userData.phoneConfirmedAt;
     const isQuestionnaireComplete = userData.verificationCompleted;
-    const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
-    const allStepsCompleted = stepsCompleted === 2;
+    const stepsCompleted = (isEmailConfirmed ? 1 : 0) + (isPhoneConfirmed ? 1 : 0) + (isQuestionnaireComplete ? 1 : 0);
+    const allStepsCompleted = stepsCompleted === 3;
     const handleRequestMember = () => {
       Alert.alert(
         'Request Submitted',
@@ -344,6 +348,7 @@ export default function TasksScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
+            </View>
 
             {/* Questionnaire */}
             <View style={styles.checklistItem}>
