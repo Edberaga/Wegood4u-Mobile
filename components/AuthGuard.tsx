@@ -19,7 +19,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#F33F32" />
+        <ActivityIndicator color="#F33F32" />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
