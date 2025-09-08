@@ -46,7 +46,7 @@ interface FormData {
 }
 
 export default function QuestionnairePage() {
-  const { userData } = useUser();
+  const { userData, refreshUserData } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
@@ -227,10 +227,12 @@ export default function QuestionnairePage() {
           console.error('Supabase error:', error);
           Alert.alert('Error', 'Failed to submit questionnaire. Please try again.');
         } else {
+          // Refresh user data to get the latest verification status
+          await refreshUserData();
+          
           Alert.alert('Success', 'Questionnaire submitted successfully!', [
-            { text: 'OK', onPress: () => console.log('Profile updated successfully') }
+            { text: 'OK', onPress: () => router.push('/tasks') }
           ]);
-          router.push('/tasks');
         }
       } catch (error) {
         console.error('Submission error:', error);

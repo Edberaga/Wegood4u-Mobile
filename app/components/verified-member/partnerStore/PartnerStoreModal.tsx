@@ -160,17 +160,10 @@ export default function PartnerStoreModal({
 
 const styles = StyleSheet.create({
   modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    // Ensure it overlays SafeAreaView & other parents
-    flex: 1,
-    zIndex: 5000,
   },
   storeModal: {
     backgroundColor: 'white',

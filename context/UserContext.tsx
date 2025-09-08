@@ -123,6 +123,50 @@ export function UserProvider({ children }: UserProviderProps) {
     }
   };
 
+  // Set up real-time subscription for profile changes
+  useEffect(() => {
+    if (!userData?.id) return;
+
+    const profileSubscription = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${userData.id}`,
+        },
+        (payload) => {
+          console.log('Profile updated:', payload);
+          // Refresh user data when profile changes
+          fetchUserData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileSubscription);
+    };
+  }, [userData?.id]);
+
+  // Set up real-time subscription for auth changes (email confirmation)
+  useEffect(() => {
+    if (!userData?.id) return;
+
+    // Listen for auth changes that might affect email confirmation
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          console.log('Auth state changed:', event);
+          // Refresh user data when auth state changes
+          await fetchUserData();
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [userData?.id]);
   useEffect(() => {
     fetchUserData();
 
