@@ -374,7 +374,10 @@ export default function TasksScreen() {
                 </View>
               </View>
               {!isPhoneConfirmed && (
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity 
+                  style={styles.actionButton}
+                  onPress={() => router.push(('/confirm-phone' as any))}
+                >
                   <Phone size={16} color="#F33F32" />
                   <Text style={styles.actionButtonText}>Add Phone Number</Text>
                 </TouchableOpacity>
