@@ -22,9 +22,11 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
+import { useUser } from '@/context/UserContext';
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { userData } = useUser();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
   const pickImage = async () => {
@@ -57,7 +59,7 @@ export default function HomeScreen() {
         >
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Welcome back!</Text>
-            <Text style={styles.username}>{user?.displayName || 'User'}</Text>
+            <Text style={styles.username}>{userData?.fullName || userData?.username || 'User'}</Text>
             <View style={styles.pointsContainer}>
               <Star size={20} color="#FFD700" />
               <Text style={styles.points}>2,450 Points</Text>
@@ -227,6 +229,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 12,
+    textTransform: 'capitalize',
   },
   pointsContainer: {
     flexDirection: 'row',
