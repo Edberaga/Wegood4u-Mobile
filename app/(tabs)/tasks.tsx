@@ -378,9 +378,9 @@ export default function TasksScreen() {
                   <Text style={styles.actionButtonText}>Fill Out Verification Form</Text>
                 </TouchableOpacity> 
                 ) : (
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity style={styles.confirmButton}>
                   <FileText size={16} color="#22C55E" />
-                  <Text style={styles.actionButtonText}>Verification Form Finished</Text>
+                  <Text style={styles.confirmButtonText}>Verification Form Finished</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1098,6 +1098,23 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: '#F33F32',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f4fef2ff',
+    borderWidth: 1,
+    borderColor: '#22C55E',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  confirmButtonText: {
+    color: '#22C55E',
     fontSize: 14,
     fontWeight: '600',
   },
