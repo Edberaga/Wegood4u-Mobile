@@ -62,34 +62,7 @@ export default function TasksScreen() {
 
   const isEmailConfirmed = !!userData?.emailConfirmedAt;
 
-  const submissions: Submission[] = [
-    {
-      id: 1,
-      submissionDate: '2024-01-12',
-      restaurantName: 'Tai Toon Baan',
-      receiptPhoto: 'https://images.pexels.com/photos/4386370/pexels-photo-4386370.jpeg?auto=compress&cs=tinysrgb&w=400',
-      selfiePhoto: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400',
-      status: 'approved',
-      points: 150,
-    },
-    {
-      id: 2,
-      submissionDate: '2024-01-10',
-      restaurantName: 'White Rabbit',
-      receiptPhoto: 'https://images.pexels.com/photos/4386431/pexels-photo-4386431.jpeg?auto=compress&cs=tinysrgb&w=400',
-      selfiePhoto: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400',
-      status: 'pending',
-    },
-    {
-      id: 3,
-      submissionDate: '2024-01-08',
-      restaurantName: 'Come True Cafe',
-      receiptPhoto: 'https://images.pexels.com/photos/4386370/pexels-photo-4386370.jpeg?auto=compress&cs=tinysrgb&w=400',
-      selfiePhoto: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
-      status: 'approved',
-      points: 200,
-    },
-  ];
+  const submissions: Submission[] = []; //remain empty for a moment
 
   // Group stores by city - moved to the top
   const groupedStores = groupStoresByCity(partnerStores);
