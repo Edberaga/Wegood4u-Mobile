@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock } from 'lucide-react-native';
+import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock, RefreshCw } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import type { PartnerStore } from '@/data/partnerStore';
 
@@ -20,6 +20,7 @@ interface Submission {
   receiptPhoto: string;
   selfiePhoto: string;
   status: 'approved' | 'pending';
+  category: string;
   points?: number;
 }
 
@@ -41,8 +42,8 @@ export default function Submission({
   const [receiptPhoto, setReceiptPhoto] = useState<string | null>(null);
   const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const submissions: Submission[] = []; // remain empty for a moment
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
   // Function to map partner store category
   const mapStoreCategory = (storeType: string): string => {
@@ -57,6 +58,59 @@ export default function Submission({
       return 'others';
     }
   };
+
+  // Function to fetch submissions from database
+  const fetchSubmissions = async () => {
+    if (!userData?.id) {
+      console.log('No user data available');
+      return;
+    }
+
+    setIsLoadingSubmissions(true);
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('*')
+        .eq('user_id', userData.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching submissions:', error);
+        Alert.alert('Error', 'Failed to fetch submissions');
+        return;
+      }
+
+      if (data) {
+        // Transform the data to match the Submission interface
+        const transformedSubmissions: Submission[] = data.map((item, index) => ({
+          id: item.id || index,
+          submissionDate: new Date(item.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }),
+          restaurantName: item.partner_store_name || 'Unknown',
+          receiptPhoto: item.receipt_url || '',
+          selfiePhoto: item.selfie_url || '',
+          status: item.status as 'approved' | 'pending',
+          category: item.partner_store_category || 'others'
+        }));
+
+        setSubmissions(transformedSubmissions);
+        console.log('Fetched submissions:', transformedSubmissions);
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      Alert.alert('Error', 'Failed to fetch submissions');
+    } finally {
+      setIsLoadingSubmissions(false);
+    }
+  };
+
+  // Fetch submissions when component mounts and when userData changes
+  useEffect(() => {
+    fetchSubmissions();
+  }, [userData?.id]);
 
   const pickImage = async (type: 'receipt' | 'selfie') => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -215,6 +269,8 @@ export default function Submission({
               setSelectedStore(null);
               setReceiptPhoto(null);
               setSelfiePhoto(null);
+              // Refresh submissions list
+              fetchSubmissions();
             }
           }
         ]
@@ -298,55 +354,96 @@ export default function Submission({
 
       {/* Submissions Table */}
       <View style={styles.tableSection}>
-        <Text style={styles.tableTitle}>Your Submissions</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.table}>
-            {/* Table Header */}
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, styles.dateColumn]}>Date</Text>
-              <Text style={[styles.tableHeaderText, styles.restaurantColumn]}>Restaurant</Text>
-              <Text style={[styles.tableHeaderText, styles.photoColumn]}>Receipt</Text>
-              <Text style={[styles.tableHeaderText, styles.photoColumn]}>Selfie</Text>
-              <Text style={[styles.tableHeaderText, styles.statusColumn]}>Status</Text>
-            </View>
+        <View style={styles.tableTitleContainer}>
+          <Text style={styles.tableTitle}>Your Submissions</Text>
+          <TouchableOpacity 
+            style={styles.refreshButton}
+            onPress={fetchSubmissions}
+            disabled={isLoadingSubmissions}
+          >
+            <RefreshCw 
+              size={18} 
+              color="#64748B" 
+              style={[isLoadingSubmissions && { opacity: 0.5 }]}
+            />
+          </TouchableOpacity>
+        </View>
+        
+        {submissions.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>
+              {isLoadingSubmissions ? 'Loading submissions...' : 'No submissions yet'}
+            </Text>
+            <Text style={styles.emptyStateSubtext}>
+              {!isLoadingSubmissions && 'Submit your first proof of travel above!'}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.table}>
+              {/* Table Header */}
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderText, styles.dateColumn]}>Date</Text>
+                <Text style={[styles.tableHeaderText, styles.restaurantColumn]}>Restaurant</Text>
+                <Text style={[styles.tableHeaderText, styles.categoryColumn]}>Category</Text>
+                <Text style={[styles.tableHeaderText, styles.photoColumn]}>Receipt</Text>
+                <Text style={[styles.tableHeaderText, styles.photoColumn]}>Selfie</Text>
+                <Text style={[styles.tableHeaderText, styles.statusColumn]}>Status</Text>
+              </View>
 
-            {/* Table Rows */}
-            {submissions.map((submission) => (
-              <View key={submission.id} style={styles.tableRow}>
-                <Text style={[styles.tableCellText, styles.dateColumn]}>
-                  {submission.submissionDate}
-                </Text>
-                <Text style={[styles.tableCellText, styles.restaurantColumn]}>
-                  {submission.restaurantName}
-                </Text>
-                <View style={[styles.tableCell, styles.photoColumn]}>
-                  <Image source={{ uri: submission.receiptPhoto }} style={styles.tablePhoto} />
-                </View>
-                <View style={[styles.tableCell, styles.photoColumn]}>
-                  <Image source={{ uri: submission.selfiePhoto }} style={styles.tablePhoto} />
-                </View>
-                <View style={[styles.tableCell, styles.statusColumn]}>
-                  <View style={[
-                    styles.statusBadge,
-                    submission.status === 'approved' ? styles.approvedBadge : styles.pendingBadge
-                  ]}>
-                    {submission.status === 'approved' ? (
-                      <CheckCircle size={12} color="#22C55E" />
+              {/* Table Rows */}
+              {submissions.map((submission) => (
+                <View key={submission.id} style={styles.tableRow}>
+                  <Text style={[styles.tableCellText, styles.dateColumn]}>
+                    {submission.submissionDate}
+                  </Text>
+                  <Text style={[styles.tableCellText, styles.restaurantColumn]} numberOfLines={2}>
+                    {submission.restaurantName}
+                  </Text>
+                  <Text style={[styles.tableCellText, styles.categoryColumn]} numberOfLines={1}>
+                    {submission.category}
+                  </Text>
+                  <View style={[styles.tableCell, styles.photoColumn]}>
+                    {submission.receiptPhoto ? (
+                      <Image source={{ uri: submission.receiptPhoto }} style={styles.tablePhoto} />
                     ) : (
-                      <Clock size={12} color="#F59E0B" />
+                      <View style={styles.photoPlaceholder}>
+                        <Text style={styles.photoPlaceholderText}>No Image</Text>
+                      </View>
                     )}
-                    <Text style={[
-                      styles.statusText,
-                      submission.status === 'approved' ? styles.approvedText : styles.pendingText
+                  </View>
+                  <View style={[styles.tableCell, styles.photoColumn]}>
+                    {submission.selfiePhoto ? (
+                      <Image source={{ uri: submission.selfiePhoto }} style={styles.tablePhoto} />
+                    ) : (
+                      <View style={styles.photoPlaceholder}>
+                        <Text style={styles.photoPlaceholderText}>No Image</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={[styles.tableCell, styles.statusColumn]}>
+                    <View style={[
+                      styles.statusBadge,
+                      submission.status === 'approved' ? styles.approvedBadge : styles.pendingBadge
                     ]}>
-                      {submission.status === 'approved' ? 'Approved' : 'Pending'}
-                    </Text>
+                      {submission.status === 'approved' ? (
+                        <CheckCircle size={12} color="#22C55E" />
+                      ) : (
+                        <Clock size={12} color="#F59E0B" />
+                      )}
+                      <Text style={[
+                        styles.statusText,
+                        submission.status === 'approved' ? styles.approvedText : styles.pendingText
+                      ]}>
+                        {submission.status === 'approved' ? 'Approved' : 'Pending'}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
+              ))}
+            </View>
+          </ScrollView>
+        )}
       </View>
     </View>
   );
@@ -443,11 +540,43 @@ const styles = StyleSheet.create({
   tableSection: {
     marginTop: 32,
   },
+  tableTitleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   tableTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e293b',
-    marginBottom: 16,
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+  },
+  emptyState: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
   },
   table: {
     backgroundColor: 'white',
@@ -489,10 +618,13 @@ const styles = StyleSheet.create({
     color: '#1e293b',
   },
   dateColumn: {
-    width: 80,
+    width: 90,
   },
   restaurantColumn: {
     width: 120,
+  },
+  categoryColumn: {
+    width: 80,
   },
   photoColumn: {
     width: 60,
@@ -504,6 +636,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 6,
+  },
+  photoPlaceholder: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoPlaceholderText: {
+    fontSize: 8,
+    color: '#94a3b8',
+    textAlign: 'center',
   },
   statusBadge: {
     flexDirection: 'row',
