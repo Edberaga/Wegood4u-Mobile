@@ -222,6 +222,42 @@ export default function TasksScreen() {
     );
   };
 
+  // Function to upload image to Supabase storage
+  const uploadImageToSupabase = async (imageUri: string, bucketName: string, fileName: string): Promise<string> => {
+    try {
+      // Fetch the image as a blob
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      
+      // Create a file from the blob
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, uint8Array, {
+          contentType: blob.type || 'image/jpeg',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Upload error:', error);
+        throw new Error(`Failed to upload image: ${error.message}`);
+      }
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(data.path);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
   const submitProof = async () => {
     if (!selectedStore) {
       Alert.alert('Error', 'Please select a partner store');
@@ -235,12 +271,56 @@ export default function TasksScreen() {
       Alert.alert('Error', 'Please upload your selfie photo');
       return;
     }
+    if (!userData?.id) {
+      Alert.alert('Error', 'User not found. Please try again.');
+      return;
+    }
 
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Generate unique file names
+      const timestamp = Date.now();
+      const receiptFileName = `receipt_${userData.id}_${timestamp}.jpg`;
+      const selfieFileName = `selfie_${userData.id}_${timestamp}.jpg`;
+
+      console.log('Starting image uploads...');
+      
+      // Upload both images concurrently
+      const [receiptUrl, selfieUrl] = await Promise.all([
+        uploadImageToSupabase(receiptPhoto, 'submitted-receipt', receiptFileName),
+        uploadImageToSupabase(selfiePhoto, 'submitted-selfie', selfieFileName)
+      ]);
+
+      console.log('Images uploaded successfully:', { receiptUrl, selfieUrl });
+
+      // Prepare submission data
+      const submissionData = {
+        user_id: userData.id,
+        partner_store_name: selectedStore.name,
+        partner_store_category: selectedStore.type, // Assuming this matches the enum
+        status: 'pending' as const,
+        selfie_url: selfieUrl,
+        receipt_url: receiptUrl
+      };
+
+      console.log('Inserting submission data:', submissionData);
+
+      // Insert submission into database
+      const { data, error } = await supabase
+        .from('submissions')
+        .insert([submissionData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Database insertion error:', error);
+        throw new Error(`Failed to save submission: ${error.message}`);
+      }
+
+      console.log('Submission saved successfully:', data);
+
+      // Show success message
       Alert.alert(
         'Success!', 
         'Your proof of travel has been submitted successfully. You will be notified once it\'s reviewed.',
@@ -256,7 +336,17 @@ export default function TasksScreen() {
           }
         ]
       );
-    }, 2000);
+
+    } catch (error: any) {
+      console.error('Submission error:', error);
+      
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Failed to submit proof of travel. Please try again.';
+      Alert.alert('Error', errorMessage);
+      
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleResendEmail = async () => {
