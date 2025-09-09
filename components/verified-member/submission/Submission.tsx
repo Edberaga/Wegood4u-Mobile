@@ -44,6 +44,20 @@ export default function Submission({
 
   const submissions: Submission[] = []; // remain empty for a moment
 
+  // Function to map partner store category
+  const mapStoreCategory = (storeType: string): string => {
+    const normalizedType = storeType.toLowerCase();
+    
+    if (normalizedType.includes('restaurant')) {
+      return 'restaurant';
+    } else if (normalizedType.includes('coffee') || normalizedType.includes('dessert')) {
+      return 'cafe';
+    } else {
+      // Beverages and any other category
+      return 'others';
+    }
+  };
+
   const pickImage = async (type: 'receipt' | 'selfie') => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -160,11 +174,14 @@ export default function Submission({
 
       console.log('Images uploaded successfully:', { receiptUrl, selfieUrl });
 
+      // Map the store category according to the requirements
+      const mappedCategory = mapStoreCategory(selectedStore.type);
+
       // Prepare submission data
       const submissionData = {
         user_id: userData.id,
         partner_store_name: selectedStore.name,
-        partner_store_category: selectedStore.type, // Assuming this matches the enum
+        partner_store_category: mappedCategory, // Use the mapped category
         status: 'pending' as const,
         selfie_url: selfieUrl,
         receipt_url: receiptUrl
