@@ -13,6 +13,7 @@ import { useUser } from '@/context/UserContext';
 import { fetchPartnerStores, type PartnerStore, groupStoresByCity } from '@/data/partnerStore';
 import UnverifiedMember from '@/components/unverified-member/UnverifiedMember';
 import VerifiedMember from '@/components/verified-member/VerifiedMember';
+import { AdminTaskScreen } from '@/components/admin-member';
 
 export default function TasksScreen() {
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
@@ -111,6 +112,10 @@ export default function TasksScreen() {
 
   // Render appropriate component based on user role
   const renderContent = () => {
+    if (userData.role === 'admin') {
+      return <AdminTaskScreen userData={userData} />;
+    }
+    
     if (userData.role === 'subscriber') {
       return (
         <UnverifiedMember
