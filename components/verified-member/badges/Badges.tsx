@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { CircleCheck as CheckCircle, Star, Coffee, UtensilsCrossed, Store } from 'lucide-react-native';
-import type { PartnerStore } from '@/data/partnerStore';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { CircleCheck as CheckCircle, Star, Coffee, UtensilsCrossed, Store, RefreshCw } from 'lucide-react-native';
+import { supabase } from '@/lib/supabase';
 
 interface Submission {
   id: number;
@@ -9,7 +9,8 @@ interface Submission {
   restaurantName: string;
   receiptPhoto: string;
   selfiePhoto: string;
-  status: 'approved' | 'pending';
+  status: 'approved' | 'pending' | 'rejected';
+  category: string;
   points?: number;
 }
 
@@ -30,34 +31,125 @@ interface BadgeCategory {
 }
 
 interface BadgesProps {
-  partnerStores: PartnerStore[];
+  userData: any;
 }
 
-export default function Badges({ partnerStores }: BadgesProps) {
-  const submissions: Submission[] = []; // remain empty for a moment
+export default function Badges({ userData }: BadgesProps) {
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [approvedCounts, setApprovedCounts] = useState({
+    total: 0,
+    restaurant: 0,
+    cafe: 0,
+    others: 0
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Calculate achievements
-  const approvedSubmissions = submissions.filter(s => s.status === 'approved');
-  const totalPoints = approvedSubmissions.length * 10;
-  
-  // Count visits by store type
-  const getStoreType = (restaurantName: string) => {
-    const store = partnerStores.find(s => s.name === restaurantName);
-    return store?.type || '';
+  // Function to fetch approved submissions - updated to match submission.tsx approach
+  const fetchApprovedSubmissions = async (showRefreshIndicator = false) => {
+    if (!userData?.id) {
+      console.log('No user data available for badges');
+      console.log('userData:', userData);
+      return;
+    }
+
+    if (showRefreshIndicator) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+
+    try {
+      console.log('Fetching submissions for user ID:', userData.id);
+      
+      // Use the same approach as submission.tsx - get all submissions first
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('*')
+        .eq('user_id', userData.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching submissions:', error);
+        Alert.alert('Error', 'Failed to fetch submissions');
+        return;
+      }
+
+      console.log('All submissions from DB:', data);
+
+      if (data) {
+        // Transform the data to match the Submission interface (same as submission.tsx)
+        const transformedSubmissions: Submission[] = data.map((item, index) => ({
+          id: item.id || index,
+          submissionDate: new Date(item.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }),
+          restaurantName: item.partner_store_name || 'Unknown',
+          receiptPhoto: item.receipt_url || '',
+          selfiePhoto: item.selfie_url || '',
+          status: item.status as 'approved' | 'pending' | 'rejected',
+          category: item.partner_store_category || 'others'
+        }));
+
+        console.log('All transformed submissions:', transformedSubmissions);
+
+        // Filter only approved submissions for badge calculations
+        const approvedSubmissions = transformedSubmissions.filter(s => s.status === 'approved');
+        console.log('Approved submissions only:', approvedSubmissions);
+
+        // Calculate counts by category
+        const totalCount = approvedSubmissions.length;
+        const restaurantCount = approvedSubmissions.filter(s => s.category === 'restaurant').length;
+        const cafeCount = approvedSubmissions.filter(s => s.category === 'cafe').length;
+        const othersCount = approvedSubmissions.filter(s => !['restaurant', 'cafe'].includes(s.category)).length;
+
+        console.log('Badge counts:', {
+          total: totalCount,
+          restaurant: restaurantCount,
+          cafe: cafeCount,
+          others: othersCount
+        });
+
+        // Update states
+        setSubmissions(approvedSubmissions);
+        setApprovedCounts({
+          total: totalCount,
+          restaurant: restaurantCount,
+          cafe: cafeCount,
+          others: othersCount
+        });
+
+        if (showRefreshIndicator) {
+          Alert.alert('Success', `Badges updated! Found ${totalCount} approved submissions.`);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      Alert.alert('Error', 'Failed to fetch submissions. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   };
-  
-  const totalVisits = approvedSubmissions.length;
-  const cafeVisits = approvedSubmissions.filter(s => {
-    const storeType = getStoreType(s.restaurantName);
-    return storeType === 'Coffee & Desserts';
-  }).length;
-  const restaurantVisits = approvedSubmissions.filter(s => {
-    const storeType = getStoreType(s.restaurantName);
-    return storeType === 'Restaurant';
-  }).length;
+
+  // Handle refresh button press
+  const handleRefresh = () => {
+    fetchApprovedSubmissions(true);
+  };
+
+  // Fetch submissions when component mounts and when userData changes
+  useEffect(() => {
+    console.log('useEffect triggered with userData:', userData);
+    fetchApprovedSubmissions();
+  }, [userData?.id]);
+
+  // Calculate achievements based on approved submission counts
+  const totalPoints = approvedCounts.total * 10;
 
   const createBadgeLevels = (currentCount: number): BadgeLevel[] => {
-    const requirements = [10, 20, 30, 40];
+    const requirements = [1, 5, 10, 25, 50]; // More realistic requirements
     return requirements.map((req, index) => ({
       level: index + 1,
       requirement: req,
@@ -73,7 +165,7 @@ export default function Badges({ partnerStores }: BadgesProps) {
       icon: <Store size={24} color="#8B5CF6" />,
       color: '#8B5CF6',
       bgColor: '#F3F4F6',
-      levels: createBadgeLevels(totalVisits),
+      levels: createBadgeLevels(approvedCounts.total),
     },
     {
       id: 'cafe',
@@ -81,7 +173,7 @@ export default function Badges({ partnerStores }: BadgesProps) {
       icon: <Coffee size={24} color="#F59E0B" />,
       color: '#F59E0B',
       bgColor: '#FEF3C7',
-      levels: createBadgeLevels(cafeVisits),
+      levels: createBadgeLevels(approvedCounts.cafe),
     },
     {
       id: 'restaurant',
@@ -89,7 +181,7 @@ export default function Badges({ partnerStores }: BadgesProps) {
       icon: <UtensilsCrossed size={24} color="#EF4444" />,
       color: '#EF4444',
       bgColor: '#FEE2E2',
-      levels: createBadgeLevels(restaurantVisits),
+      levels: createBadgeLevels(approvedCounts.restaurant),
     },
   ];
 
@@ -99,104 +191,263 @@ export default function Badges({ partnerStores }: BadgesProps) {
     </View>
   );
 
-  const renderBadgeLevel = (category: BadgeCategory, level: BadgeLevel) => (
-    <View key={level.level} style={[styles.badgeLevel, level.achieved && styles.achievedBadge]}>
-      <View style={[styles.badgeIcon, { backgroundColor: level.achieved ? category.color : '#F3F4F6' }]}>
-        {level.achieved ? (
-          <Star size={16} color="white" fill="white" />
-        ) : (
-          <Text style={styles.badgeLevelNumber}>{level.level}</Text>
+  const getCurrentCountForCategory = (categoryId: string): number => {
+    switch (categoryId) {
+      case 'any':
+        return approvedCounts.total;
+      case 'cafe':
+        return approvedCounts.cafe;
+      case 'restaurant':
+        return approvedCounts.restaurant;
+      default:
+        return 0;
+    }
+  };
+
+  const renderBadgeLevel = (category: BadgeCategory, level: BadgeLevel) => {
+    const currentCount = getCurrentCountForCategory(category.id);
+    
+    return (
+      <View key={level.level} style={[styles.badgeLevel, level.achieved && styles.achievedBadge]}>
+        <View style={[styles.badgeIcon, { backgroundColor: level.achieved ? category.color : '#F3F4F6' }]}>
+          {level.achieved ? (
+            <Star size={16} color="white" fill="white" />
+          ) : (
+            <Text style={styles.badgeLevelNumber}>{level.level}</Text>
+          )}
+        </View>
+        <View style={styles.badgeInfo}>
+          <Text style={[styles.badgeLevelText, level.achieved && styles.achievedBadgeText]}>
+            Level {level.level}
+          </Text>
+          <Text style={styles.badgeRequirement}>
+            {level.requirement} approved visits required
+          </Text>
+          {!level.achieved && (
+            <Text style={styles.badgeProgress}>
+              {currentCount} / {level.requirement}
+            </Text>
+          )}
+          {!level.achieved && renderProgressBar(level.progress, category.color)}
+        </View>
+        {level.achieved && (
+          <CheckCircle size={20} color={category.color} />
         )}
       </View>
-      <View style={styles.badgeInfo}>
-        <Text style={[styles.badgeLevelText, level.achieved && styles.achievedBadgeText]}>
-          Level {level.level}
-        </Text>
-        <Text style={styles.badgeRequirement}>
-          {level.requirement} visits
-        </Text>
-        {!level.achieved && renderProgressBar(level.progress, category.color)}
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <RefreshCw size={32} color="#64748B" />
+        <Text style={styles.loadingText}>Loading your achievements...</Text>
       </View>
-      {level.achieved && (
-        <CheckCircle size={20} color={category.color} />
-      )}
-    </View>
-  );
+    );
+  }
 
   return (
-    <ScrollView style={styles.rewardsContainer} showsVerticalScrollIndicator={false}>
-      {/* Points Summary */}
-      <View style={styles.pointsCard}>
-        <View style={styles.pointsHeader}>
-          <Star size={32} color="#F59E0B" fill="#F59E0B" />
-          <View style={styles.pointsInfo}>
-            <Text style={styles.pointsNumber}>{totalPoints}</Text>
-            <Text style={styles.pointsLabel}>Token Points</Text>
-          </View>
-        </View>
-        <Text style={styles.pointsDescription}>
-          Earn 10 points for each approved submission
-        </Text>
+    <View style={styles.container}>
+      {/* Header with Refresh Button */}
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>Your Badges</Text>
+        <TouchableOpacity 
+          style={[styles.refreshButton, isRefreshing && styles.refreshButtonDisabled]} 
+          onPress={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw 
+            size={16} 
+            color={isRefreshing ? "#94A3B8" : "#64748B"} 
+          />
+          <Text style={[styles.refreshText, isRefreshing && styles.refreshTextDisabled]}>
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Achievement Summary */}
-      <View style={styles.achievementSummary}>
-        <Text style={styles.sectionTitle}>Achievement Progress</Text>
-        <View style={styles.summaryStats}>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryNumber}>{totalVisits}</Text>
-            <Text style={styles.summaryLabel}>Total Visits</Text>
-          </View>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryNumber}>{cafeVisits}</Text>
-            <Text style={styles.summaryLabel}>Café Visits</Text>
-          </View>
-          <View style={styles.summaryStat}>
-            <Text style={styles.summaryNumber}>{restaurantVisits}</Text>
-            <Text style={styles.summaryLabel}>Restaurant Visits</Text>
-          </View>
+      <ScrollView style={styles.rewardsContainer} showsVerticalScrollIndicator={false}>
+        {/* Debug Info - Remove this in production */}
+        <View style={styles.debugCard}>
+          <Text style={styles.debugTitle}>Debug Info (Remove in production)</Text>
+          <Text style={styles.debugText}>Total Approved: {approvedCounts.total}</Text>
+          <Text style={styles.debugText}>Restaurant: {approvedCounts.restaurant}</Text>
+          <Text style={styles.debugText}>Cafe: {approvedCounts.cafe}</Text>
+          <Text style={styles.debugText}>Others: {approvedCounts.others}</Text>
+          <Text style={styles.debugText}>User ID: {userData?.id || 'Not set'}</Text>
+          <Text style={styles.debugText}>UserData: {JSON.stringify(userData)}</Text>
         </View>
-      </View>
 
-      {/* Badge Categories */}
-      {badgeCategories.map((category) => (
-        <View key={category.id} style={styles.badgeCategory}>
-          <View style={styles.categoryHeader}>
-            <View style={[styles.categoryIconContainer, { backgroundColor: category.bgColor }]}>
-              {category.icon}
-            </View>
-            <View style={styles.categoryInfo}>
-              <Text style={styles.categoryName}>{category.name}</Text>
-              <Text style={styles.categoryProgress}>
-                {category.levels.filter(l => l.achieved).length} of {category.levels.length} badges earned
-              </Text>
+        {/* Points Summary */}
+        <View style={styles.pointsCard}>
+          <View style={styles.pointsHeader}>
+            <Star size={32} color="#F59E0B" fill="#F59E0B" />
+            <View style={styles.pointsInfo}>
+              <Text style={styles.pointsNumber}>{totalPoints}</Text>
+              <Text style={styles.pointsLabel}>Token Points</Text>
             </View>
           </View>
+          <Text style={styles.pointsDescription}>
+            Earn 10 points for each approved submission
+          </Text>
+          {approvedCounts.total > 0 && (
+            <Text style={styles.pointsSubtext}>
+              You have {approvedCounts.total} approved submissions!
+            </Text>
+          )}
+        </View>
 
-          <View style={styles.badgeLevels}>
-            {category.levels.map((level) => renderBadgeLevel(category, level))}
+        {/* Achievement Summary */}
+        <View style={styles.achievementSummary}>
+          <Text style={styles.sectionTitle}>Achievement Progress</Text>
+          <View style={styles.summaryStats}>
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryNumber}>{approvedCounts.total}</Text>
+              <Text style={styles.summaryLabel}>Total Visits</Text>
+            </View>
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryNumber}>{approvedCounts.cafe}</Text>
+              <Text style={styles.summaryLabel}>Café Visits</Text>
+            </View>
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryNumber}>{approvedCounts.restaurant}</Text>
+              <Text style={styles.summaryLabel}>Restaurant Visits</Text>
+            </View>
+          </View>
+          <Text style={styles.achievementNote}>
+            Only approved submissions count towards badges
+          </Text>
+        </View>
+
+        {/* Badge Categories */}
+        {badgeCategories.map((category) => {
+          const earnedBadges = category.levels.filter(l => l.achieved).length;
+          return (
+            <View key={category.id} style={styles.badgeCategory}>
+              <View style={styles.categoryHeader}>
+                <View style={[styles.categoryIconContainer, { backgroundColor: category.bgColor }]}>
+                  {category.icon}
+                </View>
+                <View style={styles.categoryInfo}>
+                  <Text style={styles.categoryName}>{category.name}</Text>
+                  <Text style={styles.categoryProgress}>
+                    {earnedBadges} of {category.levels.length} badges earned
+                  </Text>
+                  {earnedBadges > 0 && (
+                    <Text style={[styles.categoryAchievement, { color: category.color }]}>
+                      🎉 Level {earnedBadges} achieved!
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              <View style={styles.badgeLevels}>
+                {category.levels.map((level) => renderBadgeLevel(category, level))}
+              </View>
+            </View>
+          );
+        })}
+
+        {/* Tips Section */}
+        <View style={styles.tipsCard}>
+          <Text style={styles.tipsTitle}>💡 Tips to Earn More Badges</Text>
+          <View style={styles.tipsList}>
+            <Text style={styles.tipItem}>• Visit different types of partner stores (restaurants, cafés)</Text>
+            <Text style={styles.tipItem}>• Take clear photos of your receipt and selfie</Text>
+            <Text style={styles.tipItem}>• Submit proof within 24 hours of your visit</Text>
+            <Text style={styles.tipItem}>• Check out our partner stores in different cities</Text>
+            <Text style={styles.tipItem}>• Wait for admin approval to earn points and badges</Text>
           </View>
         </View>
-      ))}
 
-      {/* Tips Section */}
-      <View style={styles.tipsCard}>
-        <Text style={styles.tipsTitle}>💡 Tips to Earn More Badges</Text>
-        <View style={styles.tipsList}>
-          <Text style={styles.tipItem}>• Visit different types of partner stores</Text>
-          <Text style={styles.tipItem}>• Take clear photos of your receipt and selfie</Text>
-          <Text style={styles.tipItem}>• Submit proof within 24 hours of your visit</Text>
-          <Text style={styles.tipItem}>• Check out our partner stores in different cities</Text>
-        </View>
-      </View>
-    </ScrollView>
+        {approvedCounts.total === 0 && (
+          <View style={styles.emptyState}>
+            <Store size={48} color="#94A3B8" />
+            <Text style={styles.emptyTitle}>Start Your Journey!</Text>
+            <Text style={styles.emptyDescription}>
+              Submit your first proof of travel to begin earning badges and points. Only approved submissions count towards your achievements.
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingTop: 10,
+    paddingHorizontal: 20,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  refreshButtonDisabled: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#f1f5f9',
+  },
+  refreshText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  refreshTextDisabled: {
+    color: '#94A3B8',
+  },
   rewardsContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#64748B',
+    marginTop: 12,
+  },
+  debugCard: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  debugTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#DC2626',
+    marginBottom: 8,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#7F1D1D',
+    marginBottom: 4,
   },
   pointsCard: {
     backgroundColor: 'white',
@@ -233,6 +484,13 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
   },
+  pointsSubtext: {
+    fontSize: 12,
+    color: '#22C55E',
+    textAlign: 'center',
+    marginTop: 4,
+    fontWeight: '600',
+  },
   achievementSummary: {
     backgroundColor: 'white',
     borderRadius: 16,
@@ -266,6 +524,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     marginTop: 4,
+  },
+  achievementNote: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 12,
+    fontStyle: 'italic',
   },
   badgeCategory: {
     backgroundColor: 'white',
@@ -303,6 +568,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     marginTop: 2,
+  },
+  categoryAchievement: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
   },
   badgeLevels: {
     gap: 12,
@@ -348,6 +618,12 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
+  badgeProgress: {
+    fontSize: 12,
+    color: '#F59E0B',
+    marginTop: 2,
+    fontWeight: '600',
+  },
   progressBarSmall: {
     height: 4,
     backgroundColor: '#e2e8f0',
@@ -382,6 +658,31 @@ const styles = StyleSheet.create({
   tipItem: {
     fontSize: 14,
     color: '#64748B',
+    lineHeight: 20,
+  },
+  emptyState: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  emptyDescription: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
     lineHeight: 20,
   },
 });
