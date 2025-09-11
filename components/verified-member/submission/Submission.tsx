@@ -9,20 +9,10 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock } from 'lucide-react-native';
+import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock, X } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import type { PartnerStore } from '@/data/partnerStore';
-
-interface Submission {
-  id: number;
-  submissionDate: string;
-  restaurantName: string;
-  receiptPhoto: string;
-  selfiePhoto: string;
-  status: 'approved' | 'pending';
-  category: string;
-  points?: number;
-}
+import type { Submission } from '@/types/submission';
 
 interface SubmissionProps {
   userData: any;
@@ -215,7 +205,7 @@ export default function Submission({
         [
           { 
             text: 'OK', 
-            onPress: () => {
+            onPress: async () => {
               // Reset form
               setSelectedStore(null);
               setReceiptPhoto(null);
@@ -236,6 +226,50 @@ export default function Submission({
       
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const getStatusIcon = (status: Submission['status']) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle size={12} color="#22C55E" />;
+      case 'rejected':
+        return <X size={12} color="#EF4444" />;
+      default:
+        return <Clock size={12} color="#F59E0B" />;
+    }
+  };
+
+  const getStatusBadgeStyle = (status: Submission['status']) => {
+    switch (status) {
+      case 'approved':
+        return styles.approvedBadge;
+      case 'rejected':
+        return styles.rejectedBadge;
+      default:
+        return styles.pendingBadge;
+    }
+  };
+
+  const getStatusTextStyle = (status: Submission['status']) => {
+    switch (status) {
+      case 'approved':
+        return styles.approvedText;
+      case 'rejected':
+        return styles.rejectedText;
+      default:
+        return styles.pendingText;
+    }
+  };
+
+  const getStatusText = (status: Submission['status']) => {
+    switch (status) {
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Pending';
     }
   };
 
@@ -373,20 +407,10 @@ export default function Submission({
                     )}
                   </View>
                   <View style={[styles.tableCell, styles.statusColumn]}>
-                    <View style={[
-                      styles.statusBadge,
-                      submission.status === 'approved' ? styles.approvedBadge : styles.pendingBadge
-                    ]}>
-                      {submission.status === 'approved' ? (
-                        <CheckCircle size={12} color="#22C55E" />
-                      ) : (
-                        <Clock size={12} color="#F59E0B" />
-                      )}
-                      <Text style={[
-                        styles.statusText,
-                        submission.status === 'approved' ? styles.approvedText : styles.pendingText
-                      ]}>
-                        {submission.status === 'approved' ? 'Approved' : 'Pending'}
+                    <View style={[styles.statusBadge, getStatusBadgeStyle(submission.status)]}>
+                      {getStatusIcon(submission.status)}
+                      <Text style={[styles.statusText, getStatusTextStyle(submission.status)]}>
+                        {getStatusText(submission.status)}
                       </Text>
                     </View>
                   </View>
@@ -615,6 +639,9 @@ const styles = StyleSheet.create({
   pendingBadge: {
     backgroundColor: '#fefce8',
   },
+  rejectedBadge: {
+    backgroundColor: '#fef2f2',
+  },
   statusText: {
     fontSize: 10,
     fontWeight: '600',
@@ -624,5 +651,8 @@ const styles = StyleSheet.create({
   },
   pendingText: {
     color: '#F59E0B',
+  },
+  rejectedText: {
+    color: '#EF4444',
   },
 });

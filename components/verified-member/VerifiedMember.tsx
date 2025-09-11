@@ -2,23 +2,13 @@ import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Upload, Gift, RefreshCw } from 'lucide-react-native';
+import { Upload, Gift } from 'lucide-react-native';
 import Submission from './submission/Submission';
 import Badges from './badges/Badges';
 import { supabase } from '@/lib/supabase';
 import { Alert } from 'react-native';
 import type { PartnerStore } from '@/data/partnerStore';
-
-interface SubmissionData {
-  id: number;
-  submissionDate: string;
-  restaurantName: string;
-  receiptPhoto: string;
-  selfiePhoto: string;
-  status: 'approved' | 'pending' | 'rejected';
-  category: string;
-  points?: number;
-}
+import type { Submission as SubmissionType } from '@/types/submission';
 
 interface VerifiedMemberProps {
   userData: any;
@@ -36,7 +26,7 @@ export default function VerifiedMember({
   partnerStores
 }: VerifiedMemberProps) {
   const [activeTab, setActiveTab] = useState<'submit' | 'rewards'>('submit');
-  const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionType[]>([]);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const [approvedCounts, setApprovedCounts] = useState({
     total: 0,
@@ -72,8 +62,8 @@ export default function VerifiedMember({
       }
 
       if (data) {
-        // Transform the data to match the SubmissionData interface
-        const transformedSubmissions: SubmissionData[] = data.map((item, index) => ({
+        // Transform the data to match the Submission interface
+        const transformedSubmissions: SubmissionType[] = data.map((item, index) => ({
           id: item.id || index,
           submissionDate: new Date(item.created_at).toLocaleDateString('en-US', {
             year: 'numeric',
