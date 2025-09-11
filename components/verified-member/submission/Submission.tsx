@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock, RefreshCw } from 'lucide-react-native';
+import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 import type { PartnerStore } from '@/data/partnerStore';
 
@@ -30,6 +30,9 @@ interface SubmissionProps {
   setSelectedStore: (store: PartnerStore | null) => void;
   setShowStoreDropdown: (show: boolean) => void;
   partnerStores: PartnerStore[];
+  submissions: Submission[];
+  isLoadingSubmissions: boolean;
+  fetchSubmissions: (showRefreshIndicator?: boolean) => Promise<void>;
 }
 
 export default function Submission({ 
@@ -37,13 +40,14 @@ export default function Submission({
   selectedStore, 
   setSelectedStore, 
   setShowStoreDropdown,
-  partnerStores 
+  partnerStores,
+  submissions,
+  isLoadingSubmissions,
+  fetchSubmissions
 }: SubmissionProps) {
   const [receiptPhoto, setReceiptPhoto] = useState<string | null>(null);
   const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
   // Function to map partner store category
   const mapStoreCategory = (storeType: string): string => {
@@ -58,59 +62,6 @@ export default function Submission({
       return 'others';
     }
   };
-
-  // Function to fetch submissions from database
-  const fetchSubmissions = async () => {
-    if (!userData?.id) {
-      console.log('No user data available');
-      return;
-    }
-
-    setIsLoadingSubmissions(true);
-    try {
-      const { data, error } = await supabase
-        .from('submissions')
-        .select('*')
-        .eq('user_id', userData.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching submissions:', error);
-        Alert.alert('Error', 'Failed to fetch submissions');
-        return;
-      }
-
-      if (data) {
-        // Transform the data to match the Submission interface
-        const transformedSubmissions: Submission[] = data.map((item, index) => ({
-          id: item.id || index,
-          submissionDate: new Date(item.created_at).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          }),
-          restaurantName: item.partner_store_name || 'Unknown',
-          receiptPhoto: item.receipt_url || '',
-          selfiePhoto: item.selfie_url || '',
-          status: item.status as 'approved' | 'pending',
-          category: item.partner_store_category || 'others'
-        }));
-
-        setSubmissions(transformedSubmissions);
-        console.log('Fetched submissions:', transformedSubmissions);
-      }
-    } catch (error) {
-      console.error('Error fetching submissions:', error);
-      Alert.alert('Error', 'Failed to fetch submissions');
-    } finally {
-      setIsLoadingSubmissions(false);
-    }
-  };
-
-  // Fetch submissions when component mounts and when userData changes
-  useEffect(() => {
-    fetchSubmissions();
-  }, [userData?.id]);
 
   const pickImage = async (type: 'receipt' | 'selfie') => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -270,7 +221,7 @@ export default function Submission({
               setReceiptPhoto(null);
               setSelfiePhoto(null);
               // Refresh submissions list
-              fetchSubmissions();
+              await fetchSubmissions();
             }
           }
         ]
@@ -358,10 +309,10 @@ export default function Submission({
           <Text style={styles.tableTitle}>Your Submissions</Text>
           <TouchableOpacity 
             style={styles.refreshButton}
-            onPress={fetchSubmissions}
+            onPress={() => fetchSubmissions(true)}
             disabled={isLoadingSubmissions}
           >
-            <RefreshCw 
+            <Upload 
               size={18} 
               color="#64748B" 
               style={[isLoadingSubmissions && { opacity: 0.5 }]}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { CircleCheck as CheckCircle, Star, Coffee, UtensilsCrossed, Store, RefreshCw } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
+import { CircleCheck as CheckCircle, Star, Coffee, UtensilsCrossed, Store } from 'lucide-react-native';
 
 interface Submission {
   id: number;
@@ -32,118 +31,38 @@ interface BadgeCategory {
 
 interface BadgesProps {
   userData: any;
+  submissions: Submission[];
+  approvedCounts: {
+    total: number;
+    restaurant: number;
+    cafe: number;
+    others: number;
+  };
+  isLoadingSubmissions: boolean;
+  fetchSubmissions: (showRefreshIndicator?: boolean) => Promise<void>;
 }
 
-export default function Badges({ userData }: BadgesProps) {
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [approvedCounts, setApprovedCounts] = useState({
-    total: 0,
-    restaurant: 0,
-    cafe: 0,
-    others: 0
-  });
-  const [isLoading, setIsLoading] = useState(false);
+export default function Badges({ 
+  userData, 
+  submissions, 
+  approvedCounts, 
+  isLoadingSubmissions, 
+  fetchSubmissions 
+}: BadgesProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Function to fetch approved submissions - updated to match submission.tsx approach
-  const fetchApprovedSubmissions = async (showRefreshIndicator = false) => {
-    if (!userData?.id) {
-      console.log('No user data available for badges');
-      console.log('userData:', userData);
-      return;
-    }
-
-    if (showRefreshIndicator) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
+  // Handle refresh button press
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
-      console.log('Fetching submissions for user ID:', userData.id);
-      
-      // Use the same approach as submission.tsx - get all submissions first
-      const { data, error } = await supabase
-        .from('submissions')
-        .select('*')
-        .eq('user_id', userData.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching submissions:', error);
-        Alert.alert('Error', 'Failed to fetch submissions');
-        return;
-      }
-
-      console.log('All submissions from DB:', data);
-
-      if (data) {
-        // Transform the data to match the Submission interface (same as submission.tsx)
-        const transformedSubmissions: Submission[] = data.map((item, index) => ({
-          id: item.id || index,
-          submissionDate: new Date(item.created_at).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          }),
-          restaurantName: item.partner_store_name || 'Unknown',
-          receiptPhoto: item.receipt_url || '',
-          selfiePhoto: item.selfie_url || '',
-          status: item.status as 'approved' | 'pending' | 'rejected',
-          category: item.partner_store_category || 'others'
-        }));
-
-        console.log('All transformed submissions:', transformedSubmissions);
-
-        // Filter only approved submissions for badge calculations
-        const approvedSubmissions = transformedSubmissions.filter(s => s.status === 'approved');
-        console.log('Approved submissions only:', approvedSubmissions);
-
-        // Calculate counts by category
-        const totalCount = approvedSubmissions.length;
-        const restaurantCount = approvedSubmissions.filter(s => s.category === 'restaurant').length;
-        const cafeCount = approvedSubmissions.filter(s => s.category === 'cafe').length;
-        const othersCount = approvedSubmissions.filter(s => !['restaurant', 'cafe'].includes(s.category)).length;
-
-        console.log('Badge counts:', {
-          total: totalCount,
-          restaurant: restaurantCount,
-          cafe: cafeCount,
-          others: othersCount
-        });
-
-        // Update states
-        setSubmissions(approvedSubmissions);
-        setApprovedCounts({
-          total: totalCount,
-          restaurant: restaurantCount,
-          cafe: cafeCount,
-          others: othersCount
-        });
-
-        if (showRefreshIndicator) {
-          Alert.alert('Success', `Badges updated! Found ${totalCount} approved submissions.`);
-        }
-      }
+      await fetchSubmissions(true);
+      Alert.alert('Success', `Badges updated! Found ${approvedCounts.total} approved submissions.`);
     } catch (error) {
-      console.error('Error fetching submissions:', error);
-      Alert.alert('Error', 'Failed to fetch submissions. Please try again.');
+      Alert.alert('Error', 'Failed to refresh badges. Please try again.');
     } finally {
-      setIsLoading(false);
       setIsRefreshing(false);
     }
   };
-
-  // Handle refresh button press
-  const handleRefresh = () => {
-    fetchApprovedSubmissions(true);
-  };
-
-  // Fetch submissions when component mounts and when userData changes
-  useEffect(() => {
-    console.log('useEffect triggered with userData:', userData);
-    fetchApprovedSubmissions();
-  }, [userData?.id]);
 
   // Calculate achievements based on approved submission counts
   const totalPoints = approvedCounts.total * 10;
@@ -237,10 +156,10 @@ export default function Badges({ userData }: BadgesProps) {
     );
   };
 
-  if (isLoading) {
+  if (isLoadingSubmissions && approvedCounts.total === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <RefreshCw size={32} color="#64748B" />
+        <Star size={32} color="#64748B" />
         <Text style={styles.loadingText}>Loading your achievements...</Text>
       </View>
     );
@@ -256,7 +175,7 @@ export default function Badges({ userData }: BadgesProps) {
           onPress={handleRefresh}
           disabled={isRefreshing}
         >
-          <RefreshCw 
+          <Star 
             size={16} 
             color={isRefreshing ? "#94A3B8" : "#64748B"} 
           />
@@ -274,8 +193,8 @@ export default function Badges({ userData }: BadgesProps) {
           <Text style={styles.debugText}>Restaurant: {approvedCounts.restaurant}</Text>
           <Text style={styles.debugText}>Cafe: {approvedCounts.cafe}</Text>
           <Text style={styles.debugText}>Others: {approvedCounts.others}</Text>
+          <Text style={styles.debugText}>Total Submissions: {submissions.length}</Text>
           <Text style={styles.debugText}>User ID: {userData?.id || 'Not set'}</Text>
-          <Text style={styles.debugText}>UserData: {JSON.stringify(userData)}</Text>
         </View>
 
         {/* Points Summary */}
@@ -362,7 +281,7 @@ export default function Badges({ userData }: BadgesProps) {
 
         {approvedCounts.total === 0 && (
           <View style={styles.emptyState}>
-            <Store size={48} color="#94A3B8" />
+            <Star size={48} color="#94A3B8" />
             <Text style={styles.emptyTitle}>Start Your Journey!</Text>
             <Text style={styles.emptyDescription}>
               Submit your first proof of travel to begin earning badges and points. Only approved submissions count towards your achievements.

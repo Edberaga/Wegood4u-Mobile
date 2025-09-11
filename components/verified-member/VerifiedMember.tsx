@@ -1,10 +1,24 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Upload, Gift } from 'lucide-react-native';
+import { Upload, Gift, RefreshCw } from 'lucide-react-native';
 import Submission from './submission/Submission';
 import Badges from './badges/Badges';
+import { supabase } from '@/lib/supabase';
+import { Alert } from 'react-native';
 import type { PartnerStore } from '@/data/partnerStore';
+
+interface SubmissionData {
+  id: number;
+  submissionDate: string;
+  restaurantName: string;
+  receiptPhoto: string;
+  selfiePhoto: string;
+  status: 'approved' | 'pending' | 'rejected';
+  category: string;
+  points?: number;
+}
 
 interface VerifiedMemberProps {
   userData: any;
@@ -22,9 +36,87 @@ export default function VerifiedMember({
   partnerStores
 }: VerifiedMemberProps) {
   const [activeTab, setActiveTab] = useState<'submit' | 'rewards'>('submit');
+  const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
+  const [approvedCounts, setApprovedCounts] = useState({
+    total: 0,
+    restaurant: 0,
+    cafe: 0,
+    others: 0
+  });
 
-  // Mock submissions for now
-  const submissions: any[] = [];
+  // Function to fetch submissions from database
+  const fetchSubmissions = async (showRefreshIndicator = false) => {
+    if (!userData?.id) {
+      console.log('No user data available');
+      return;
+    }
+
+    if (showRefreshIndicator) {
+      console.log('Refreshing submissions...');
+    } else {
+      setIsLoadingSubmissions(true);
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('*')
+        .eq('user_id', userData.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching submissions:', error);
+        Alert.alert('Error', 'Failed to fetch submissions');
+        return;
+      }
+
+      if (data) {
+        // Transform the data to match the SubmissionData interface
+        const transformedSubmissions: SubmissionData[] = data.map((item, index) => ({
+          id: item.id || index,
+          submissionDate: new Date(item.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }),
+          restaurantName: item.partner_store_name || 'Unknown',
+          receiptPhoto: item.receipt_url || '',
+          selfiePhoto: item.selfie_url || '',
+          status: item.status as 'approved' | 'pending' | 'rejected',
+          category: item.partner_store_category || 'others'
+        }));
+
+        // Calculate approved counts for badges
+        const approvedSubmissions = transformedSubmissions.filter(s => s.status === 'approved');
+        const totalCount = approvedSubmissions.length;
+        const restaurantCount = approvedSubmissions.filter(s => s.category === 'restaurant').length;
+        const cafeCount = approvedSubmissions.filter(s => s.category === 'cafe').length;
+        const othersCount = approvedSubmissions.filter(s => !['restaurant', 'cafe'].includes(s.category)).length;
+
+        setSubmissions(transformedSubmissions);
+        setApprovedCounts({
+          total: totalCount,
+          restaurant: restaurantCount,
+          cafe: cafeCount,
+          others: othersCount
+        });
+
+        console.log('Fetched submissions:', transformedSubmissions.length);
+        console.log('Approved counts:', { totalCount, restaurantCount, cafeCount, othersCount });
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      Alert.alert('Error', 'Failed to fetch submissions');
+    } finally {
+      setIsLoadingSubmissions(false);
+    }
+  };
+
+  // Fetch submissions when component mounts and when userData changes
+  useEffect(() => {
+    fetchSubmissions();
+  }, [userData?.id]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -72,9 +164,18 @@ export default function VerifiedMember({
             setSelectedStore={setSelectedStore}
             setShowStoreDropdown={setShowStoreDropdown}
             partnerStores={partnerStores}
+            submissions={submissions}
+            isLoadingSubmissions={isLoadingSubmissions}
+            fetchSubmissions={fetchSubmissions}
           />
         ) : (
-          <Badges partnerStores={partnerStores} />
+          <Badges 
+            userData={userData}
+            submissions={submissions}
+            approvedCounts={approvedCounts}
+            isLoadingSubmissions={isLoadingSubmissions}
+            fetchSubmissions={fetchSubmissions}
+          />
         )}
       </ScrollView>
     </SafeAreaView>
