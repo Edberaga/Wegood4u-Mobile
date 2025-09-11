@@ -11,16 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  User, 
-  Calendar,
-  Store,
-  Eye,
-  RefreshCw
-} from 'lucide-react-native';
+import { CircleCheck as CheckCircle, Circle as XCircle, Clock, User, Calendar, Store, Eye, RefreshCw } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
 
 interface PendingSubmission {
