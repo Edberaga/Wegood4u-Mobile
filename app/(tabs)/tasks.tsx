@@ -89,7 +89,7 @@ export default function TasksScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#F33F32" />
+          <ActivityIndicator color="#206E56" />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </SafeAreaView>
@@ -103,7 +103,7 @@ export default function TasksScreen() {
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Unable to load user data</Text>
           <TouchableOpacity style={styles.retryButton} onPress={refreshUserData}>
-            <RefreshCw size={16} color="#F33F32" />
+            <RefreshCw size={16} color="#206E56" />
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
@@ -290,11 +290,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#F33F32',
+    borderColor: '#206E56',
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#F33F32',
+    color: '#206E56',
     fontWeight: '600',
   },
   modalOverlay: {
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f1f5f9',
   },
   selectedStoreItem: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
   },
   storeItemText: {
     fontSize: 14,
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   cityHeaderText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#F33F32',
+    color: '#206E56',
     marginRight: 8,
   },
   cityStoreCount: {
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   clearSearchButton: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

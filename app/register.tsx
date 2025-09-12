@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   registerButton: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loginLinkHighlight: {
-    color: '#F33F32',
+    color: '#206E56',
     fontWeight: '600',
   },
   genderSelector: {
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f1f5f9',
   },
   selectedGenderOption: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
   },
   genderOptionText: {
     fontSize: 16,

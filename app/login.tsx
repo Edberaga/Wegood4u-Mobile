@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   loginButton: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   forgotPasswordText: {
-    color: '#F33F32',
+    color: '#206E56',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   registerLinkHighlight: {
-    color: '#F33F32',
+    color: '#206E56',
     fontWeight: '600',
   },
 });

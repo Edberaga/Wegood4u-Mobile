@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     borderRadius: 12,
     paddingVertical: 16,
     gap: 8,
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
   refreshButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#CBEED2',
   },
   emptyState: {
     backgroundColor: 'white',
@@ -646,10 +646,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   approvedText: {
-    color: '#22C55E',
+    color: '#206E56',
   },
   pendingText: {
-    color: '#F59E0B',
+    color: '#E5C69E',
   },
   rejectedText: {
     color: '#EF4444',

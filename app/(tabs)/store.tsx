@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#F33F32',
+    color: '#206E56',
   },
   modalOverlay: {
     flex: 1,
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   selectedSortOption: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
   },
   sortOptionText: {
     fontSize: 16,
@@ -712,8 +712,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   selectedCategoryChip: {
-    backgroundColor: '#F33F32',
-    borderColor: '#F33F32',
+    backgroundColor: '#206E56',
+    borderColor: '#206E56',
   },
   categoryChipText: {
     fontSize: 14,
@@ -732,11 +732,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#F33F32',
+    borderColor: '#206E56',
     alignItems: 'center',
   },
   resetButtonText: {
-    color: '#F33F32',
+    color: '#206E56',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     alignItems: 'center',
   },
   applyButtonText: {
@@ -851,7 +851,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e2e8f0',
   },
   buyButton: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

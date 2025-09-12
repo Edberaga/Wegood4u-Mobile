@@ -267,13 +267,13 @@ const styles = StyleSheet.create({
   refreshButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#CBEED2',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#206E56',
   },
   refreshButtonDisabled: {
     backgroundColor: '#f1f5f9',
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   summaryNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#F33F32',
+    color: '#206E56',
   },
   summaryLabel: {
     fontSize: 12,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     color: '#1e293b',
   },
   achievedBadgeText: {
-    color: '#22C55E',
+    color: '#206E56',
   },
   badgeRequirement: {
     fontSize: 12,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
   },
   badgeProgress: {
     fontSize: 12,
-    color: '#F59E0B',
+    color: '#E5C69E',
     marginTop: 2,
     fontWeight: '600',
   },

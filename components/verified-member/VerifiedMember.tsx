@@ -54,7 +54,7 @@ export default function VerifiedMember({
           style={[styles.tab, activeTab === 'submit' && styles.activeTab]}
           onPress={() => setActiveTab('submit')}
         >
-          <Upload size={20} color={activeTab === 'submit' ? '#F33F32' : '#64748B'} />
+          <Upload size={20} color={activeTab === 'submit' ? '#206E56' : '#64748B'} />
           <Text style={[styles.tabText, activeTab === 'submit' && styles.activeTabText]}>
             Submit Proof
           </Text>
@@ -64,7 +64,7 @@ export default function VerifiedMember({
           style={[styles.tab, activeTab === 'rewards' && styles.activeTab]}
           onPress={() => setActiveTab('rewards')}
         >
-          <Gift size={20} color={activeTab === 'rewards' ? '#F33F32' : '#64748B'} />
+          <Gift size={20} color={activeTab === 'rewards' ? '#206E56' : '#64748B'} />
           <Text style={[styles.tabText, activeTab === 'rewards' && styles.activeTabText]}>
             View Rewards
           </Text>
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#F33F32',
+    color: '#206E56',
   },
   statLabel: {
     fontSize: 12,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   activeTab: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#CBEED2',
   },
   tabText: {
     fontSize: 14,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   activeTabText: {
-    color: '#F33F32',
+    color: '#206E56',
   },
   content: {
     flex: 1,

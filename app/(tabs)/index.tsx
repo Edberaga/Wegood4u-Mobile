@@ -52,7 +52,7 @@ export default function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={['#F33F32', '#f38632ff']}
+          colors={['#206E56', '#CBEED2']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -73,7 +73,7 @@ export default function HomeScreen() {
           <View style={styles.quickActions}>
             <TouchableOpacity style={styles.actionButton} onPress={pickImage}>
               <View style={styles.actionIcon}>
-                <Camera size={24} color="#F33F32" />
+                <Camera size={24} color="#206E56" />
               </View>
               <Text style={styles.actionText}>Upload Proof</Text>
             </TouchableOpacity>
@@ -87,7 +87,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity style={styles.actionButton}>
               <View style={styles.actionIcon}>
-                <Gift size={24} color="#F59E0B" />
+                <Gift size={24} color="#E5C69E" />
               </View>
               <Text style={styles.actionText}>Redeem</Text>
             </TouchableOpacity>
@@ -114,7 +114,7 @@ export default function HomeScreen() {
           <View style={styles.activityList}>
             <View style={styles.activityItem}>
               <View style={styles.activityIcon}>
-                <Trophy size={20} color="#F59E0B" />
+                <Trophy size={20} color="#E5C69E" />
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityTitle}>Task Completed</Text>
@@ -136,7 +136,7 @@ export default function HomeScreen() {
 
             <View style={styles.activityItem}>
               <View style={styles.activityIcon}>
-                <Share2 size={20} color="#F33F32" />
+                <Share2 size={20} color="#206E56" />
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityTitle}>Referral Success</Text>
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   pointsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(203, 238, 210, 0.3)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,

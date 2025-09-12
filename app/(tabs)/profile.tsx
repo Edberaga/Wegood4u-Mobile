@@ -155,7 +155,7 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
         <LinearGradient
-          colors={['#F33F32', '#f38632ff']}
+          colors={['#206E56', '#CBEED2']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -288,7 +288,7 @@ export default function ProfileScreen() {
               <Switch
                 value={settings.notifications}
                 onValueChange={(value) => setSettings({ ...settings, notifications: value })}
-                trackColor={{ false: '#e2e8f0', true: '#F33F32' }}
+                trackColor={{ false: '#e2e8f0', true: '#206E56' }}
                 thumbColor={settings.notifications ? '#ffffff' : '#f4f3f4'}
               />
             </View>
@@ -301,7 +301,7 @@ export default function ProfileScreen() {
               <Switch
                 value={settings.locationServices}
                 onValueChange={(value) => setSettings({ ...settings, locationServices: value })}
-                trackColor={{ false: '#e2e8f0', true: '#F33F32' }}
+                trackColor={{ false: '#e2e8f0', true: '#206E56' }}
                 thumbColor={settings.locationServices ? '#ffffff' : '#f4f3f4'}
               />
             </View>
@@ -314,7 +314,7 @@ export default function ProfileScreen() {
               <Switch
                 value={settings.marketingEmails}
                 onValueChange={(value) => setSettings({ ...settings, marketingEmails: value })}
-                trackColor={{ false: '#e2e8f0', true: '#F33F32' }}
+                trackColor={{ false: '#e2e8f0', true: '#206E56' }}
                 thumbColor={settings.marketingEmails ? '#ffffff' : '#f4f3f4'}
               />
             </View>
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   roleContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(203, 238, 210, 0.3)',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   pointsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(203, 238, 210, 0.3)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#206E56',
     marginTop: 8,
     marginBottom: 4,
   },
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
   referralCode: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#F33F32',
+    color: '#206E56',
     marginBottom: 8,
   },
   referralDescription: {
@@ -491,17 +491,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#F33F32',
+    borderColor: '#206E56',
     gap: 8,
   },
   shareReferralButton: {
-    backgroundColor: '#F33F32',
-    borderColor: '#F33F32',
+    backgroundColor: '#206E56',
+    borderColor: '#206E56',
   },
   referralButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F33F32',
+    color: '#206E56',
   },
   editButton: {
     flexDirection: 'row',
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F33F32',
+    color: '#206E56',
   },
   profileForm: {
     backgroundColor: 'white',
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   saveButton: {
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
