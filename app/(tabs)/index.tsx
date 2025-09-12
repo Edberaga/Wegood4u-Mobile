@@ -32,24 +32,10 @@ import type { PartnerStore } from '@/types';
 export default function HomeScreen() {
   const { user } = useAuth();
   const { userData } = useUser();
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
   const [recommendedRestaurants, setRecommendedRestaurants] = useState<PartnerStore[]>([]);
   const [recommendedCafes, setRecommendedCafes] = useState<PartnerStore[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const userStats = {
-    totalPoints: 2450,
-    tasksCompleted: 12,
-    vouchersEarned: 8,
-    memberSince: 'January 2024',
-  };
-
-  const recentAchievements = [
-    { id: 1, title: 'First Review', description: 'Posted your first restaurant review', date: '2024-01-10' },
-    { id: 2, title: 'Point Collector', description: 'Earned 1000 points', date: '2024-01-08' },
-    { id: 3, title: 'Social Butterfly', description: 'Referred 3 friends', date: '2024-01-05' },
-  ];
 
   // Load partner stores and filter recommendations
   useEffect(() => {
@@ -65,18 +51,18 @@ export default function HomeScreen() {
       // Filter and sort restaurants by rating (top 6)
       const restaurants = stores
         .filter(store => store.type.toLowerCase().includes('restaurant') || 
-                        store.type.toLowerCase().includes('italian') ||
-                        store.type.toLowerCase().includes('japanese') ||
-                        store.type.toLowerCase().includes('fast food') ||
-                        store.type.toLowerCase().includes('healthy food'))
+          store.type.toLowerCase().includes('italian') ||
+          store.type.toLowerCase().includes('japanese') ||
+          store.type.toLowerCase().includes('fast food') ||
+          store.type.toLowerCase().includes('healthy food'))
         .sort((a, b) => b.rating - a.rating)
         .slice(0, 6);
 
       // Filter and sort cafes by rating (top 6)
       const cafes = stores
         .filter(store => store.type.toLowerCase().includes('coffee') || 
-                        store.type.toLowerCase().includes('dessert') ||
-                        store.type.toLowerCase().includes('cafe'))
+          store.type.toLowerCase().includes('dessert') ||
+          store.type.toLowerCase().includes('cafe'))
         .sort((a, b) => b.rating - a.rating)
         .slice(0, 6);
 
@@ -88,24 +74,6 @@ export default function HomeScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setUploadedImage(result.assets[0].uri);
-      Alert.alert('Success', 'Proof of travel uploaded successfully!');
-    }
-  };
-
-  const shareReferralCode = () => {
-    Alert.alert('Referral Code', 'Your referral code: WG4U2024\nShare with friends to earn rewards!');
   };
 
   const renderStoreCard = (store: PartnerStore, index: number) => (
@@ -126,11 +94,11 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderRecommendationSection = (title: string, stores: PartnerStore[], icon: React.ReactNode) => (
+  const renderRecommendationSection = (title: string, stores: PartnerStore[]) => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionTitleContainer}>
-          {icon}
+          
           <Text style={styles.sectionTitle}>{title}</Text>
         </View>
         <TouchableOpacity style={styles.seeAllButton}>
@@ -178,79 +146,17 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={pickImage}>
-              <View style={styles.actionIcon}>
-                <Camera size={24} color="#206E56" />
-              </View>
-              <Text style={styles.actionText}>Upload Proof</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton} onPress={shareReferralCode}>
-              <View style={styles.actionIcon}>
-                <Share2 size={24} color="#00A85A" />
-              </View>
-              <Text style={styles.actionText}>Share Code</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton}>
-              <View style={styles.actionIcon}>
-                <Gift size={24} color="#E5C69E" />
-              </View>
-              <Text style={styles.actionText}>Redeem</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Recommended Restaurants */}
         {renderRecommendationSection(
           'Recommended Restaurant', 
-          recommendedRestaurants, 
-          <UtensilsCrossed size={20} color="#EF4444" />
+          recommendedRestaurants
         )}
 
         {/* Recommended Cafes */}
         {renderRecommendationSection(
           'Recommended Cafe', 
-          recommendedCafes, 
-          <Coffee size={20} color="#F59E0B" />
+          recommendedCafes
         )}
-
-        {/* Uploaded Image */}
-        {uploadedImage && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Latest Upload</Text>
-            <View style={styles.uploadedImageContainer}>
-              <Image source={{ uri: uploadedImage }} style={styles.uploadedImage} />
-              <View style={styles.uploadBadge}>
-                <Upload size={16} color="white" />
-                <Text style={styles.uploadBadgeText}>Proof Uploaded</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Recent Activities */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activities</Text>
-          <View style={styles.activityList}>
-            {recentAchievements.map((achievement) => (
-              <View key={achievement.id} style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                  <Trophy size={20} color="#E5C69E" />
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>{achievement.title}</Text>
-                  <Text style={styles.activitySubtitle}>{achievement.description}</Text>
-                </View>
-                <Text style={styles.activityTime}>2h ago</Text>
-              </View>
-            ))}
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -314,7 +220,7 @@ const styles = StyleSheet.create({
     color: '#206E56',
   },
   advertisementBanner: {
-    backgroundColor: '#9CA3AF',
+    backgroundColor: '#dce0e7ff',
     borderRadius: 16,
     paddingVertical: 60,
     paddingHorizontal: 20,
@@ -384,6 +290,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 16,
     marginRight: 12,
+    marginBottom: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
