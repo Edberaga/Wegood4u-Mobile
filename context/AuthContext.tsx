@@ -34,21 +34,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
+  setIsLoading(true);
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) throw error;
-    } catch (error: any) {
-      throw new Error(error.message);
-    } finally {
-      setIsLoading(false);
+    if (error) throw error;
+    
+    // Wait for the auth state to be properly set
+    if (data.session) {
+      setSession(data.session);
+      setUser(data.session.user);
     }
-  };
+    
+  } catch (error: any) {
+    throw new Error(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const signUp = async (email: string, password: string, displayName: string, dateOfBirth: string, gender: string, invitationCode?: string) => {
     setIsLoading(true);

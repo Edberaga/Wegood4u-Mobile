@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
 import type { UserData, UserContextType } from '@/types';
 
@@ -96,7 +95,7 @@ export function UserProvider({ children }: UserProviderProps) {
           table: 'profiles',
           filter: `id=eq.${userId}`,
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Profile updated in real-time:', payload);
           // Refresh user data when profile changes
           fetchUserData();
