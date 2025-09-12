@@ -2,16 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { CircleCheck as CheckCircle, Star, Coffee, UtensilsCrossed, Store } from 'lucide-react-native';
 
-interface Submission {
-  id: number;
-  submissionDate: string;
-  restaurantName: string;
-  receiptPhoto: string;
-  selfiePhoto: string;
-  status: 'approved' | 'pending' | 'rejected';
-  category: string;
-  points?: number;
-}
+import type { TransformedSubmission, ApprovedCounts } from '@/hooks/useSubmissions';
 
 interface BadgeLevel {
   level: number;
@@ -31,13 +22,8 @@ interface BadgeCategory {
 
 interface BadgesProps {
   userData: any;
-  submissions: Submission[];
-  approvedCounts: {
-    total: number;
-    restaurant: number;
-    cafe: number;
-    others: number;
-  };
+  submissions: TransformedSubmission[];
+  approvedCounts: ApprovedCounts;
   isLoadingSubmissions: boolean;
   fetchSubmissions: (showRefreshIndicator?: boolean) => Promise<void>;
 }

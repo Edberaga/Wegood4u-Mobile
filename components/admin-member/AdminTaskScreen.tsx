@@ -12,112 +12,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, User, Calendar, Store, Eye, RefreshCw } from 'lucide-react-native';
-import { supabase } from '@/lib/supabase';
-
-interface PendingSubmission {
-  id: number;
-  user_id: string;
-  partner_store_name: string;
-  partner_store_category: 'cafe' | 'restaurant' | 'others';
-  status: 'pending' | 'approved' | 'rejected';
-  selfie_url: string;
-  receipt_url: string;
-  created_at: string;
-  // User profile data
-  profiles?: {
-    username: string | null;
-    full_name: string | null;
-  };
-}
+import { usePendingSubmissions } from '@/hooks/useSubmissions';
 
 interface AdminTaskScreenProps {
   userData: any;
 }
 
 export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
-  const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
 
-  // Fetch pending submissions
-  const fetchPendingSubmissions = async (showRefreshIndicator = false) => {
-    if (showRefreshIndicator) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('submissions')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            full_name
-          )
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching pending submissions:', error);
-        Alert.alert('Error', 'Failed to fetch pending submissions');
-        return;
-      }
-
-      setPendingSubmissions(data || []);
-    } catch (error) {
-      console.error('Error fetching submissions:', error);
-      Alert.alert('Error', 'Failed to fetch submissions');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  // Update submission status
-  const updateSubmissionStatus = async (
-    submissionId: number, 
-    newStatus: 'approved' | 'rejected',
-    adminNotes?: string
-  ) => {
-    try {
-      const { error } = await supabase
-        .from('submissions')
-        .update({
-          status: newStatus,
-          reviewed_by: userData.id,
-          reviewed_at: new Date().toISOString(),
-          admin_notes: adminNotes || null,
-        })
-        .eq('id', submissionId);
-
-      if (error) {
-        console.error('Error updating submission:', error);
-        Alert.alert('Error', 'Failed to update submission status');
-        return;
-      }
-
-      // Remove the updated submission from the pending list
-      setPendingSubmissions(prev => 
-        prev.filter(submission => submission.id !== submissionId)
-      );
-
-      Alert.alert(
-        'Success', 
-        `Submission ${newStatus} successfully!`
-      );
-    } catch (error) {
-      console.error('Error updating submission:', error);
-      Alert.alert('Error', 'Failed to update submission');
-    }
-  };
+  // Use the custom hook for pending submissions
+  const {
+    pendingSubmissions,
+    isLoading,
+    refetch,
+    updateSubmissionStatus
+  } = usePendingSubmissions();
 
   // Handle approve submission
-  const handleApprove = (submission: PendingSubmission) => {
+  const handleApprove = (submission: any) => {
     Alert.alert(
       'Approve Submission',
       `Are you sure you want to approve this submission from ${submission.profiles?.username || 'Unknown User'} at ${submission.partner_store_name}?`,
@@ -126,14 +40,19 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
         {
           text: 'Approve',
           style: 'default',
-          onPress: () => updateSubmissionStatus(submission.id, 'approved')
+          onPress: async () => {
+            const success = await updateSubmissionStatus(submission.id, 'approved', userData.id);
+            if (success) {
+              Alert.alert('Success', 'Submission approved successfully!');
+            }
+          }
         }
       ]
     );
   };
 
   // Handle reject submission
-  const handleReject = (submission: PendingSubmission) => {
+  const handleReject = (submission: any) => {
     Alert.alert(
       'Reject Submission',
       `Are you sure you want to reject this submission from ${submission.profiles?.username || 'Unknown User'} at ${submission.partner_store_name}?`,
@@ -142,7 +61,12 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
         {
           text: 'Reject',
           style: 'destructive',
-          onPress: () => updateSubmissionStatus(submission.id, 'rejected', 'Rejected by admin')
+          onPress: async () => {
+            const success = await updateSubmissionStatus(submission.id, 'rejected', userData.id, 'Rejected by admin');
+            if (success) {
+              Alert.alert('Success', 'Submission rejected successfully!');
+            }
+          }
         }
       ]
     );
@@ -177,10 +101,6 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
     }
   };
 
-  useEffect(() => {
-    fetchPendingSubmissions();
-  }, []);
-
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -209,8 +129,8 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
         style={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={() => fetchPendingSubmissions(true)}
+            refreshing={false}
+            onRefresh={() => refetch(true)}
             colors={['#F33F32']}
           />
         }
@@ -225,7 +145,7 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
             </Text>
             <TouchableOpacity 
               style={styles.refreshButton}
-              onPress={() => fetchPendingSubmissions(true)}
+              onPress={() => refetch(true)}
             >
               <RefreshCw size={16} color="#F33F32" />
               <Text style={styles.refreshButtonText}>Refresh</Text>

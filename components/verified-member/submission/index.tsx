@@ -11,8 +11,8 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock, X } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
+import type { TransformedSubmission } from '@/hooks/useSubmissions';
 import type { PartnerStore } from '@/data/partnerStore';
-import type { Submission } from '@/types/submission';
 
 interface SubmissionProps {
   userData: any;
@@ -20,7 +20,7 @@ interface SubmissionProps {
   setSelectedStore: (store: PartnerStore | null) => void;
   setShowStoreDropdown: (show: boolean) => void;
   partnerStores: PartnerStore[];
-  submissions: Submission[];
+  submissions: TransformedSubmission[];
   isLoadingSubmissions: boolean;
   fetchSubmissions: (showRefreshIndicator?: boolean) => Promise<void>;
 }

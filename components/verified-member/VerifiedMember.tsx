@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Upload, Gift } from 'lucide-react-native';
 import Submission from './submission';
 import Badges from './badges';
-import { supabase } from '@/lib/supabase';
-import { Alert } from 'react-native';
+import { useUserSubmissions } from '@/hooks/useSubmissions';
 import type { PartnerStore } from '@/data/partnerStore';
-import type { Submission as SubmissionType } from '@/types/submission';
 
 interface VerifiedMemberProps {
   userData: any;
@@ -26,87 +23,15 @@ export default function VerifiedMember({
   partnerStores
 }: VerifiedMemberProps) {
   const [activeTab, setActiveTab] = useState<'submit' | 'rewards'>('submit');
-  const [submissions, setSubmissions] = useState<SubmissionType[]>([]);
-  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
-  const [approvedCounts, setApprovedCounts] = useState({
-    total: 0,
-    restaurant: 0,
-    cafe: 0,
-    others: 0
-  });
-
-  // Function to fetch submissions from database
-  const fetchSubmissions = async (showRefreshIndicator = false) => {
-    if (!userData?.id) {
-      console.log('No user data available');
-      return;
-    }
-
-    if (showRefreshIndicator) {
-      console.log('Refreshing submissions...');
-    } else {
-      setIsLoadingSubmissions(true);
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('submissions')
-        .select('*')
-        .eq('user_id', userData.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching submissions:', error);
-        Alert.alert('Error', 'Failed to fetch submissions');
-        return;
-      }
-
-      if (data) {
-        // Transform the data to match the Submission interface
-        const transformedSubmissions: SubmissionType[] = data.map((item, index) => ({
-          id: item.id || index,
-          submissionDate: new Date(item.created_at).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          }),
-          restaurantName: item.partner_store_name || 'Unknown',
-          receiptPhoto: item.receipt_url || '',
-          selfiePhoto: item.selfie_url || '',
-          status: item.status as 'approved' | 'pending' | 'rejected',
-          category: item.partner_store_category || 'others'
-        }));
-
-        // Calculate approved counts for badges
-        const approvedSubmissions = transformedSubmissions.filter(s => s.status === 'approved');
-        const totalCount = approvedSubmissions.length;
-        const restaurantCount = approvedSubmissions.filter(s => s.category === 'restaurant').length;
-        const cafeCount = approvedSubmissions.filter(s => s.category === 'cafe').length;
-        const othersCount = approvedSubmissions.filter(s => !['restaurant', 'cafe'].includes(s.category)).length;
-
-        setSubmissions(transformedSubmissions);
-        setApprovedCounts({
-          total: totalCount,
-          restaurant: restaurantCount,
-          cafe: cafeCount,
-          others: othersCount
-        });
-
-        console.log('Fetched submissions:', transformedSubmissions.length);
-        console.log('Approved counts:', { totalCount, restaurantCount, cafeCount, othersCount });
-      }
-    } catch (error) {
-      console.error('Error fetching submissions:', error);
-      Alert.alert('Error', 'Failed to fetch submissions');
-    } finally {
-      setIsLoadingSubmissions(false);
-    }
-  };
-
-  // Fetch submissions when component mounts and when userData changes
-  useEffect(() => {
-    fetchSubmissions();
-  }, [userData?.id]);
+  
+  // Use the custom hook for fetching user submissions
+  const {
+    submissions,
+    approvedCounts,
+    stats,
+    isLoading: isLoadingSubmissions,
+    refetch: fetchSubmissions
+  } = useUserSubmissions(userData?.id);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -114,11 +39,11 @@ export default function VerifiedMember({
         <Text style={styles.title}>Travel Proof</Text>
         <View style={styles.stats}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{submissions.filter(s => s.status === 'approved').length}</Text>
+            <Text style={styles.statNumber}>{stats.approved}</Text>
             <Text style={styles.statLabel}>Approved</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{submissions.filter(s => s.status === 'pending').length}</Text>
+            <Text style={styles.statNumber}>{stats.pending}</Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
         </View>
