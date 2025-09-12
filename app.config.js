@@ -29,7 +29,8 @@ export default {
       "expo-font",
       "expo-web-browser",
       "expo-image-picker",
-      "expo-location"
+      "expo-location",
+      "expo-secure-store"
     ],
     experiments: {
       typedRoutes: true
