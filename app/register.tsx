@@ -5,15 +5,14 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff, User, Gift, Calendar, Users, ChevronDown } from 'lucide-react-native';
+import { Eye, EyeOff, ChevronDown } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '@/context/AuthContext';
 
@@ -71,24 +70,6 @@ export default function RegisterScreen() {
   const handlePasswordChange = (text: string) => {
     updateFormData('password', text);
     setPasswordErrors(validatePassword(text));
-  };
-
-  const getPasswordHelperText = () => {
-    if (!formData.password) return null;
-    
-    if (passwordErrors.length === 0) {
-      return (
-        <Text style={styles.passwordHelperValid}>
-          ✓ Password meets all requirements
-        </Text>
-      );
-    }
-    
-    return (
-      <Text style={styles.passwordHelperInvalid}>
-        Missing: {passwordErrors.join(', ')}
-      </Text>
-    );
   };
 
   const handleRegister = async () => {
@@ -160,80 +141,75 @@ export default function RegisterScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <LinearGradient
-        colors={['#F33F32', '#f38632ff']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../assets/images/icon.png')}
-              style={styles.logo}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Fill your information below to register</Text>
+        </View>
+
+        <View style={styles.formContainer}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex. John Doe"
+              placeholderTextColor="#999"
+              value={formData.displayName}
+              onChangeText={(text) => updateFormData('displayName', text)}
+              autoCapitalize="words"
             />
-            <Text style={styles.title}>Join Wegood4u</Text>
-            <Text style={styles.subtitle}>Start your food journey today</Text>
           </View>
 
-          <View style={styles.formContainer}>
-            <View style={styles.inputContainer}>
-              <User size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Username"
-                placeholderTextColor="#666"
-                value={formData.displayName}
-                onChangeText={(text) => updateFormData('displayName', text)}
-                autoCapitalize="none"
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="example@gmail.com"
+              placeholderTextColor="#999"
+              value={formData.email}
+              onChangeText={(text) => updateFormData('email', text)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Mail size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#666"
-                value={formData.email}
-                onChangeText={(text) => updateFormData('email', text)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Calendar size={20} color="#666" style={styles.inputIcon} />
-              <TouchableOpacity
-                style={styles.dateSelector}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={styles.dateSelectorText}>
-                  {formData.dateOfBirth.toLocaleDateString()}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Date of Birth</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <View style={styles.dateSelector}>
+                <Text style={[styles.dateSelectorText, !formData.dateOfBirth && styles.placeholderText]}>
+                  {formData.dateOfBirth ? formData.dateOfBirth.toLocaleDateString() : 'Select Date'}
                 </Text>
-                <ChevronDown size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
+                <ChevronDown size={20} color="#999" />
+              </View>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Users size={20} color="#666" style={styles.inputIcon} />
-              <TouchableOpacity
-                style={styles.genderSelector}
-                onPress={() => setShowGenderDropdown(true)}
-              >
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Gender</Text>
+            <TouchableOpacity
+              style={styles.input}
+              onPress={() => setShowGenderDropdown(true)}
+            >
+              <View style={styles.genderSelector}>
                 <Text style={[styles.genderSelectorText, !formData.gender && styles.placeholderText]}>
                   {formData.gender || 'Select Gender'}
                 </Text>
-                <ChevronDown size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
+                <ChevronDown size={20} color="#999" />
+              </View>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Lock size={20} color="#666" style={styles.inputIcon} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.passwordContainer}>
               <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Password"
-                placeholderTextColor="#666"
+                style={[styles.input, styles.passwordInput]}
+                placeholder="********"
+                placeholderTextColor="#999"
                 value={formData.password}
                 onChangeText={handlePasswordChange}
                 secureTextEntry={!showPassword}
@@ -243,21 +219,21 @@ export default function RegisterScreen() {
                 style={styles.eyeIcon}
               >
                 {showPassword ? (
-                  <EyeOff size={20} color="#666" />
+                  <EyeOff size={20} color="#999" />
                 ) : (
-                  <Eye size={20} color="#666" />
+                  <Eye size={20} color="#999" />
                 )}
               </TouchableOpacity>
             </View>
-            
-            {getPasswordHelperText()}
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Lock size={20} color="#666" style={styles.inputIcon} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Confirm Password</Text>
+            <View style={styles.passwordContainer}>
               <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Confirm Password"
-                placeholderTextColor="#666"
+                style={[styles.input, styles.passwordInput]}
+                placeholder="********"
+                placeholderTextColor="#999"
                 value={formData.confirmPassword}
                 onChangeText={(text) => updateFormData('confirmPassword', text)}
                 secureTextEntry={!showConfirmPassword}
@@ -267,43 +243,43 @@ export default function RegisterScreen() {
                 style={styles.eyeIcon}
               >
                 {showConfirmPassword ? (
-                  <EyeOff size={20} color="#666" />
+                  <EyeOff size={20} color="#999" />
                 ) : (
-                  <Eye size={20} color="#666" />
+                  <Eye size={20} color="#999" />
                 )}
               </TouchableOpacity>
             </View>
-
-            <View style={styles.inputContainer}>
-              <Gift size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Invitation Code (Optional)"
-                placeholderTextColor="#666"
-                value={formData.invitationCode}
-                onChangeText={(text) => updateFormData('invitationCode', text)}
-                autoCapitalize="characters"
-              />
-            </View>
-
-            <TouchableOpacity
-              style={[styles.registerButton, submitting && styles.registerButtonDisabled]}
-              onPress={handleRegister}
-              disabled={submitting}
-            >
-              <Text style={styles.registerButtonText}>
-                {submitting ? 'Creating Account...' : 'Create Account'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.loginLink} onPress={goToLogin}>
-              <Text style={styles.loginLinkText}>
-                Already have an account? <Text style={styles.loginLinkHighlight}>Login here</Text>
-              </Text>
-            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </LinearGradient>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Invitation Code (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter invitation code"
+              placeholderTextColor="#999"
+              value={formData.invitationCode}
+              onChangeText={(text) => updateFormData('invitationCode', text)}
+              autoCapitalize="characters"
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.registerButton, submitting && styles.registerButtonDisabled]}
+            onPress={handleRegister}
+            disabled={submitting}
+          >
+            <Text style={styles.registerButtonText}>
+              {submitting ? 'Creating Account...' : 'Register'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.loginLink} onPress={goToLogin}>
+            <Text style={styles.loginLinkText}>
+              Already have an account? <Text style={styles.loginLinkHighlight}>Sign In</Text> here
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       {/* Date Picker Modal */}
       {showDatePicker && (
@@ -322,7 +298,12 @@ export default function RegisterScreen() {
       )}
 
       {/* Gender Selection Modal */}
-      {showGenderDropdown && (
+      <Modal
+        visible={showGenderDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowGenderDropdown(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.genderModal}>
             <Text style={styles.modalTitle}>Select Gender</Text>
@@ -354,7 +335,7 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -362,87 +343,90 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: '#fff',
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
-  logoContainer: {
+  header: {
     alignItems: 'center',
     marginBottom: 40,
   },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 16,
-  },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#000',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#666',
+    textAlign: 'center',
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    flex: 1,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+  inputGroup: {
+    marginBottom: 24,
   },
-  inputIcon: {
-    marginRight: 12,
+  inputLabel: {
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   input: {
-    flex: 1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 16,
-    color: '#333',
+    color: '#000',
+    borderWidth: 0,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
   },
   eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
     padding: 4,
   },
-  passwordHelperValid: {
-    fontSize: 12,
-    color: '#22C55E',
-    marginBottom: 16,
-    marginTop: -8,
-    paddingHorizontal: 16,
+  dateSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  passwordHelperInvalid: {
-    fontSize: 12,
-    color: '#EF4444',
-    marginBottom: 16,
-    marginTop: -8,
-    paddingHorizontal: 16,
+  dateSelectorText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  genderSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  genderSelectorText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  placeholderText: {
+    color: '#999',
   },
   registerButton: {
-    backgroundColor: '#206E56',
-    borderRadius: 12,
+    backgroundColor: '#4A9B8E',
+    borderRadius: 25,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 32,
   },
   registerButtonDisabled: {
     opacity: 0.6,
@@ -454,51 +438,21 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     alignItems: 'center',
-    marginTop: 20,
   },
   loginLinkText: {
     color: '#666',
     fontSize: 14,
   },
   loginLinkHighlight: {
-    color: '#206E56',
+    color: '#4A9B8E',
     fontWeight: '600',
-  },
-  genderSelector: {
-    flex: 1,
-    paddingVertical: 4,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  genderSelectorText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  dateSelector: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  dateSelectorText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  placeholderText: {
-    color: '#666',
+    textDecorationLine: 'underline',
   },
   modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
   },
   genderModal: {
     backgroundColor: 'white',
@@ -515,7 +469,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#000',
     padding: 20,
     paddingBottom: 16,
     textAlign: 'center',
@@ -529,11 +483,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f1f5f9',
   },
   selectedGenderOption: {
-    backgroundColor: '#206E56',
+    backgroundColor: '#4A9B8E',
   },
   genderOptionText: {
     fontSize: 16,
-    color: '#1e293b',
+    color: '#000',
     textAlign: 'center',
   },
   selectedGenderOptionText: {

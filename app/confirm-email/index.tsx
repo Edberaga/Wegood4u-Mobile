@@ -7,7 +7,7 @@ export default function ConfirmEmailScreen() {
   const { email } = useLocalSearchParams<{ email?: string }>();
   const [secondsLeft, setSecondsLeft] = useState<number>(60);
   const [isResending, setIsResending] = useState<boolean>(false);
-  const intervalRef = useRef<NodeJS.Timer | null>(null);
+  const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     intervalRef.current = setInterval(() => {

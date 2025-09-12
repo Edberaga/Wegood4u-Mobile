@@ -5,22 +5,23 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
+import SocialAuthButtons from '@/components/auth/SocialAuthButtons';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [activeTab, setActiveTab] = useState('email'); // 'email' or 'phone'
   
   const { signIn } = useAuth();
 
@@ -51,42 +52,53 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <LinearGradient
-        colors={['#F33F32', '#f38632ff']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../assets/images/site icon.png')}
-              style={styles.logo}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Sign In</Text>
+          <Text style={styles.subtitle}>Welcome back, you've been missed</Text>
+        </View>
+
+{/*
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'email' && styles.activeTab]}
+            onPress={() => setActiveTab('email')}
+          >
+            <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}>
+              Email
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'phone' && styles.activeTab]}
+            onPress={() => setActiveTab('phone')}
+          >
+            <Text style={[styles.tabText, activeTab === 'phone' && styles.activeTabText]}>
+              Contact Number
+            </Text>
+          </TouchableOpacity>
+        </View>
+*/}
+        <View style={styles.formContainer}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="example@gmail.com"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
-            <Text style={styles.title}>Wegood4u</Text>
-            <Text style={styles.subtitle}>Discover, Share, Earn</Text>
           </View>
 
-          <View style={styles.formContainer}>
-            <View style={styles.inputContainer}>
-              <Mail size={20} color="#666" style={styles.inputIcon} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.passwordContainer}>
               <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#666"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Lock size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Password"
-                placeholderTextColor="#666"
+                style={[styles.input, styles.passwordInput]}
+                placeholder="********"
+                placeholderTextColor="#999"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -96,35 +108,51 @@ export default function LoginScreen() {
                 style={styles.eyeIcon}
               >
                 {showPassword ? (
-                  <EyeOff size={20} color="#666" />
+                  <EyeOff size={20} color="#999" />
                 ) : (
-                  <Eye size={20} color="#666" />
+                  <Eye size={20} color="#999" />
                 )}
               </TouchableOpacity>
             </View>
+          </View>
 
+          <View style={styles.optionsContainer}>
             <TouchableOpacity
-              style={[styles.loginButton, submitting && styles.loginButtonDisabled]}
-              onPress={handleLogin}
-              disabled={submitting}
+              style={styles.rememberContainer}
+              onPress={() => setRememberMe(!rememberMe)}
             >
-              <Text style={styles.loginButtonText}>
-                {submitting ? 'Logging in...' : 'Login'}
-              </Text>
+              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.rememberText}>Remember me</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.forgotPassword}>
+            <TouchableOpacity>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.registerLink} onPress={goToRegister}>
-              <Text style={styles.registerLinkText}>
-                Don't have account yet? <Text style={styles.registerLinkHighlight}>Register here</Text>
-              </Text>
-            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </LinearGradient>
+
+          <TouchableOpacity
+            style={[styles.loginButton, submitting && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={submitting}
+          >
+            <Text style={styles.loginButtonText}>
+              {submitting ? 'Logging in...' : 'Login'}
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={styles.orText}>Or sign in with</Text>
+
+          <SocialAuthButtons />
+
+          <TouchableOpacity style={styles.registerLink} onPress={goToRegister}>
+            <Text style={styles.registerLinkText}>
+              Don't have an account? <Text style={styles.registerLinkHighlight}>Sign Up</Text> now!
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -132,73 +160,128 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  gradient: {
-    flex: 1,
+    backgroundColor: '#fff',
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingTop: 60,
   },
-  logoContainer: {
+  header: {
     alignItems: 'center',
-    marginBottom: 50,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
+    marginBottom: 40,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#000',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 40,
+  },
+  tab: {
+    flex: 1,
+    paddingBottom: 12,
+    alignItems: 'center',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#4A9B8E',
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#4A9B8E',
+    fontWeight: '600',
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    flex: 1,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+  inputGroup: {
+    marginBottom: 24,
   },
-  inputIcon: {
-    marginRight: 12,
+  inputLabel: {
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   input: {
-    flex: 1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 16,
-    color: '#333',
+    color: '#000',
+    borderWidth: 0,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
   },
   eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
     padding: 4,
   },
+  optionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  rememberContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#4A9B8E',
+    borderColor: '#4A9B8E',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  rememberText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: '#4A9B8E',
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
   loginButton: {
-    backgroundColor: '#206E56',
-    borderRadius: 12,
+    backgroundColor: '#4A9B8E',
+    borderRadius: 25,
     paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 20,
+    marginBottom: 32,
   },
   loginButtonDisabled: {
     opacity: 0.6,
@@ -208,25 +291,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  forgotPassword: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  forgotPasswordText: {
-    color: '#206E56',
+  orText: {
+    textAlign: 'center',
     fontSize: 14,
-    fontWeight: '500',
+    color: '#999',
+    marginBottom: 24,
   },
   registerLink: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 24,
+    marginBottom: 40,
   },
   registerLinkText: {
     color: '#666',
     fontSize: 14,
   },
   registerLinkHighlight: {
-    color: '#206E56',
+    color: '#4A9B8E',
     fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
