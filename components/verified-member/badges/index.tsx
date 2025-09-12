@@ -2,23 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { CircleCheck as CheckCircle, Star, Coffee, UtensilsCrossed, Store } from 'lucide-react-native';
 
-import type { TransformedSubmission, ApprovedCounts } from '@/hooks/useSubmissions';
-
-interface BadgeLevel {
-  level: number;
-  requirement: number;
-  achieved: boolean;
-  progress: number;
-}
-
-interface BadgeCategory {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  color: string;
-  bgColor: string;
-  levels: BadgeLevel[];
-}
+import type { TransformedSubmission, ApprovedCounts, BadgeLevel, BadgeCategory } from '@/types';
 
 interface BadgesProps {
   userData: any;

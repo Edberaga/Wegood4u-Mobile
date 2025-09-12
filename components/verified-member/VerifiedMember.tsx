@@ -5,7 +5,7 @@ import { Upload, Gift } from 'lucide-react-native';
 import Submission from './submission';
 import Badges from './badges';
 import { useUserSubmissions } from '@/hooks/useSubmissions';
-import type { PartnerStore } from '@/data/partnerStore';
+import type { PartnerStore } from '@/types';
 
 interface VerifiedMemberProps {
   userData: any;

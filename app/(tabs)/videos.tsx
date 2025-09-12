@@ -11,20 +11,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Play, Heart, Share2, Eye, Clock } from 'lucide-react-native';
+import type { Video } from '@/types';
 
 const { width } = Dimensions.get('window');
-
-interface Video {
-  id: number;
-  title: string;
-  thumbnail: string;
-  duration: string;
-  views: number;
-  likes: number;
-  category: string;
-  description: string;
-  location: string;
-}
 
 export default function VideosScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');

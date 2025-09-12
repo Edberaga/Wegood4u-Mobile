@@ -2,36 +2,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
+import type { UserData, UserContextType } from '@/types';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
-
-interface UserData {
-  // Auth data
-  id: string;
-  email: string;
-  emailConfirmedAt: string | null;
-  phone: string | null;
-  phoneConfirmedAt: string | null;
-  
-  // Profile data
-  username: string | null;
-  fullName: string | null;
-  role: 'subscriber' | 'member' | 'affiliate' | 'admin';
-  avatarUrl: string | null;
-  verificationCompleted: boolean;
-  inviterId: string | null;
-  affiliateRequestStatus: 'pending' | 'approved' | 'rejected' | null;
-  createdAt: string;
-}
-
-interface UserContextType {
-  userData: UserData | null;
-  isLoading: boolean;
-  error: string | null;
-  refreshUserData: () => Promise<void>;
-  resendEmailConfirmation: () => Promise<void>;
-}
-
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 interface UserProviderProps {

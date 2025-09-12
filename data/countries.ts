@@ -1,8 +1,4 @@
-export interface Country {
-    name: string;
-    code: string;
-    phoneCode: string;
-  }
+import type { Country } from '@/types';
   
   export const countries: Country[] = [
     // Prioritized countries (Malaysia and Thailand first)

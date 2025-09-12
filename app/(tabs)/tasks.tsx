@@ -10,7 +10,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, ChevronRight, X, RefreshCw, Activity as ActivityIndicator } from 'lucide-react-native';
 import { useUser } from '@/context/UserContext';
-import { fetchPartnerStores, type PartnerStore, groupStoresByCity } from '@/data/partnerStore';
+import { fetchPartnerStores, groupStoresByCity } from '@/data/partnerStore';
+import type { PartnerStore } from '@/types';
 import UnverifiedMember from '@/components/unverified-member/UnverifiedMember';
 import VerifiedMember from '@/components/verified-member/VerifiedMember';
 import AdminTaskScreen from '@/components/admin-member/AdminTaskScreen'

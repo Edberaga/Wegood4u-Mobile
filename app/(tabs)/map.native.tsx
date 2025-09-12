@@ -13,7 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { MapPin, Star, Phone, Clock, Navigation, ChevronDown } from 'lucide-react-native';
-import { fetchPartnerStores, type PartnerStore, groupStoresByCity } from '@/data/partnerStore';
+import { fetchPartnerStores, groupStoresByCity } from '@/data/partnerStore';
+import type { PartnerStore } from '@/types';
 
 export default function MapScreen() {
   const [userLocation, setUserLocation] = useState<{

@@ -1,19 +1,6 @@
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-
-export interface PartnerStore {
-  id: string;
-  name: string;
-  type: string;
-  city: string;
-  latitude: number;
-  longitude: number;
-  rating: number;
-  image: string;
-  phone: string;
-  hours: string;
-  description: string;
-}
+import type { PartnerStore, GroupedStores } from '@/types';
 
 /**
  * Fetches all partner stores from Firestore
@@ -53,16 +40,16 @@ export const fetchPartnerStores = async (): Promise<PartnerStore[]> => {
 /**
  * Groups partner stores by city
  * @param stores Array of partner stores
- * @returns Record<string, PartnerStore[]> Stores grouped by city
+  * @returns GroupedStores Stores grouped by city
  */
-export const groupStoresByCity = (stores: PartnerStore[]): Record<string, PartnerStore[]> => {
-  return stores.reduce((acc, store) => {
+export const groupStoresByCity = (stores: PartnerStore[]): GroupedStores => {
+  return stores.reduce((acc: GroupedStores, store) => {
     if (!acc[store.city]) {
       acc[store.city] = [];
     }
     acc[store.city].push(store);
     return acc;
-  }, {} as Record<string, PartnerStore[]>);
+  }, {} as GroupedStores);
 };
 
 /**
