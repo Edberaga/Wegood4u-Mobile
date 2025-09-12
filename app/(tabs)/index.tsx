@@ -60,10 +60,6 @@ export default function HomeScreen() {
           <View style={styles.headerContent}>
             <Text style={styles.greeting}>Welcome back!</Text>
             <Text style={styles.username}>{userData?.fullName || userData?.username || 'User'}</Text>
-            <View style={styles.pointsContainer}>
-              <Star size={20} color="#FFD700" />
-              <Text style={styles.points}>2,450 Points</Text>
-            </View>
           </View>
         </LinearGradient>
 
