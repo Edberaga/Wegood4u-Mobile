@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   },
   resendButton: {
     marginTop: 20,
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',

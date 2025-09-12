@@ -118,7 +118,7 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
         <Text style={styles.title}>Admin Dashboard</Text>
         <View style={styles.headerStats}>
           <View style={styles.statItem}>
-            <Clock size={20} color="#F59E0B" />
+            <Clock size={20} color="#E5C69E" />
             <Text style={styles.statNumber}>{pendingSubmissions.length}</Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
@@ -147,7 +147,7 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
               style={styles.refreshButton}
               onPress={() => refetch(true)}
             >
-              <RefreshCw size={16} color="#F33F32" />
+              <RefreshCw size={16} color="#206E56" />
               <Text style={styles.refreshButtonText}>Refresh</Text>
             </TouchableOpacity>
           </View>
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#F59E0B',
+    color: '#E5C69E',
   },
   statLabel: {
     fontSize: 12,
@@ -354,16 +354,16 @@ const styles = StyleSheet.create({
   refreshButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef2f2',
+    backgroundColor: '#CBEED2',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#F33F32',
+    borderColor: '#206E56',
     gap: 8,
   },
   refreshButtonText: {
-    color: '#F33F32',
+    color: '#206E56',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#22C55E',
+    backgroundColor: '#206E56',
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,

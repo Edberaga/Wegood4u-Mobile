@@ -700,13 +700,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   radioButtonSelected: {
-    borderColor: '#F38632',
+    borderColor: '#206E56',
   },
   radioButtonInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#F38632',
+    backgroundColor: '#206E56',
   },
   radioText: {
     fontSize: 16,
@@ -750,12 +750,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   submitButton: {
-    backgroundColor: '#F38632',
+    backgroundColor: '#206E56',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 20,
-    shadowColor: '#F38632',
+    shadowColor: '#206E56',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

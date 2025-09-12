@@ -125,7 +125,7 @@ export default function UnverifiedMember({
                 onPress={handleResendEmail}
                 disabled={isResendingEmail}
               >
-                <Mail size={16} color="#F33F32" />
+                <Mail size={16} color="#206E56" />
                 <Text style={styles.actionButtonText}>
                   {isResendingEmail ? 'Sending...' : 'Resend Confirmation Email'}
                 </Text>
@@ -158,12 +158,12 @@ export default function UnverifiedMember({
             </View>
             {!isQuestionnaireComplete ? (
               <TouchableOpacity style={styles.actionButton} onPress={navigateToQuestionnaire}>
-                <FileText size={16} color="#F33F32" />
+                <FileText size={16} color="#206E56" />
                 <Text style={styles.actionButtonText}>Fill Out Verification Form</Text>
               </TouchableOpacity> 
               ) : (
               <TouchableOpacity style={styles.confirmButton}>
-                <FileText size={16} color="#22C55E" />
+                <FileText size={16} color="#206E56" />
                 <Text style={styles.confirmButtonText}>Verification Form Finished</Text>
               </TouchableOpacity>
             )}
@@ -290,9 +290,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fef2f2',
+    backgroundColor: '#CBEED2',
     borderWidth: 1,
-    borderColor: '#F33F32',
+    borderColor: '#206E56',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   actionButtonText: {
-    color: '#F33F32',
+    color: '#206E56',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -310,16 +310,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f4fef2ff',
+    backgroundColor: '#CBEED2',
     borderWidth: 1,
-    borderColor: '#22C55E',
+    borderColor: '#206E56',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
     gap: 8,
   },
   confirmButtonText: {
-    color: '#22C55E',
+    color: '#206E56',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     borderRadius: 4,
   },
   progressText: {
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   },
   requestButton: {
     marginTop: 12,
-    backgroundColor: '#F33F32',
+    backgroundColor: '#206E56',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
