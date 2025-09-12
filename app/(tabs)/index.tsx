@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,14 +20,75 @@ import {
   Share2,
   Trophy,
   Clock,
+  ChevronRight,
+  UtensilsCrossed,
+  Coffee,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
+import { fetchPartnerStores } from '@/data/partnerStore';
+import type { PartnerStore } from '@/types';
 
 export default function HomeScreen() {
   const { user } = useAuth();
   const { userData } = useUser();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
+  const [recommendedRestaurants, setRecommendedRestaurants] = useState<PartnerStore[]>([]);
+  const [recommendedCafes, setRecommendedCafes] = useState<PartnerStore[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const userStats = {
+    totalPoints: 2450,
+    tasksCompleted: 12,
+    vouchersEarned: 8,
+    memberSince: 'January 2024',
+  };
+
+  const recentAchievements = [
+    { id: 1, title: 'First Review', description: 'Posted your first restaurant review', date: '2024-01-10' },
+    { id: 2, title: 'Point Collector', description: 'Earned 1000 points', date: '2024-01-08' },
+    { id: 3, title: 'Social Butterfly', description: 'Referred 3 friends', date: '2024-01-05' },
+  ];
+
+  // Load partner stores and filter recommendations
+  useEffect(() => {
+    loadPartnerStores();
+  }, []);
+
+  const loadPartnerStores = async () => {
+    try {
+      setIsLoading(true);
+      const stores = await fetchPartnerStores();
+      setPartnerStores(stores);
+
+      // Filter and sort restaurants by rating (top 6)
+      const restaurants = stores
+        .filter(store => store.type.toLowerCase().includes('restaurant') || 
+                        store.type.toLowerCase().includes('italian') ||
+                        store.type.toLowerCase().includes('japanese') ||
+                        store.type.toLowerCase().includes('fast food') ||
+                        store.type.toLowerCase().includes('healthy food'))
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 6);
+
+      // Filter and sort cafes by rating (top 6)
+      const cafes = stores
+        .filter(store => store.type.toLowerCase().includes('coffee') || 
+                        store.type.toLowerCase().includes('dessert') ||
+                        store.type.toLowerCase().includes('cafe'))
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 6);
+
+      setRecommendedRestaurants(restaurants);
+      setRecommendedCafes(cafes);
+    } catch (error) {
+      console.error('Error loading partner stores:', error);
+      Alert.alert('Error', 'Failed to load partner stores');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -47,6 +108,53 @@ export default function HomeScreen() {
     Alert.alert('Referral Code', 'Your referral code: WG4U2024\nShare with friends to earn rewards!');
   };
 
+  const renderStoreCard = (store: PartnerStore, index: number) => (
+    <TouchableOpacity key={store.id} style={styles.storeCard}>
+      <Image source={{ uri: store.image }} style={styles.storeImage} />
+      <View style={styles.storeInfo}>
+        <Text style={styles.storeName} numberOfLines={1}>{store.name}</Text>
+        <Text style={styles.storeType} numberOfLines={1}>{store.type}</Text>
+        <View style={styles.storeRating}>
+          <Star size={12} color="#FFD700" fill="#FFD700" />
+          <Text style={styles.rating}>{store.rating}</Text>
+        </View>
+        <View style={styles.storeLocation}>
+          <MapPin size={10} color="#64748B" />
+          <Text style={styles.locationText} numberOfLines={1}>{store.city}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderRecommendationSection = (title: string, stores: PartnerStore[], icon: React.ReactNode) => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionTitleContainer}>
+          {icon}
+          <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
+        <TouchableOpacity style={styles.seeAllButton}>
+          <Text style={styles.seeAllText}>See All</Text>
+          <ChevronRight size={16} color="#206E56" />
+        </TouchableOpacity>
+      </View>
+      
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading recommendations...</Text>
+        </View>
+      ) : stores.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storeList}>
+          {stores.map((store, index) => renderStoreCard(store, index))}
+        </ScrollView>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No {title.toLowerCase()} available</Text>
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -62,6 +170,13 @@ export default function HomeScreen() {
             <Text style={styles.username}>{userData?.fullName || userData?.username || 'User'}</Text>
           </View>
         </LinearGradient>
+
+        {/* Advertisement Banner */}
+        <View style={styles.section}>
+          <View style={styles.advertisementBanner}>
+            <Text style={styles.advertisementText}>Advertisement</Text>
+          </View>
+        </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
@@ -90,6 +205,20 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* Recommended Restaurants */}
+        {renderRecommendationSection(
+          'Recommended Restaurant', 
+          recommendedRestaurants, 
+          <UtensilsCrossed size={20} color="#EF4444" />
+        )}
+
+        {/* Recommended Cafes */}
+        {renderRecommendationSection(
+          'Recommended Cafe', 
+          recommendedCafes, 
+          <Coffee size={20} color="#F59E0B" />
+        )}
+
         {/* Uploaded Image */}
         {uploadedImage && (
           <View style={styles.section}>
@@ -108,92 +237,19 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Activities</Text>
           <View style={styles.activityList}>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Trophy size={20} color="#E5C69E" />
+            {recentAchievements.map((achievement) => (
+              <View key={achievement.id} style={styles.activityItem}>
+                <View style={styles.activityIcon}>
+                  <Trophy size={20} color="#E5C69E" />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{achievement.title}</Text>
+                  <Text style={styles.activitySubtitle}>{achievement.description}</Text>
+                </View>
+                <Text style={styles.activityTime}>2h ago</Text>
               </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>Task Completed</Text>
-                <Text style={styles.activitySubtitle}>Visited Cafe Luna - Earned 150 points</Text>
-              </View>
-              <Text style={styles.activityTime}>2h ago</Text>
-            </View>
-
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <MapPin size={20} color="#00A85A" />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>New Store Added</Text>
-                <Text style={styles.activitySubtitle}>Discover Pizza Corner nearby</Text>
-              </View>
-              <Text style={styles.activityTime}>1d ago</Text>
-            </View>
-
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Share2 size={20} color="#206E56" />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>Referral Success</Text>
-                <Text style={styles.activitySubtitle}>Friend joined - Earned 200 points</Text>
-              </View>
-              <Text style={styles.activityTime}>3d ago</Text>
-            </View>
+            ))}
           </View>
-        </View>
-
-        {/* Featured Stores */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Featured Partners</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.storeList}>
-              <View style={styles.storeCard}>
-                <Image
-                  source={{ uri: 'https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg?auto=compress&cs=tinysrgb&w=400' }}
-                  style={styles.storeImage}
-                />
-                <View style={styles.storeInfo}>
-                  <Text style={styles.storeName}>Cafe Luna</Text>
-                  <Text style={styles.storeType}>Coffee & Desserts</Text>
-                  <View style={styles.storeRating}>
-                    <Star size={14} color="#FFD700" />
-                    <Text style={styles.rating}>4.8</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.storeCard}>
-                <Image
-                  source={{ uri: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400' }}
-                  style={styles.storeImage}
-                />
-                <View style={styles.storeInfo}>
-                  <Text style={styles.storeName}>Pizza Corner</Text>
-                  <Text style={styles.storeType}>Italian Cuisine</Text>
-                  <View style={styles.storeRating}>
-                    <Star size={14} color="#FFD700" />
-                    <Text style={styles.rating}>4.6</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.storeCard}>
-                <Image
-                  source={{ uri: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400' }}
-                  style={styles.storeImage}
-                />
-                <View style={styles.storeInfo}>
-                  <Text style={styles.storeName}>Sushi Zen</Text>
-                  <Text style={styles.storeType}>Japanese Food</Text>
-                  <View style={styles.storeRating}>
-                    <Star size={14} color="#FFD700" />
-                    <Text style={styles.rating}>4.9</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -227,29 +283,53 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textTransform: 'capitalize',
   },
-  pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(203, 238, 210, 0.3)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  points: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-    marginLeft: 8,
-  },
   section: {
     marginBottom: 24,
     paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1e293b',
-    marginBottom: 16,
+  },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#206E56',
+  },
+  advertisementBanner: {
+    backgroundColor: '#9CA3AF',
+    borderRadius: 16,
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  advertisementText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#374151',
   },
   quickActions: {
     flexDirection: 'row',
@@ -279,6 +359,75 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#475569',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#64748B',
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#94A3B8',
+  },
+  storeList: {
+    paddingRight: 20,
+  },
+  storeCard: {
+    width: 140,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  storeImage: {
+    width: '100%',
+    height: 90,
+  },
+  storeInfo: {
+    padding: 12,
+  },
+  storeName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  storeType: {
+    fontSize: 12,
+    color: '#64748b',
+    marginBottom: 6,
+  },
+  storeRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  rating: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginLeft: 4,
+  },
+  storeLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationText: {
+    fontSize: 10,
+    color: '#64748b',
+    marginLeft: 2,
   },
   uploadedImageContainer: {
     position: 'relative',
@@ -349,50 +498,5 @@ const styles = StyleSheet.create({
   activityTime: {
     fontSize: 12,
     color: '#94a3b8',
-  },
-  storeList: {
-    flexDirection: 'row',
-    paddingRight: 20,
-  },
-  storeCard: {
-    width: 160,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  storeImage: {
-    width: '100%',
-    height: 100,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  storeInfo: {
-    padding: 12,
-  },
-  storeName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  storeType: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 8,
-  },
-  storeRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginLeft: 4,
   },
 });
