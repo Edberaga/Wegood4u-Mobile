@@ -15,3 +15,27 @@ export interface PartnerStore {
 export interface GroupedStores {
   [city: string]: PartnerStore[];
 }
+
+// NFT Store Types
+export interface NFTProduct {
+  id: string;
+  name: string;
+  category: 'zodiac' | 'horoscope';
+  price: number;
+  image: string;
+  description: string;
+  symbol?: string; // For zodiac symbols
+  dateRange?: string; // For zodiac date ranges
+  year?: string; // For Chinese horoscope years
+  traits: string[];
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  createdAt: string;
+}
+
+export interface StoreFilters {
+  category: 'all' | 'zodiac' | 'horoscope';
+  sortBy: 'latest' | 'alphabetical' | 'price-low' | 'price-high';
+  searchQuery: string;
+  selectedZodiac?: string;
+  selectedHoroscope?: string;
+}
