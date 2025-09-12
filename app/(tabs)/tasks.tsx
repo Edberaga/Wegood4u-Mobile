@@ -13,7 +13,7 @@ import { useUser } from '@/context/UserContext';
 import { fetchPartnerStores, type PartnerStore, groupStoresByCity } from '@/data/partnerStore';
 import UnverifiedMember from '@/components/unverified-member/UnverifiedMember';
 import VerifiedMember from '@/components/verified-member/VerifiedMember';
-import { AdminTaskScreen } from '@/components/admin-member';
+import AdminTaskScreen from '@/components/admin-member/AdminTaskScreen'
 
 export default function TasksScreen() {
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();

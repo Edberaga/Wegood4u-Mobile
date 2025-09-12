@@ -64,9 +64,6 @@ export default function Badges({
     }
   };
 
-  // Calculate achievements based on approved submission counts
-  const totalPoints = approvedCounts.total * 10;
-
   const createBadgeLevels = (currentCount: number): BadgeLevel[] => {
     const requirements = [1, 5, 10, 25, 50]; // More realistic requirements
     return requirements.map((req, index) => ({
@@ -197,25 +194,6 @@ export default function Badges({
           <Text style={styles.debugText}>User ID: {userData?.id || 'Not set'}</Text>
         </View>
 
-        {/* Points Summary */}
-        <View style={styles.pointsCard}>
-          <View style={styles.pointsHeader}>
-            <Star size={32} color="#F59E0B" fill="#F59E0B" />
-            <View style={styles.pointsInfo}>
-              <Text style={styles.pointsNumber}>{totalPoints}</Text>
-              <Text style={styles.pointsLabel}>Token Points</Text>
-            </View>
-          </View>
-          <Text style={styles.pointsDescription}>
-            Earn 10 points for each approved submission
-          </Text>
-          {approvedCounts.total > 0 && (
-            <Text style={styles.pointsSubtext}>
-              You have {approvedCounts.total} approved submissions!
-            </Text>
-          )}
-        </View>
-
         {/* Achievement Summary */}
         <View style={styles.achievementSummary}>
           <Text style={styles.sectionTitle}>Achievement Progress</Text>
@@ -236,6 +214,11 @@ export default function Badges({
           <Text style={styles.achievementNote}>
             Only approved submissions count towards badges
           </Text>
+          {approvedCounts.total > 0 && (
+            <Text style={styles.pointsSubtext}>
+              You have {approvedCounts.total} approved submissions!
+            </Text>
+          )}
         </View>
 
         {/* Badge Categories */}
