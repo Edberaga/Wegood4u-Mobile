@@ -1,20 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
-import type { Database } from '@/lib/supabase';
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface AuthContextType {
   user: User | null;
-  profile: Profile | null;
   session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string, dateOfBirth: string, gender: string, invitationCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,7 +20,6 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,11 +28,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     });
 
     // Listen for auth changes
@@ -46,38 +36,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
@@ -170,34 +134,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) throw new Error('No user logged in');
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error: any) {
-      throw new Error(error.message);
-    }
-  };
-
   const value: AuthContextType = {
     user,
-    profile,
     session,
     isLoading,
     isAuthenticated: !!user,
     signIn,
     signUp,
     signOut,
-    updateProfile,
   };
 
   return (
