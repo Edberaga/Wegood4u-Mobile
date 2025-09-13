@@ -106,9 +106,9 @@ export default function HomeScreen() {
           style={styles.circularButton}
           onPress={() => {
             if (title === 'Recommended Restaurant') {
-              router.push('/(tabs)/partner-store/Restaurant');
+              router.push('/partner-store/Restaurant');
             } else if (title === 'Recommended Cafe') {
-              router.push('/(tabs)/partner-store/Cafe');
+              router.push('/partner-store/Cafe');
             }
           }}
         >
