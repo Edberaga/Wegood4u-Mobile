@@ -6,42 +6,34 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  TextInput,
   Alert,
-  Switch,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { User, CreditCard as Edit3, Star, Gift, Share2, Settings, Bell, Shield, LogOut, Camera, Copy, Trophy, MapPin, Calendar, Mail, Phone, CircleCheck as CheckCircle, X, RefreshCw } from 'lucide-react-native';
+import { Menu, Share2, Camera, Trophy, Gift, Clock, ChevronRight, LogOut } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
+import { useUserSubmissions } from '@/hooks/useSubmissions';
+import { usePendingSubmissions } from '@/hooks/useSubmissions';
+import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isResendingEmail, setIsResendingEmail] = useState(false);
-  const [settings, setSettings] = useState({
-    notifications: true,
-    locationServices: true,
-    marketingEmails: false,
-  });
+  
+  // Get user submissions data for members/affiliates
+  const {
+    approvedCounts,
+    stats,
+    isLoading: isLoadingSubmissions
+  } = useUserSubmissions(userData?.id || '');
 
-  const referralCode = 'WG4U2024';
-  const userStats = {
-    totalPoints: 2450,
-    tasksCompleted: 12,
-    vouchersEarned: 8,
-    memberSince: 'January 2024',
-  };
-
-  const recentAchievements = [
-    { id: 1, title: 'First Review', description: 'Posted your first restaurant review', date: '2024-01-10' },
-    { id: 2, title: 'Point Collector', description: 'Earned 1000 points', date: '2024-01-08' },
-    { id: 3, title: 'Social Butterfly', description: 'Referred 3 friends', date: '2024-01-05' },
-  ];
+  // Get pending submissions for admin
+  const {
+    pendingSubmissions,
+    isLoading: isLoadingPending
+  } = usePendingSubmissions();
 
   // Show loading state
   if (userLoading) {
@@ -70,7 +62,6 @@ export default function ProfileScreen() {
     );
   }
 
-  const isEmailConfirmed = !!userData.emailConfirmedAt;
 
   const pickProfileImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -86,31 +77,8 @@ export default function ProfileScreen() {
     }
   };
 
-  const copyReferralCode = () => {
-    Alert.alert('Copied!', `Referral code ${referralCode} copied to clipboard`);
-  };
-
-  const shareReferralCode = () => {
-    Alert.alert(
-      'Share Referral Code',
-      `Share your referral code ${referralCode} with friends and earn rewards!`
-    );
-  };
-
-  const handleResendEmail = async () => {
-    setIsResendingEmail(true);
-    try {
-      await resendEmailConfirmation();
-      Alert.alert('Success', 'Confirmation email sent! Please check your inbox.');
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setIsResendingEmail(false);
-    }
-  };
-
-  const handleAddPhoneNumber = () => {
-    Alert.alert('Add Phone Number', 'Phone number verification feature coming soon!');
+  const shareProfile = () => {
+    Alert.alert('Share Profile', 'Share your profile with friends!');
   };
 
   const handleLogout = async () => {
@@ -128,6 +96,10 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleBecomeMember = () => {
+    router.push('/tasks');
   };
 
   const getRoleDisplayName = (role: string) => {
@@ -150,16 +122,43 @@ export default function ProfileScreen() {
     }
   };
 
+  const getGreeting = () => {
+    if (userData.role === 'admin') {
+      return 'Welcome Admin';
+    }
+    return userData.fullName || userData.username || 'User';
+  };
+
+  const calculateBadgeCount = () => {
+    // Calculate badges based on approved submissions
+    let badgeCount = 0;
+    const milestones = [1, 5, 10, 25, 50]; // Badge milestones
+    
+    // Count activity badges
+    badgeCount += milestones.filter(milestone => approvedCounts.total >= milestone).length;
+    // Count cafe badges  
+    badgeCount += milestones.filter(milestone => approvedCounts.cafe >= milestone).length;
+    // Count restaurant badges
+    badgeCount += milestones.filter(milestone => approvedCounts.restaurant >= milestone).length;
+    
+    return badgeCount;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
-        <LinearGradient
-          colors={['#206E56', '#CBEED2']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.menuButton}>
+            <Menu size={24} color="#1e293b" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.shareButton} onPress={shareProfile}>
+            <Share2 size={24} color="#1e293b" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Profile Section */}
+        <View style={styles.profileSection}>
           <TouchableOpacity style={styles.profileImageContainer} onPress={pickProfileImage}>
             <Image 
               source={{ 
@@ -172,156 +171,72 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.userName}>{userData.username || 'User'}</Text>
+          <Text style={styles.userName}>{getGreeting()}</Text>
           <Text style={styles.userEmail}>{userData.email}</Text>
-          
-          <View style={styles.roleContainer}>
-            <Text style={[styles.roleText, { color: getRoleColor(userData.role) }]}>
-              {getRoleDisplayName(userData.role)}
-            </Text>
-          </View>
-
-          <View style={styles.pointsContainer}>
-            <Star size={20} color="#FFD700" />
-            <Text style={styles.points}>{userStats.totalPoints} Points</Text>
-          </View>
-        </LinearGradient>
-
-        {/* Stats Section */}
-        <View style={styles.section}>
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Trophy size={20} color="#F33F32" />
-              <Text style={styles.statNumber}>{userStats.tasksCompleted}</Text>
-              <Text style={styles.statLabel}>Tasks Done</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Gift size={20} color="#00A85A" />
-              <Text style={styles.statNumber}>{userStats.vouchersEarned}</Text>
-              <Text style={styles.statLabel}>Vouchers</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Calendar size={20} color="#F59E0B" />
-              <Text style={styles.statNumber}>3</Text>
-              <Text style={styles.statLabel}>Months</Text>
-            </View>
-          </View>
         </View>
 
-        {/* Referral Code Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Referral Code</Text>
-          <View style={styles.referralCard}>
-            <View style={styles.referralInfo}>
-              <Text style={styles.referralLabel}>Your Referral Code</Text>
-              <Text style={styles.referralCode}>{referralCode}</Text>
-              <Text style={styles.referralDescription}>
-                Share with friends and earn 200 points for each signup!
-              </Text>
-            </View>
-            <View style={styles.referralActions}>
-              <TouchableOpacity style={styles.referralButton} onPress={copyReferralCode}>
-                <Copy size={16} color="#F33F32" />
-                <Text style={styles.referralButtonText}>Copy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.referralButton, styles.shareReferralButton]}
-                onPress={shareReferralCode}
-              >
-                <Share2 size={16} color="white" />
-                <Text style={[styles.referralButtonText, { color: 'white' }]}>Share</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Recent Achievements */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Achievements</Text>
-          <View style={styles.achievementsList}>
-            {recentAchievements.map((achievement) => (
-              <View key={achievement.id} style={styles.achievementItem}>
-                <View style={styles.achievementIcon}>
-                  <Trophy size={16} color="#F59E0B" />
-                </View>
-                <View style={styles.achievementContent}>
-                  <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                  <Text style={styles.achievementDescription}>{achievement.description}</Text>
-                  <Text style={styles.achievementDate}>{achievement.date}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
-          <View style={styles.settingsContainer}>
-            {/* Email Confirmation */}
-            <TouchableOpacity 
-              style={styles.settingItem}
-              onPress={isEmailConfirmed ? undefined : handleResendEmail}
-              disabled={isEmailConfirmed || isResendingEmail}
-            >
-              <View style={styles.settingInfo}>
-                <Mail size={20} color="#64748B" />
-                <Text style={styles.settingLabel}>Confirm Email Address</Text>
-              </View>
-              <View style={styles.settingStatus}>
-                {isResendingEmail ? (
-                  <ActivityIndicator size="small" color="#F33F32" />
-                ) : isEmailConfirmed ? (
-                  <CheckCircle size={20} color="#22C55E" />
-                ) : (
-                  <X size={20} color="#EF4444" />
-                )}
-              </View>
+        {/* Role-based Content */}
+        {userData.role === 'subscriber' ? (
+          // Subscriber: Show "Become a Member" button
+          <View style={styles.section}>
+            <TouchableOpacity style={styles.becomeMemberButton} onPress={handleBecomeMember}>
+              <Text style={styles.becomeMemberText}>Become a Member</Text>
+              <ChevronRight size={24} color="white" />
             </TouchableOpacity>
-
-
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <Bell size={20} color="#64748B" />
-                <Text style={styles.settingLabel}>Push Notifications</Text>
+          </View>
+        ) : userData.role === 'admin' ? (
+          // Admin: Show only pending submissions count
+          <View style={styles.section}>
+            <View style={styles.adminStatsContainer}>
+              <View style={styles.adminStatItem}>
+                <Clock size={32} color="#F59E0B" />
+                <Text style={styles.adminStatNumber}>
+                  {isLoadingPending ? '...' : pendingSubmissions.length}
+                </Text>
+                <Text style={styles.adminStatLabel}>Pending Submissions</Text>
               </View>
-              <Switch
-                value={settings.notifications}
-                onValueChange={(value) => setSettings({ ...settings, notifications: value })}
-                trackColor={{ false: '#e2e8f0', true: '#206E56' }}
-                thumbColor={settings.notifications ? '#ffffff' : '#f4f3f4'}
-              />
             </View>
-
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <MapPin size={20} color="#64748B" />
-                <Text style={styles.settingLabel}>Location Services</Text>
+          </View>
+        ) : (
+          // Member & Affiliate: Show full stats section
+          <View style={styles.section}>
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Trophy size={20} color="#F59E0B" />
+                <Text style={styles.statNumber}>
+                  {isLoadingSubmissions ? '...' : stats.approved}
+                </Text>
+                <Text style={styles.statLabel}>Task Done</Text>
               </View>
-              <Switch
-                value={settings.locationServices}
-                onValueChange={(value) => setSettings({ ...settings, locationServices: value })}
-                trackColor={{ false: '#e2e8f0', true: '#206E56' }}
-                thumbColor={settings.locationServices ? '#ffffff' : '#f4f3f4'}
-              />
-            </View>
-
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <Shield size={20} color="#64748B" />
-                <Text style={styles.settingLabel}>Marketing Emails</Text>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Gift size={20} color="#22C55E" />
+                <Text style={styles.statNumber}>
+                  {isLoadingSubmissions ? '...' : calculateBadgeCount()}
+                </Text>
+                <Text style={styles.statLabel}>Gained Badges</Text>
               </View>
-              <Switch
-                value={settings.marketingEmails}
-                onValueChange={(value) => setSettings({ ...settings, marketingEmails: value })}
-                trackColor={{ false: '#e2e8f0', true: '#206E56' }}
-                thumbColor={settings.marketingEmails ? '#ffffff' : '#f4f3f4'}
-              />
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Clock size={20} color="#64748B" />
+                <Text style={styles.statNumber}>0</Text>
+                <Text style={styles.statLabel}>Collection</Text>
+              </View>
             </View>
+          </View>
+        )}
+
+        {/* Character Illustration */}
+        <View style={styles.section}>
+          <View style={styles.illustrationContainer}>
+            <Image 
+              source={{ uri: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400' }}
+              style={styles.illustrationImage}
+            />
           </View>
         </View>
 
-        {/* Logout */}
+        {/* Logout Button */}
         <View style={styles.section}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <LogOut size={20} color="#EF4444" />
@@ -338,24 +253,72 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  header: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 30,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#64748B',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    marginBottom: 20,
+    paddingVertical: 16,
+    backgroundColor: 'white',
+  },
+  menuButton: {
+    padding: 8,
+  },
+  shareButton: {
+    padding: 8,
+  },
+  profileSection: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    backgroundColor: 'white',
   },
   profileImageContainer: {
     position: 'relative',
     marginBottom: 16,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: 'white',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 6,
+    borderColor: '#206E56',
   },
   cameraIcon: {
     position: 'absolute',
@@ -364,63 +327,38 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#206E56',
+    backgroundColor: '#64748B',
     justifyContent: 'center',
     alignItems: 'center',
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#1e293b',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: 8,
-  },
-  roleContainer: {
-    backgroundColor: 'rgba(203, 238, 210, 0.3)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  roleText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'white',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  pointsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(203, 238, 210, 0.3)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  points: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-    marginLeft: 8,
+    color: '#64748B',
   },
   section: {
     marginBottom: 24,
     paddingHorizontal: 20,
   },
-  sectionHeader: {
+  becomeMemberButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: '#206E56',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    gap: 12,
   },
-  sectionTitle: {
+  becomeMemberText: {
+    color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1e293b',
+    fontWeight: '600',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -432,16 +370,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
   },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 16,
+  },
   statNumber: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#206E56',
+    color: '#1e293b',
     marginTop: 8,
     marginBottom: 4,
   },
@@ -450,7 +395,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontWeight: '600',
   },
-  referralCard: {
+  adminStatsContainer: {
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
@@ -459,179 +404,45 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    alignItems: 'center',
   },
-  referralInfo: {
-    marginBottom: 16,
+  adminStatItem: {
+    alignItems: 'center',
   },
-  referralLabel: {
-    fontSize: 14,
-    color: '#64748b',
-    marginBottom: 8,
-  },
-  referralCode: {
+  adminStatNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#206E56',
+    color: '#F59E0B',
     marginBottom: 8,
   },
-  referralDescription: {
+  adminStatLabel: {
     fontSize: 12,
     color: '#64748b',
-    lineHeight: 16,
+    fontWeight: '600',
   },
-  referralActions: {
-    flexDirection: 'row',
-    gap: 12,
+  illustrationContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
   },
-  referralButton: {
-    flex: 1,
+  illustrationImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 16,
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#206E56',
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    borderRadius: 12,
     gap: 8,
-  },
-  shareReferralButton: {
-    backgroundColor: '#206E56',
-    borderColor: '#206E56',
-  },
-  referralButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#206E56',
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#206E56',
-  },
-  profileForm: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  formGroup: {
-    marginBottom: 16,
-  },
-  formLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-  formInput: {
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#1e293b',
+    borderColor: '#FEE2E2',
   },
-  disabledInput: {
-    backgroundColor: '#f8fafc',
-    color: '#64748b',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  saveButton: {
-    backgroundColor: '#206E56',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveButtonText: {
-    color: 'white',
+  logoutButtonText: {
+    color: '#EF4444',
     fontSize: 16,
     fontWeight: '600',
-  },
-  achievementsList: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  achievementItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  achievementIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#fef3c7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  achievementContent: {
-    flex: 1,
-  },
-  achievementTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 2,
-  },
-  achievementDescription: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 4,
-  },
-  achievementDate: {
-    fontSize: 10,
-    color: '#94a3b8',
-  },
-  settingsContainer: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  settingInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: '#1e293b',
   },
 });
