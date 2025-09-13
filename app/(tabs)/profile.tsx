@@ -16,11 +16,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
 import { useUserSubmissions } from '@/hooks/useSubmissions';
 import { usePendingSubmissions } from '@/hooks/useSubmissions';
+import { uploadProfileImage, updateUserAvatar } from '@/utils/imageUpload';
 import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   
   // Get user submissions data for members/affiliates
   const {
@@ -63,16 +65,54 @@ export default function ProfileScreen() {
   }
 
   const pickProfileImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    try {
+      // Request permissions
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please grant permission to access your photo library.');
+        return;
+      }
 
-    if (!result.canceled) {
-      // TODO: Upload image to Supabase storage and update avatar_url
-      Alert.alert('Feature Coming Soon', 'Profile image upload will be available soon!');
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8, // Compress for better upload performance
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setIsUploadingImage(true);
+        
+        const imageUri = result.assets[0].uri;
+        
+        // Upload image to Supabase storage
+        const uploadResult = await uploadProfileImage(userData.id, imageUri);
+        
+        if (!uploadResult.success) {
+          Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload image');
+          return;
+        }
+
+        // Update user avatar in database
+        const updateResult = await updateUserAvatar(userData.id, uploadResult.url!);
+        
+        if (!updateResult.success) {
+          Alert.alert('Update Failed', updateResult.error || 'Failed to update profile');
+          return;
+        }
+
+        // Refresh user data to show new avatar
+        await refreshUserData();
+        
+        Alert.alert('Success', 'Profile picture updated successfully!');
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'An unexpected error occurred while updating your profile picture.');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -160,15 +200,23 @@ export default function ProfileScreen() {
 
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <TouchableOpacity style={styles.profileImageContainer} onPress={pickProfileImage}>
+          <TouchableOpacity 
+            style={styles.profileImageContainer} 
+            onPress={pickProfileImage}
+            disabled={isUploadingImage}
+          >
             <Image 
               source={{ 
                 uri: userData.avatarUrl || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400' 
               }} 
               style={styles.profileImage} 
             />
-            <View style={styles.cameraIcon}>
-              <Camera size={16} color="white" />
+            <View style={[styles.cameraIcon, isUploadingImage && styles.cameraIconLoading]}>
+              {isUploadingImage ? (
+                <ActivityIndicator size={16} color="white" />
+              ) : (
+                <Camera size={16} color="white" />
+              )}
             </View>
           </TouchableOpacity>
 
@@ -324,6 +372,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#64748B',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cameraIconLoading: {
+    backgroundColor: '#206E56',
   },
   userInfoContainer: {
     flex: 1,
