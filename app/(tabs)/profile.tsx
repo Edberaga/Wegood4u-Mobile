@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Menu, Share2, Camera, Trophy, Gift, Clock, ChevronRight, LogOut } from 'lucide-react-native';
+import { Menu, Share2, Camera, SquareCheckBig, Trophy, SquareLibrary, Clock, ChevronRight, LogOut, RefreshCw } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
 import { useUserSubmissions } from '@/hooks/useSubmissions';
@@ -61,7 +61,6 @@ export default function ProfileScreen() {
       </SafeAreaView>
     );
   }
-
 
   const pickProfileImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -149,9 +148,11 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
+          {/* Profile Menu Setting */}
           <TouchableOpacity style={styles.menuButton}>
             <Menu size={24} color="#1e293b" />
           </TouchableOpacity>
+          {/* Invitation Friend Button */}
           <TouchableOpacity style={styles.shareButton} onPress={shareProfile}>
             <Share2 size={24} color="#1e293b" />
           </TouchableOpacity>
@@ -171,8 +172,10 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.userName}>{getGreeting()}</Text>
-          <Text style={styles.userEmail}>{userData.email}</Text>
+          <View style={styles.userInfoContainer}>
+            <Text style={styles.userName}>{getGreeting()}</Text>
+            <Text style={styles.userEmail}>{userData.email}</Text>
+          </View>
         </View>
 
         {/* Role-based Content */}
@@ -202,7 +205,7 @@ export default function ProfileScreen() {
           <View style={styles.section}>
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Trophy size={20} color="#F59E0B" />
+                <SquareCheckBig size={20} color="#22C55E" />
                 <Text style={styles.statNumber}>
                   {isLoadingSubmissions ? '...' : stats.approved}
                 </Text>
@@ -210,31 +213,21 @@ export default function ProfileScreen() {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Gift size={20} color="#22C55E" />
+                <Trophy size={20} color="#F59E0B" />
                 <Text style={styles.statNumber}>
                   {isLoadingSubmissions ? '...' : calculateBadgeCount()}
                 </Text>
-                <Text style={styles.statLabel}>Gained Badges</Text>
+                <Text style={styles.statLabel}>Badges</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Clock size={20} color="#64748B" />
+                <SquareLibrary size={20} color="#64748B" />
                 <Text style={styles.statNumber}>0</Text>
                 <Text style={styles.statLabel}>Collection</Text>
               </View>
             </View>
           </View>
         )}
-
-        {/* Character Illustration */}
-        <View style={styles.section}>
-          <View style={styles.illustrationContainer}>
-            <Image 
-              source={{ uri: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400' }}
-              style={styles.illustrationImage}
-            />
-          </View>
-        </View>
 
         {/* Logout Button */}
         <View style={styles.section}>
@@ -304,32 +297,37 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   profileSection: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 32,
     paddingHorizontal: 20,
     backgroundColor: 'white',
+    gap: 24,
   },
   profileImageContainer: {
     position: 'relative',
-    marginBottom: 16,
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 6,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 4,
     borderColor: '#206E56',
   },
   cameraIcon: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#64748B',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  userInfoContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
   userName: {
     fontSize: 24,
@@ -338,8 +336,33 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#64748B',
+  },
+  pointBalanceContainer: {
+    backgroundColor: '#206E56',
+    borderRadius: 25,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignSelf: 'flex-start',
+  },
+  pointBalanceContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pointBalanceIcon: {
+    fontSize: 20,
+  },
+  pointBalanceNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  pointBalanceLabel: {
+    fontSize: 14,
+    color: 'white',
+    opacity: 0.9,
   },
   section: {
     marginBottom: 24,
