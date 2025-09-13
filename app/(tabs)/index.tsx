@@ -20,13 +20,14 @@ import {
   Share2,
   Trophy,
   Clock,
-  ChevronRight,
+  ChevronRight as ChevronRightIcon,
   UtensilsCrossed,
   Coffee,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
 import { fetchPartnerStores } from '@/data/partnerStore';
+import { router } from 'expo-router';
 import type { PartnerStore } from '@/types';
 
 export default function HomeScreen() {
@@ -101,9 +102,17 @@ export default function HomeScreen() {
           
           <Text style={styles.sectionTitle}>{title}</Text>
         </View>
-        <TouchableOpacity style={styles.seeAllButton}>
-          <Text style={styles.seeAllText}>See All</Text>
-          <ChevronRight size={16} color="#206E56" />
+        <TouchableOpacity 
+          style={styles.circularButton}
+          onPress={() => {
+            if (title === 'Recommended Restaurant') {
+              router.push('/(tabs)/partner-store/Restaurant');
+            } else if (title === 'Recommended Cafe') {
+              router.push('/(tabs)/partner-store/Cafe');
+            }
+          }}
+        >
+          <ChevronRightIcon size={16} color="#206E56" />
         </TouchableOpacity>
       </View>
       
@@ -214,10 +223,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#206E56',
+  circularButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#CBEED2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#206E56',
   },
   advertisementBanner: {
     backgroundColor: '#dce0e7ff',
