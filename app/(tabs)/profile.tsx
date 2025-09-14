@@ -278,14 +278,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         )}
-
-        {/* Logout Button */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={20} color="#EF4444" />
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
 
       {/* Settings Overlay */}

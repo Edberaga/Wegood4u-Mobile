@@ -1,10 +1,8 @@
 import { Tabs } from 'expo-router';
 import { CircleEllipsis as Home, MapPin, Store, SquareCheck as CheckSquare, User } from 'lucide-react-native';
 import { AuthGuard } from '@/components/AuthGuard';
-import { useTheme } from '@/context/ThemeContext';
 
 export default function TabLayout() {
-  const { colors } = useTheme();
 
   return (
     <AuthGuard>
