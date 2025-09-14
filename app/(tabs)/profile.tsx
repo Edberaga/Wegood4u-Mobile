@@ -18,11 +18,13 @@ import { useUserSubmissions } from '@/hooks/useSubmissions';
 import { usePendingSubmissions } from '@/hooks/useSubmissions';
 import { uploadProfileImage, updateUserAvatar } from '@/utils/imageUpload';
 import { router } from 'expo-router';
+import SettingsOverlay from '@/app/profile/SettingsOverlay';
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
   
   // Get user submissions data for members/affiliates
   const {
@@ -189,7 +191,7 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           {/* Profile Menu Setting */}
-          <TouchableOpacity style={styles.menuButton}>
+          <TouchableOpacity style={styles.menuButton} onPress={() => setShowSettingsOverlay(true)}>
             <Menu size={24} color="#1e293b" />
           </TouchableOpacity>
           {/* Invitation Friend Button */}
@@ -285,6 +287,13 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Settings Overlay */}
+      <SettingsOverlay
+        visible={showSettingsOverlay}
+        onClose={() => setShowSettingsOverlay(false)}
+        userData={userData}
+      />
     </SafeAreaView>
   );
 }
