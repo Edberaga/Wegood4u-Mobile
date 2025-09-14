@@ -188,10 +188,11 @@ export default function CafeScreen() {
           <MapPin size={16} color="#64748B" />
           <Text style={styles.filterButtonText}>{getLocationDisplayText()}</Text>
         </TouchableOpacity>
-
+{/*
         <TouchableOpacity style={styles.listViewButton}>
           <SlidersHorizontal size={16} color="#64748B" />
         </TouchableOpacity>
+*/}
       </View>
 
       {/* Cafe Grid */}
