@@ -5,7 +5,9 @@ export interface UserData {
   emailConfirmedAt: string | null;
   phone: string | null;
   phoneConfirmedAt: string | null;
-  
+  dob: string | null; // date field from your schema
+  gender: string | null;
+
   // Profile data
   username: string | null;
   fullName: string | null;
@@ -15,6 +17,7 @@ export interface UserData {
   inviterId: string | null;
   affiliateRequestStatus: 'pending' | 'approved' | 'rejected' | null;
   createdAt: string;
+  updatedAt: string | null;
 }
 
 export interface UserContextType {
@@ -23,6 +26,7 @@ export interface UserContextType {
   error: string | null;
   refreshUserData: () => Promise<void>;
   resendEmailConfirmation: () => Promise<void>;
+  updateProfile?: (updates: any) => Promise<any>;
 }
 
 export interface UserStats {

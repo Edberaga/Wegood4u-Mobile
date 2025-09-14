@@ -24,6 +24,7 @@ export function UserProvider({ children }: UserProviderProps) {
       // Get current user from auth
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       console.log('user: ', user);
+      
       if (authError) {
         throw authError;
       }
@@ -33,14 +34,29 @@ export function UserProvider({ children }: UserProviderProps) {
         return;
       }
 
-      // Fetch profile data
+      // Fetch profile data with all necessary fields
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          username,
+          full_name,
+          role,
+          avatar_url,
+          verification_completed,
+          inviter_id,
+          affiliate_request_status,
+          dob,
+          gender,
+          phone,
+          created_at,
+          updated_at
+        `)
         .eq('id', user.id)
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Profile fetch error:', profileError);
         throw profileError;
       }
 
@@ -50,7 +66,7 @@ export function UserProvider({ children }: UserProviderProps) {
         id: user.id,
         email: user.email || '',
         emailConfirmedAt: user.email_confirmed_at || null,
-        phone: user.phone || null,
+        phone: profile?.phone || user.phone || null, // Try profile phone first, then auth phone
         phoneConfirmedAt: user.phone_confirmed_at || null,
         
         // Profile data (with defaults if profile doesn't exist)
@@ -61,10 +77,15 @@ export function UserProvider({ children }: UserProviderProps) {
         verificationCompleted: profile?.verification_completed || false,
         inviterId: profile?.inviter_id || null,
         affiliateRequestStatus: profile?.affiliate_request_status || null,
+        dob: profile?.dob || null,
+        gender: profile?.gender || null,
         createdAt: profile?.created_at || user.created_at,
+        updatedAt: profile?.updated_at || null,
       };
 
+      console.log('Combined user data:', combinedUserData);
       setUserData(combinedUserData);
+      
     } catch (err: any) {
       console.error('Error fetching user data:', err);
       setError(err.message);
@@ -74,6 +95,7 @@ export function UserProvider({ children }: UserProviderProps) {
   };
 
   const refreshUserData = async () => {
+    console.log('Refreshing user data...');
     await fetchUserData();
   };
 
@@ -90,7 +112,7 @@ export function UserProvider({ children }: UserProviderProps) {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'profiles',
           filter: `id=eq.${userId}`,
@@ -101,10 +123,13 @@ export function UserProvider({ children }: UserProviderProps) {
           fetchUserData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     setRealtimeChannel(channel);
   };
+
   const resendEmailConfirmation = async () => {
     try {
       if (!userData?.email) {
@@ -120,6 +145,33 @@ export function UserProvider({ children }: UserProviderProps) {
       
       return Promise.resolve();
     } catch (err: any) {
+      throw new Error(err.message);
+    }
+  };
+
+  // Update profile data
+  const updateProfile = async (updates: Partial<Profile>) => {
+    try {
+      if (!userData?.id) {
+        throw new Error('No user ID found');
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userData.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('Profile updated:', data);
+      // Refresh user data to get the latest changes
+      await refreshUserData();
+      
+      return data;
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
       throw new Error(err.message);
     }
   };
@@ -145,8 +197,8 @@ export function UserProvider({ children }: UserProviderProps) {
     // Listen for auth changes that might affect email confirmation
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event);
         if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'SIGNED_IN') {
-          console.log('Auth state changed:', event);
           // Refresh user data when auth state changes
           await fetchUserData();
         }
@@ -154,24 +206,37 @@ export function UserProvider({ children }: UserProviderProps) {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [userData?.id]);
 
+  // Initial data fetch and auth state listener
   useEffect(() => {
     fetchUserData();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event);
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           await fetchUserData();
         } else if (event === 'SIGNED_OUT') {
           setUserData(null);
           setIsLoading(false);
+          // Clean up realtime subscription
+          if (realtimeChannel) {
+            supabase.removeChannel(realtimeChannel);
+            setRealtimeChannel(null);
+          }
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      // Clean up realtime subscription on unmount
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
+    };
   }, []);
 
   const value: UserContextType = {
@@ -180,6 +245,7 @@ export function UserProvider({ children }: UserProviderProps) {
     error,
     refreshUserData,
     resendEmailConfirmation,
+    updateProfile, // Add this new method
   };
 
   return (
