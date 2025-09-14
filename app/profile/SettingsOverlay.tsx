@@ -72,11 +72,6 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
     router.push('/profile/faq');
   };
 
-  const handleTheme = () => {
-    onClose();
-    router.push('/profile/theme');
-  };
-
   const renderMenuItem = (
     icon: React.ReactNode,
     title: string,

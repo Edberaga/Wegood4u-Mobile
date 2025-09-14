@@ -18,6 +18,7 @@ export default function TabLayout() {
             borderTopWidth: 1,
             borderTopColor: colors.primaryLight,
             paddingTop: 8,
+            paddingBottom: 8,
           },
           tabBarLabelStyle: {
             fontSize: 12,

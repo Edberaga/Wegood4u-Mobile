@@ -9,7 +9,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Palette, Sun, Moon } from 'lucide-react-native';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useTheme } from '@/context/ThemeContext';
 import type { ThemeType } from '@/context/ThemeContext';
@@ -17,13 +16,13 @@ import type { ThemeType } from '@/context/ThemeContext';
 export default function ThemeScreen() {
   const { theme, setTheme, colors, isLoading } = useTheme();
 
-  const handleThemeChange = async (theme: ThemeType) => {
+  const handleThemeChange = async (newTheme: ThemeType) => {
     try {
-      await setTheme(theme);
+      await setTheme(newTheme);
       
       Alert.alert(
         'Theme Updated',
-        `Successfully switched to ${theme} theme!`,
+        `Successfully switched to ${newTheme} theme!`,
         [{ text: 'OK' }]
       );
     } catch (error) {
@@ -33,52 +32,56 @@ export default function ThemeScreen() {
   };
 
   const renderThemeOption = (
-    theme: ThemeType,
+    themeOption: ThemeType,
     label: string,
     description: string,
     icon: React.ReactNode
-  ) => (
-    <TouchableOpacity
-      style={[
-        styles.themeOption,
-        { backgroundColor: colors.surface, borderColor: colors.border },
-        theme === theme && styles.selectedThemeOption
-      ]}
-      onPress={() => handleThemeChange(theme)}
-    >
-      <View style={styles.themeOptionLeft}>
-        <View style={[
-          styles.themeIconContainer,
-          theme === theme ? styles.selectedThemeIconContainer : { backgroundColor: colors.border }
-        ]}>
-          {icon}
-        </View>
-        <View style={styles.themeInfo}>
-          <Text style={[
-            styles.themeLabel,
-            theme === theme ? styles.selectedThemeLabel : { color: colors.text }
+  ) => {
+    const isSelected = theme === themeOption;
+    
+    return (
+      <TouchableOpacity
+        style={[
+          styles.themeOption,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          isSelected && styles.selectedThemeOption
+        ]}
+        onPress={() => handleThemeChange(themeOption)}
+      >
+        <View style={styles.themeOptionLeft}>
+          <View style={[
+            styles.themeIconContainer,
+            isSelected ? styles.selectedThemeIconContainer : { backgroundColor: colors.border }
           ]}>
-            {label}
-          </Text>
-          <Text style={[
-            styles.themeDescription,
-            theme === theme ? styles.selectedThemeDescription : { color: colors.textSecondary }
+            {icon}
+          </View>
+          <View style={styles.themeInfo}>
+            <Text style={[
+              styles.themeLabel,
+              isSelected ? styles.selectedThemeLabel : { color: colors.text }
+            ]}>
+              {label}
+            </Text>
+            <Text style={[
+              styles.themeDescription,
+              isSelected ? styles.selectedThemeDescription : { color: colors.textSecondary }
+            ]}>
+              {description}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.themeSelector}>
+          <View style={[
+            styles.radioButton,
+            isSelected && styles.radioButtonSelected
           ]}>
-            {description}
-          </Text>
+            {isSelected && <View style={styles.radioButtonInner} />}
+          </View>
         </View>
-      </View>
-      
-      <View style={styles.themeSelector}>
-        <View style={[
-          styles.radioButton,
-          theme === theme && styles.radioButtonSelected
-        ]}>
-          {theme === theme && <View style={styles.radioButtonInner} />}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (isLoading) {
     return (
