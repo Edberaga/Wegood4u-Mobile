@@ -11,36 +11,15 @@ import { ArrowLeft, Palette, Sun, Moon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type ThemeType = 'light' | 'dark';
+import { useTheme } from '@/context/ThemeContext';
+import type { ThemeType } from '@/context/ThemeContext';
 
 export default function ThemeScreen() {
-  const [selectedTheme, setSelectedTheme] = useState<ThemeType>('light');
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadThemePreference();
-  }, []);
-
-  const loadThemePreference = async () => {
-    try {
-      const savedTheme = await AsyncStorage.getItem('app_theme');
-      if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
-        setSelectedTheme(savedTheme as ThemeType);
-      }
-    } catch (error) {
-      console.error('Error loading theme preference:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { theme, setTheme, colors, isLoading } = useTheme();
 
   const handleThemeChange = async (theme: ThemeType) => {
     try {
-      setSelectedTheme(theme);
-      await AsyncStorage.setItem('app_theme', theme);
-      
-      // Apply theme immediately
-      applyTheme(theme);
+      await setTheme(theme);
       
       Alert.alert(
         'Theme Updated',
@@ -53,18 +32,6 @@ export default function ThemeScreen() {
     }
   };
 
-  const applyTheme = (theme: ThemeType) => {
-    // This function would typically update a global theme context
-    // For now, we'll just store the preference
-    console.log(`Applied ${theme} theme`);
-  };
-
-  const getThemeStyles = () => {
-    return selectedTheme === 'dark' ? darkStyles : lightStyles;
-  };
-
-  const themeStyles = getThemeStyles();
-
   const renderThemeOption = (
     theme: ThemeType,
     label: string,
@@ -74,28 +41,28 @@ export default function ThemeScreen() {
     <TouchableOpacity
       style={[
         styles.themeOption,
-        themeStyles.themeOption,
-        selectedTheme === theme && styles.selectedThemeOption
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        theme === theme && styles.selectedThemeOption
       ]}
       onPress={() => handleThemeChange(theme)}
     >
       <View style={styles.themeOptionLeft}>
         <View style={[
           styles.themeIconContainer,
-          selectedTheme === theme ? styles.selectedThemeIconContainer : themeStyles.themeIconContainer
+          theme === theme ? styles.selectedThemeIconContainer : { backgroundColor: colors.border }
         ]}>
           {icon}
         </View>
         <View style={styles.themeInfo}>
           <Text style={[
             styles.themeLabel,
-            selectedTheme === theme ? styles.selectedThemeLabel : themeStyles.themeLabel
+            theme === theme ? styles.selectedThemeLabel : { color: colors.text }
           ]}>
             {label}
           </Text>
           <Text style={[
             styles.themeDescription,
-            selectedTheme === theme ? styles.selectedThemeDescription : themeStyles.themeDescription
+            theme === theme ? styles.selectedThemeDescription : { color: colors.textSecondary }
           ]}>
             {description}
           </Text>
@@ -105,9 +72,9 @@ export default function ThemeScreen() {
       <View style={styles.themeSelector}>
         <View style={[
           styles.radioButton,
-          selectedTheme === theme && styles.radioButtonSelected
+          theme === theme && styles.radioButtonSelected
         ]}>
-          {selectedTheme === theme && <View style={styles.radioButtonInner} />}
+          {theme === theme && <View style={styles.radioButtonInner} />}
         </View>
       </View>
     </TouchableOpacity>
@@ -115,31 +82,31 @@ export default function ThemeScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, themeStyles.container]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <Text style={themeStyles.text}>Loading theme settings...</Text>
+          <Text style={{ color: colors.text }}>Loading theme settings...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, themeStyles.container]}>
-      <View style={[styles.header, themeStyles.header]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ArrowLeft size={24} color={themeStyles.text.color} />
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, themeStyles.text]}>Theme</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Theme</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.content}>
-        <View style={[styles.section, themeStyles.section]}>
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <View style={styles.sectionHeader}>
             <Palette size={24} color="#206E56" />
-            <Text style={[styles.sectionTitle, themeStyles.text]}>Choose Your Theme</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choose Your Theme</Text>
           </View>
-          <Text style={[styles.sectionDescription, themeStyles.secondaryText]}>
+          <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
             Select your preferred theme for the app. The theme will be applied immediately and saved for future sessions.
           </Text>
 
@@ -148,31 +115,31 @@ export default function ThemeScreen() {
               'light',
               'Light Theme',
               'Clean and bright interface',
-              <Sun size={24} color={selectedTheme === 'light' ? '#206E56' : '#64748B'} />
+              <Sun size={24} color={theme === 'light' ? '#206E56' : '#64748B'} />
             )}
 
             {renderThemeOption(
               'dark',
               'Dark Theme',
               'Easy on the eyes in low light',
-              <Moon size={24} color={selectedTheme === 'dark' ? '#206E56' : '#64748B'} />
+              <Moon size={24} color={theme === 'dark' ? '#206E56' : '#64748B'} />
             )}
           </View>
         </View>
 
-        <View style={[styles.infoSection, themeStyles.section]}>
-          <Text style={[styles.infoTitle, themeStyles.text]}>Theme Information</Text>
+        <View style={[styles.infoSection, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.infoTitle, { color: colors.text }]}>Theme Information</Text>
           <View style={styles.infoList}>
-            <Text style={[styles.infoItem, themeStyles.secondaryText]}>
+            <Text style={[styles.infoItem, { color: colors.textSecondary }]}>
               • Theme preference is saved automatically
             </Text>
-            <Text style={[styles.infoItem, themeStyles.secondaryText]}>
+            <Text style={[styles.infoItem, { color: colors.textSecondary }]}>
               • Changes apply immediately across the app
             </Text>
-            <Text style={[styles.infoItem, themeStyles.secondaryText]}>
+            <Text style={[styles.infoItem, { color: colors.textSecondary }]}>
               • Brand colors remain consistent in both themes
             </Text>
-            <Text style={[styles.infoItem, themeStyles.secondaryText]}>
+            <Text style={[styles.infoItem, { color: colors.textSecondary }]}>
               • Dark theme helps reduce eye strain
             </Text>
           </View>

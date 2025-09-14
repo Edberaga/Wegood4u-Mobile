@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, User, Settings, Palette, Lock, Info, MessageCircle, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 
 interface SettingsOverlayProps {
   visible: boolean;
@@ -21,6 +22,7 @@ interface SettingsOverlayProps {
 
 export default function SettingsOverlay({ visible, onClose, userData }: SettingsOverlayProps) {
   const { signOut } = useAuth();
+  const { colors } = useTheme();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -81,14 +83,14 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
     onPress: () => void,
     showChevron: boolean = true
   ) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+    <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]} onPress={onPress}>
       <View style={styles.menuItemLeft}>
-        <View style={styles.menuItemIcon}>
+        <View style={[styles.menuItemIcon, { backgroundColor: colors.background }]}>
           {icon}
         </View>
-        <Text style={styles.menuItemText}>{title}</Text>
+        <Text style={[styles.menuItemText, { color: colors.text }]}>{title}</Text>
       </View>
-      {showChevron && <ChevronRight size={20} color="#94A3B8" />}
+      {showChevron && <ChevronRight size={20} color={colors.textSecondary} />}
     </TouchableOpacity>
   );
 
@@ -100,35 +102,35 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.sidebar}>
+        <View style={[styles.sidebar, { backgroundColor: colors.surface }]}>
           <SafeAreaView style={styles.sidebarContent}>
             {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>Settings</Text>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#1e293b" />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
               {/* General Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>General</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>General</Text>
                 
                 {renderMenuItem(
-                  <User size={20} color="#64748B" />,
+                  <User size={20} color={colors.textSecondary} />,
                   'Account Profile',
                   handleAccountProfile
                 )}
                 
                 {renderMenuItem(
-                  <Settings size={20} color="#64748B" />,
+                  <Settings size={20} color={colors.textSecondary} />,
                   'Edit Preferences',
                   handleEditPreferences
                 )}
 
                 {renderMenuItem(
-                  <Palette size={20} color="#64748B" />,
+                  <Palette size={20} color={colors.textSecondary} />,
                   'Theme',
                   handleTheme
                 )}
@@ -136,10 +138,10 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
 
               {/* Security Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Security</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Security</Text>
                 
                 {renderMenuItem(
-                  <Lock size={20} color="#64748B" />,
+                  <Lock size={20} color={colors.textSecondary} />,
                   'Change Password',
                   handleChangePassword
                 )}
@@ -147,22 +149,22 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
 
               {/* About Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>About</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>About</Text>
                 
                 {renderMenuItem(
-                  <Info size={20} color="#64748B" />,
+                  <Info size={20} color={colors.textSecondary} />,
                   'About This App',
                   handleAboutApp
                 )}
                 
                 {renderMenuItem(
-                  <MessageCircle size={20} color="#64748B" />,
+                  <MessageCircle size={20} color={colors.textSecondary} />,
                   'Contact Us',
                   handleContactUs
                 )}
                 
                 {renderMenuItem(
-                  <HelpCircle size={20} color="#64748B" />,
+                  <HelpCircle size={20} color={colors.textSecondary} />,
                   'FAQ',
                   handleFAQ
                 )}
@@ -170,10 +172,10 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
                 {/* Logout */}
                 <TouchableOpacity style={styles.logoutItem} onPress={handleLogout}>
                   <View style={styles.menuItemLeft}>
-                    <View style={styles.logoutIcon}>
-                      <LogOut size={20} color="#EF4444" />
+                    <View style={[styles.logoutIcon, { backgroundColor: '#fef2f2' }]}>
+                      <LogOut size={20} color={colors.error} />
                     </View>
-                    <Text style={styles.logoutText}>Logout</Text>
+                    <Text style={[styles.logoutText, { color: colors.error }]}>Logout</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -201,7 +203,6 @@ const styles = StyleSheet.create({
   sidebar: {
     width: '80%',
     maxWidth: 320,
-    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 0 },
     shadowOpacity: 0.25,
@@ -221,12 +222,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1e293b',
   },
   closeButton: {
     padding: 4,
@@ -241,7 +240,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#374151',
     marginBottom: 16,
     marginHorizontal: 20,
     textTransform: 'uppercase',
@@ -254,7 +252,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -265,14 +262,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
   menuItemText: {
     fontSize: 16,
-    color: '#1e293b',
     fontWeight: '500',
   },
   themeOptions: {
@@ -295,14 +290,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fef2f2',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
   logoutText: {
     fontSize: 16,
-    color: '#EF4444',
     fontWeight: '600',
   },
 });

@@ -15,9 +15,11 @@ import type { PartnerStore } from '@/types';
 import UnverifiedMember from '@/components/unverified-member/UnverifiedMember';
 import VerifiedMember from '@/components/verified-member/VerifiedMember';
 import AdminTaskScreen from '@/components/admin-member/AdminTaskScreen'
+import { useTheme } from '@/context/ThemeContext';
 
 export default function TasksScreen() {
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
+  const { colors } = useTheme();
   const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
   const [storesLoading, setStoresLoading] = useState(true);
   const [storesError, setStoresError] = useState<string | null>(null);
@@ -87,10 +89,10 @@ export default function TasksScreen() {
   // Show loading state
   if (userLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#206E56" />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading...</Text>
         </View>
       </SafeAreaView>
     );
@@ -99,12 +101,12 @@ export default function TasksScreen() {
   // Show error state if no user data
   if (!userData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Unable to load user data</Text>
+          <Text style={[styles.errorText, { color: colors.error }]}>Unable to load user data</Text>
           <TouchableOpacity style={styles.retryButton} onPress={refreshUserData}>
-            <RefreshCw size={16} color="#206E56" />
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <RefreshCw size={16} color={colors.primary} />
+            <Text style={[styles.retryButtonText, { color: colors.primary }]}>Retry</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -145,22 +147,23 @@ export default function TasksScreen() {
       {/* Store Selection Modal */}
       {showStoreDropdown && (
         <View style={styles.modalOverlay}>
-          <View style={styles.storeModal}>
-            <Text style={styles.modalTitle}>Select Partner Store</Text>
+          <View style={[styles.storeModal, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Select Partner Store</Text>
             <ScrollView style={styles.storeList} showsVerticalScrollIndicator={false}>
               
               {/* Search Bar */}
-              <View style={styles.searchContainer}>
-                <Search size={20} color="#9CA3AF" />
+              <View style={[styles.searchContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <Search size={20} color={colors.textSecondary} />
                 <TextInput
-                  style={styles.searchInput}
+                  style={[styles.searchInput, { color: colors.text }]}
                   placeholder="Search partner stores..."
+                  placeholderTextColor={colors.textSecondary}
                   value={storeSearchQuery}
                   onChangeText={setStoreSearchQuery}
                 />
                 {storeSearchQuery.length > 0 && (
                   <TouchableOpacity onPress={() => setStoreSearchQuery('')}>
-                    <X size={20} color="#9CA3AF" />
+                    <X size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -170,16 +173,16 @@ export default function TasksScreen() {
                 <React.Fragment key={city}>
                   {/* City Header - Collapsible */}
                   <TouchableOpacity 
-                    style={styles.cityHeader}
+                    style={[styles.cityHeader, { backgroundColor: colors.background, borderBottomColor: colors.border }]}
                     onPress={() => toggleCityExpansion(city)}
                   >
                     <View style={styles.cityHeaderContent}>
-                      <Text style={styles.cityHeaderText}>{city}</Text>
-                      <Text style={styles.cityStoreCount}>({stores.length} stores)</Text>
+                      <Text style={[styles.cityHeaderText, { color: colors.primary }]}>{city}</Text>
+                      <Text style={[styles.cityStoreCount, { color: colors.textSecondary }]}>({stores.length} stores)</Text>
                     </View>
                     <ChevronRight 
                       size={20} 
-                      color="#64748B" 
+                      color={colors.textSecondary} 
                       style={[
                         styles.cityChevron,
                         expandedCities[city] && styles.cityChevronExpanded
@@ -193,7 +196,7 @@ export default function TasksScreen() {
                       key={store.id}
                       style={[
                         styles.storeItem,
-                        selectedStore?.id === store.id && styles.selectedStoreItem
+                        selectedStore?.id === store.id && { backgroundColor: colors.primary }
                       ]}
                       onPress={() => {
                         setSelectedStore(store);
@@ -204,13 +207,13 @@ export default function TasksScreen() {
                       <View style={styles.storeItemContent}>
                         <Text style={[
                           styles.storeItemText,
-                          selectedStore?.id === store.id && styles.selectedStoreItemText
+                          { color: selectedStore?.id === store.id ? 'white' : colors.text }
                         ]}>
                           {store.name}
                         </Text>
                         <Text style={[
                           styles.storeTypeText,
-                          selectedStore?.id === store.id && styles.selectedStoreTypeText
+                          { color: selectedStore?.id === store.id ? 'rgba(255, 255, 255, 0.8)' : colors.textSecondary }
                         ]}>
                           {store.type === "Coffee & Desserts" ? "Cafe" : store.type}
                         </Text>
@@ -223,9 +226,9 @@ export default function TasksScreen() {
               {/* No Results Message */}
               {Object.keys(filteredGroupedStores).length === 0 && storeSearchQuery.length > 0 && (
                 <View style={styles.noResultsContainer}>
-                  <Text style={styles.noResultsText}>No stores found matching "{storeSearchQuery}"</Text>
+                  <Text style={[styles.noResultsText, { color: colors.textSecondary }]}>No stores found matching "{storeSearchQuery}"</Text>
                   <TouchableOpacity 
-                    style={styles.clearSearchButton}
+                    style={[styles.clearSearchButton, { backgroundColor: colors.primary }]}
                     onPress={() => setStoreSearchQuery('')}
                   >
                     <Text style={styles.clearSearchButtonText}>Clear Search</Text>
@@ -234,13 +237,13 @@ export default function TasksScreen() {
               )}
             </ScrollView>
             <TouchableOpacity
-              style={styles.modalCloseButton}
+              style={[styles.modalCloseButton, { backgroundColor: colors.background }]}
               onPress={() => {
                 setShowStoreDropdown(false);
                 setStoreSearchQuery('');
               }}
             >
-              <Text style={styles.modalCloseButtonText}>Cancel</Text>
+              <Text style={[styles.modalCloseButtonText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -249,7 +252,7 @@ export default function TasksScreen() {
       {/* Loading overlay for stores */}
       {storesLoading && (
         <View style={styles.loadingOverlay}>
-          <Text style={styles.loadingText}>Loading partner stores...</Text>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading partner stores...</Text>
         </View>
       )}
     </>
@@ -259,7 +262,6 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   loadingContainer: {
     flex: 1,
@@ -275,11 +277,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   errorText: {
     fontSize: 16,
-    color: '#EF4444',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -290,11 +290,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#206E56',
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#206E56',
     fontWeight: '600',
   },
   modalOverlay: {
@@ -309,7 +307,6 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   storeModal: {
-    backgroundColor: 'white',
     borderRadius: 16,
     margin: 20,
     maxWidth: 350,
@@ -324,12 +321,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
     padding: 20,
     paddingBottom: 16,
     textAlign: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
   },
   storeList: {
     maxHeight: 300,
@@ -338,11 +333,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
   },
   storeItem: {
     flexDirection: 'row',
@@ -352,27 +345,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
-  selectedStoreItem: {
-    backgroundColor: '#206E56',
-  },
   storeItemText: {
     fontSize: 14,
-    color: '#1e293b',
     fontWeight: '500',
     marginBottom: 2,
   },
-  selectedStoreItemText: {
-    color: 'white',
-  },
   storeTypeText: {
     fontSize: 12,
-    color: '#64748b',
-  },
-  selectedStoreTypeText: {
-    color: 'rgba(255, 255, 255, 0.8)',
   },
   modalCloseButton: {
-    backgroundColor: '#f8fafc',
     paddingVertical: 16,
     alignItems: 'center',
     borderBottomLeftRadius: 16,
@@ -380,13 +361,11 @@ const styles = StyleSheet.create({
   },
   modalCloseButtonText: {
     fontSize: 16,
-    color: '#64748b',
     fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -394,13 +373,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
-    color: '#1f2937',
   },
   cityHeaderContent: {
     flexDirection: 'row',
@@ -410,12 +387,10 @@ const styles = StyleSheet.create({
   cityHeaderText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#206E56',
     marginRight: 8,
   },
   cityStoreCount: {
     fontSize: 12,
-    color: '#64748B',
     fontWeight: '500',
   },
   cityChevron: {
@@ -434,12 +409,10 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     fontSize: 16,
-    color: '#64748B',
     textAlign: 'center',
     marginBottom: 16,
   },
   clearSearchButton: {
-    backgroundColor: '#206E56',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

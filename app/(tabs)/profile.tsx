@@ -281,7 +281,6 @@ export default function ProfileScreen() {
 
         {/* Logout Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <LogOut size={20} color="#EF4444" />
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
@@ -312,6 +311,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#64748B',
+    color: '#64748B',
   },
   errorContainer: {
     flex: 1,
@@ -321,6 +321,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
+    color: '#EF4444',
     color: '#EF4444',
     marginBottom: 16,
     textAlign: 'center',
@@ -332,10 +333,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#EF4444',
+    borderColor: '#F33F32',
     borderRadius: 8,
   },
   retryButtonText: {
+    color: '#F33F32',
     color: '#EF4444',
     fontWeight: '600',
   },
@@ -361,7 +363,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     gap: 24,
   },
-  profileImageContainer: {
     position: 'relative',
   },
   profileImage: {
@@ -369,7 +370,6 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 45,
     borderWidth: 4,
-    borderColor: '#206E56',
   },
   cameraIcon: {
     position: 'absolute',
@@ -378,12 +378,10 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#64748B',
     justifyContent: 'center',
     alignItems: 'center',
   },
   cameraIconLoading: {
-    backgroundColor: '#206E56',
   },
   userInfoContainer: {
     flex: 1,
@@ -392,12 +390,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1e293b',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
-    color: '#64748B',
   },
   pointBalanceContainer: {
     backgroundColor: '#206E56',
@@ -437,7 +433,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 25,
     gap: 12,
-  },
   becomeMemberText: {
     color: 'white',
     fontSize: 18,
@@ -445,7 +440,6 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
@@ -463,23 +457,19 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: '#e2e8f0',
     marginHorizontal: 16,
   },
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1e293b',
     marginTop: 8,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#64748b',
     fontWeight: '600',
   },
   adminStatsContainer: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
@@ -504,27 +494,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   illustrationContainer: {
-    alignItems: 'center',
     paddingVertical: 40,
   },
   illustrationImage: {
     width: 200,
-    height: 200,
     borderRadius: 16,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#FEE2E2',
   },
   logoutButtonText: {
-    color: '#EF4444',
     fontSize: 16,
     fontWeight: '600',
   },
