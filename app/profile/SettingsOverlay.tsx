@@ -21,7 +21,6 @@ interface SettingsOverlayProps {
 
 export default function SettingsOverlay({ visible, onClose, userData }: SettingsOverlayProps) {
   const { signOut } = useAuth();
-  const [selectedTheme, setSelectedTheme] = useState<'light' | 'dark'>('light');
 
   const handleLogout = async () => {
     Alert.alert(
@@ -71,9 +70,9 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
     router.push('/profile/faq');
   };
 
-  const handleThemeChange = (theme: 'light' | 'dark') => {
-    setSelectedTheme(theme);
-    Alert.alert('Theme Changed', `Switched to ${theme} theme`);
+  const handleTheme = () => {
+    onClose();
+    router.push('/profile/theme');
   };
 
   const renderMenuItem = (
@@ -90,29 +89,6 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
         <Text style={styles.menuItemText}>{title}</Text>
       </View>
       {showChevron && <ChevronRight size={20} color="#94A3B8" />}
-    </TouchableOpacity>
-  );
-
-  const renderThemeOption = (theme: 'light' | 'dark', label: string) => (
-    <TouchableOpacity
-      style={[styles.themeOption, selectedTheme === theme && styles.selectedThemeOption]}
-      onPress={() => handleThemeChange(theme)}
-    >
-      <View style={styles.themeOptionContent}>
-        <View style={[
-          styles.themePreview,
-          theme === 'dark' ? styles.darkThemePreview : styles.lightThemePreview
-        ]} />
-        <Text style={[
-          styles.themeOptionText,
-          selectedTheme === theme && styles.selectedThemeOptionText
-        ]}>
-          {label}
-        </Text>
-      </View>
-      {selectedTheme === theme && (
-        <View style={styles.selectedIndicator} />
-      )}
     </TouchableOpacity>
   );
 
@@ -151,20 +127,11 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
                   handleEditPreferences
                 )}
 
-                {/* Theme Section */}
-                <View style={styles.menuItem}>
-                  <View style={styles.menuItemLeft}>
-                    <View style={styles.menuItemIcon}>
-                      <Palette size={20} color="#64748B" />
-                    </View>
-                    <Text style={styles.menuItemText}>Theme</Text>
-                  </View>
-                </View>
-                
-                <View style={styles.themeOptions}>
-                  {renderThemeOption('light', 'Light')}
-                  {renderThemeOption('dark', 'Dark')}
-                </View>
+                {renderMenuItem(
+                  <Palette size={20} color="#64748B" />,
+                  'Theme',
+                  handleTheme
+                )}
               </View>
 
               {/* Security Section */}
@@ -316,50 +283,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  selectedThemeOption: {
-    borderColor: '#206E56',
-    backgroundColor: '#f0fdf4',
-  },
-  themeOptionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  themePreview: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  lightThemePreview: {
-    backgroundColor: '#ffffff',
-  },
-  darkThemePreview: {
-    backgroundColor: '#1e293b',
-  },
-  themeOptionText: {
-    fontSize: 16,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  selectedThemeOptionText: {
-    color: '#206E56',
-    fontWeight: '600',
-  },
-  selectedIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#206E56',
-  },
   logoutItem: {
     flexDirection: 'row',
     alignItems: 'center',
