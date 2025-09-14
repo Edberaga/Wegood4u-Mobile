@@ -77,26 +77,7 @@ export default function LoginScreen() {
           <Text style={styles.title}>Sign In</Text>
           <Text style={styles.subtitle}>Welcome back, you've been missed</Text>
         </View>
-{/*
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'email' && styles.activeTab]}
-            onPress={() => setActiveTab('email')}
-          >
-            <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}>
-              Email
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'phone' && styles.activeTab]}
-            onPress={() => setActiveTab('phone')}
-          >
-            <Text style={[styles.tabText, activeTab === 'phone' && styles.activeTabText]}>
-              Contact Number
-            </Text>
-          </TouchableOpacity>
-        </View>
-*/}
+
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Email</Text>

@@ -66,17 +66,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw error;
       }
 
-      if (!data.session) {
-        console.error('🚨 No session returned from Supabase');
-        throw new Error('No session returned from login');
-      }
+      console.log('✅ Login successful');
+      console.log('Session:', data.session ? 'exists' : 'missing');
+      console.log('User:', data.user ? 'exists' : 'missing');
       
-      console.log('✅ Session exists, updating state');
-      console.log('User ID:', data.session.user.id);
-      
-      // Update state
-      setSession(data.session);
-      setUser(data.session.user);
+      // Note: We don't manually set session/user here because 
+      // onAuthStateChange will handle it automatically
       
       console.log('✅ SignIn completed successfully');
       
