@@ -177,7 +177,7 @@ export default function ContactScreen() {
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </Text>
             </TouchableOpacity>
-          </div>
+          </View>
         </View>
 
         {/* Business Hours */}
