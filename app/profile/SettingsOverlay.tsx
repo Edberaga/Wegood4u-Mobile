@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, User, Settings, Palette, Lock, Info, MessageCircle, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '@/context/ThemeContext';
 
 interface SettingsOverlayProps {
   visible: boolean;
@@ -22,7 +21,6 @@ interface SettingsOverlayProps {
 
 export default function SettingsOverlay({ visible, onClose, userData }: SettingsOverlayProps) {
   const { signOut } = useAuth();
-  const { colors } = useTheme();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -52,11 +50,6 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
     router.push('/profile/preferences');
   };
 
-  const handleChangePassword = () => {
-    onClose();
-    router.push('/profile/change-password');
-  };
-
   const handleAboutApp = () => {
     onClose();
     router.push('/profile/about');
@@ -78,14 +71,14 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
     onPress: () => void,
     showChevron: boolean = true
   ) => (
-    <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]} onPress={onPress}>
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuItemLeft}>
-        <View style={[styles.menuItemIcon, { backgroundColor: colors.background }]}>
+        <View style={styles.menuItemIcon}>
           {icon}
         </View>
-        <Text style={[styles.menuItemText, { color: colors.text }]}>{title}</Text>
+        <Text style={styles.menuItemText}>{title}</Text>
       </View>
-      {showChevron && <ChevronRight size={20} color={colors.textSecondary} />}
+      {showChevron && <ChevronRight size={20} color="#64748B" />}
     </TouchableOpacity>
   );
 
@@ -97,46 +90,41 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={[styles.sidebar, { backgroundColor: colors.surface }]}>
+        <View style={styles.sidebar}>
           <SafeAreaView style={styles.sidebarContent}>
             {/* Header */}
-            <View style={[styles.header, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>Settings</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color={colors.text} />
+                <X size={24} color="#1e293b" />
               </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
               {/* General Section */}
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>General</Text>
+                <Text style={styles.sectionTitle}>General</Text>
                 
                 {renderMenuItem(
-                  <User size={20} color={colors.textSecondary} />,
+                  <User size={20} color="#64748B" />,
                   'Account Profile',
                   handleAccountProfile
                 )}
                 
                 {renderMenuItem(
-                  <Settings size={20} color={colors.textSecondary} />,
+                  <Settings size={20} color="#64748B" />,
                   'Edit Preferences',
                   handleEditPreferences
                 )}
 
-                {renderMenuItem(
-                  <Palette size={20} color={colors.textSecondary} />,
-                  'Theme',
-                  handleTheme
-                )}
               </View>
 
               {/* Security Section */}
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Security</Text>
+                <Text style={styles.sectionTitle}>Security</Text>
                 
                 {renderMenuItem(
-                  <Lock size={20} color={colors.textSecondary} />,
+                  <Lock size={20} color="#64748B" />,
                   'Change Password',
                   handleChangePassword
                 )}
@@ -144,22 +132,22 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
 
               {/* About Section */}
               <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>About</Text>
+                <Text style={styles.sectionTitle}>About</Text>
                 
                 {renderMenuItem(
-                  <Info size={20} color={colors.textSecondary} />,
+                  <Info size={20} color="#64748B" />,
                   'About This App',
                   handleAboutApp
                 )}
                 
                 {renderMenuItem(
-                  <MessageCircle size={20} color={colors.textSecondary} />,
+                  <MessageCircle size={20} color="#64748B" />,
                   'Contact Us',
                   handleContactUs
                 )}
                 
                 {renderMenuItem(
-                  <HelpCircle size={20} color={colors.textSecondary} />,
+                  <HelpCircle size={20} color="#64748B" />,
                   'FAQ',
                   handleFAQ
                 )}
@@ -167,10 +155,10 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
                 {/* Logout */}
                 <TouchableOpacity style={styles.logoutItem} onPress={handleLogout}>
                   <View style={styles.menuItemLeft}>
-                    <View style={[styles.logoutIcon, { backgroundColor: '#fef2f2' }]}>
-                      <LogOut size={20} color={colors.error} />
+                    <View style={styles.logoutIcon}>
+                      <LogOut size={20} color="#EF4444" />
                     </View>
-                    <Text style={[styles.logoutText, { color: colors.error }]}>Logout</Text>
+                    <Text style={styles.logoutText}>Logout</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -198,6 +186,7 @@ const styles = StyleSheet.create({
   sidebar: {
     width: '80%',
     maxWidth: 320,
+    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 0 },
     shadowOpacity: 0.25,
@@ -217,10 +206,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    borderBottomWidth: 1,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#1e293b',
   },
   closeButton: {
     padding: 4,
@@ -235,6 +227,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#64748B',
     marginBottom: 16,
     marginHorizontal: 20,
     textTransform: 'uppercase',
@@ -247,6 +240,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    borderBottomWidth: 1,
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -257,6 +252,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -264,6 +260,7 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 16,
     fontWeight: '500',
+    color: '#1e293b',
   },
   themeOptions: {
     paddingHorizontal: 20,
@@ -285,6 +282,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#fef2f2',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -292,5 +290,6 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#EF4444',
   },
 });

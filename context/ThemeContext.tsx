@@ -1,7 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export type ThemeType = 'light' | 'dark';
+import React, { createContext, useContext, ReactNode } from 'react';
 
 export interface ThemeColors {
   background: string;
@@ -18,11 +15,7 @@ export interface ThemeColors {
 }
 
 export interface ThemeContextType {
-  theme: ThemeType;
   colors: ThemeColors;
-  toggleTheme: () => Promise<void>;
-  setTheme: (theme: ThemeType) => Promise<void>;
-  isLoading: boolean;
 }
 
 const lightTheme: ThemeColors = {
@@ -39,20 +32,6 @@ const lightTheme: ThemeColors = {
   shadow: '#000000',
 };
 
-const darkTheme: ThemeColors = {
-  background: '#0f172a',
-  surface: '#1e293b',
-  text: '#f8fafc',
-  textSecondary: '#cbd5e1',
-  border: '#334155',
-  primary: '#206E56',
-  primaryLight: '#CBEED2',
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  shadow: '#000000',
-};
-
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
@@ -60,49 +39,10 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<ThemeType>('light');
-  const [isLoading, setIsLoading] = useState(true);
-
-  const colors = theme === 'light' ? lightTheme : darkTheme;
-
-  useEffect(() => {
-    loadTheme();
-  }, []);
-
-  const loadTheme = async () => {
-    try {
-      const savedTheme = await AsyncStorage.getItem('app_theme');
-      if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
-        setThemeState(savedTheme as ThemeType);
-      }
-    } catch (error) {
-      console.error('Error loading theme:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const setTheme = async (newTheme: ThemeType) => {
-    try {
-      setThemeState(newTheme);
-      await AsyncStorage.setItem('app_theme', newTheme);
-    } catch (error) {
-      console.error('Error saving theme:', error);
-      throw error;
-    }
-  };
-
-  const toggleTheme = async () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    await setTheme(newTheme);
-  };
+  const colors = lightTheme; // Always use light theme
 
   const value: ThemeContextType = {
-    theme,
     colors,
-    toggleTheme,
-    setTheme,
-    isLoading,
   };
 
   return (
