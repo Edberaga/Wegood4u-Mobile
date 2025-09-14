@@ -50,6 +50,11 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
     router.push('/profile/preferences');
   };
 
+  const handleChangePassword = () => {
+    onClose();
+    router.push('/profile/change-password');
+  }
+
   const handleAboutApp = () => {
     onClose();
     router.push('/profile/about');
@@ -207,7 +212,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
-    borderBottomWidth: 1,
   },
   headerTitle: {
     fontSize: 24,
@@ -241,7 +245,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
-    borderBottomWidth: 1,
   },
   menuItemLeft: {
     flexDirection: 'row',
