@@ -15,15 +15,19 @@ export async function uploadProfileImage(
     const fileExtension = imageUri.split('.').pop() || 'jpg';
     const fileName = `${userId}/profile_${Date.now()}.${fileExtension}`;
 
-    // Convert the image URI to a blob for upload
+    // Convert the image URI to arrayBuffer and then to Uint8Array
     const response = await fetch(imageUri);
-    const blob = await response.blob();
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    // Infer content type from response headers if available, fallback to inferred type
+    const contentType = response.headers.get('Content-Type') || `image/${fileExtension}`;
 
     // Upload to Supabase storage
     const { data, error } = await supabase.storage
       .from('profilePic')
-      .upload(fileName, blob, {
-        contentType: `image/${fileExtension}`,
+      .upload(fileName, uint8Array, {
+        contentType,
         upsert: true,
       });
 
