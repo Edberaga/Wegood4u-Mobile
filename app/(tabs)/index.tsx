@@ -29,12 +29,10 @@ import { useUser } from '@/context/UserContext';
 import { fetchPartnerStores } from '@/data/partnerStore';
 import { router } from 'expo-router';
 import type { PartnerStore } from '@/types';
-import { useTheme } from '@/context/ThemeContext';
 
 export default function HomeScreen() {
   const { user } = useAuth();
   const { userData } = useUser();
-  const { colors } = useTheme();
   const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
   const [recommendedRestaurants, setRecommendedRestaurants] = useState<PartnerStore[]>([]);
   const [recommendedCafes, setRecommendedCafes] = useState<PartnerStore[]>([]);
@@ -80,18 +78,18 @@ export default function HomeScreen() {
   };
 
   const renderStoreCard = (store: PartnerStore, index: number) => (
-    <TouchableOpacity key={store.id} style={[styles.storeCard, { backgroundColor: colors.surface }]}>
+    <TouchableOpacity key={store.id} style={styles.storeCard}>
       <Image source={{ uri: store.image }} style={styles.storeImage} />
       <View style={styles.storeInfo}>
-        <Text style={[styles.storeName, { color: colors.text }]} numberOfLines={1}>{store.name}</Text>
-        <Text style={[styles.storeType, { color: colors.textSecondary }]} numberOfLines={1}>{store.type}</Text>
+        <Text style={styles.storeName} numberOfLines={1}>{store.name}</Text>
+        <Text style={styles.storeType} numberOfLines={1}>{store.type}</Text>
         <View style={styles.storeRating}>
           <Star size={12} color="#FFD700" fill="#FFD700" />
-          <Text style={[styles.rating, { color: colors.text }]}>{store.rating}</Text>
+          <Text style={styles.rating}>{store.rating}</Text>
         </View>
         <View style={styles.storeLocation}>
-          <MapPin size={10} color={colors.textSecondary} />
-          <Text style={[styles.locationText, { color: colors.textSecondary }]} numberOfLines={1}>{store.city}</Text>
+          <MapPin size={10} color="#64748B" />
+          <Text style={styles.locationText} numberOfLines={1}>{store.city}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -105,12 +103,12 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>{title}</Text>
         </View>
         <TouchableOpacity 
-          style={[styles.circularButton, { backgroundColor: colors.primaryLight, borderWidth: 1, borderColor: colors.primary }]}
+          style={styles.circularButton}
           onPress={() => {
             if (title === 'Recommended Restaurant') {
-              router.push('/partner-store/Restaurant');
+              router.push('../partner-store/Restaurant');
             } else if (title === 'Recommended Cafe') {
-              router.push('/partner-store/Cafe');
+              router.push('../partner-store/Cafe');
             }
           }}
         >
@@ -135,11 +133,11 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
-          colors={[colors.primary, colors.primaryLight]}
+          colors={['#206E56', '#CBEED2']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -152,8 +150,8 @@ export default function HomeScreen() {
 
         {/* Advertisement Banner */}
         <View style={styles.section}>
-          <View style={[styles.advertisementBanner, { backgroundColor: colors.border }]}>
-            <Text style={[styles.advertisementText, { color: colors.text }]}>Advertisement</Text>
+          <View style={styles.advertisementBanner}>
+            <Text style={styles.advertisementText}>Advertisement</Text>
           </View>
         </View>
 
