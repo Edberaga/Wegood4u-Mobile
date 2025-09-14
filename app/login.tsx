@@ -26,19 +26,39 @@ export default function LoginScreen() {
   const { signIn } = useAuth();
 
   const handleLogin = async () => {
+    console.log('🔍 Login attempt started');
+    console.log('📧 Email:', email);
+    console.log('🔒 Password length:', password.length);
+
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
+    if (!email.includes('@')) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
     try {
       setSubmitting(true);
+      console.log('📤 Calling signIn function...');
+      
       await signIn(email, password);
+      
+      console.log('✅ Sign in successful, navigating to tabs');
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
-    }
-    finally {
+      console.error('❌ Login error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error object:', JSON.stringify(error, null, 2));
+      
+      Alert.alert(
+        'Login Failed', 
+        error.message || 'An unexpected error occurred. Please try again.'
+      );
+    } finally {
+      console.log('🔄 Setting submitting to false');
       setSubmitting(false);
     }
   };
@@ -57,7 +77,6 @@ export default function LoginScreen() {
           <Text style={styles.title}>Sign In</Text>
           <Text style={styles.subtitle}>Welcome back, you've been missed</Text>
         </View>
-
 {/*
         <View style={styles.tabContainer}>
           <TouchableOpacity
@@ -89,6 +108,7 @@ export default function LoginScreen() {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
+              autoCorrect={false}
             />
           </View>
 
@@ -102,6 +122,8 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
+                autoCorrect={false}
+                autoCapitalize="none"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -141,6 +163,16 @@ export default function LoginScreen() {
               {submitting ? 'Logging in...' : 'Login'}
             </Text>
           </TouchableOpacity>
+
+          {/* Debug info - remove this in production */}
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugText}>
+              Debug: Submitting = {submitting.toString()}
+            </Text>
+            <Text style={styles.debugText}>
+              Email valid: {email.includes('@').toString()}
+            </Text>
+          </View>
 
           <Text style={styles.orText}>Or sign in with</Text>
 
@@ -281,7 +313,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 16,
   },
   loginButtonDisabled: {
     opacity: 0.6,
@@ -290,6 +322,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  debugContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#666',
+    fontFamily: 'monospace',
   },
   orText: {
     textAlign: 'center',

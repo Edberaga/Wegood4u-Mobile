@@ -15,8 +15,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔧 AuthProvider: Initializing auth state');
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔧 AuthProvider: Initial session:', session ? 'exists' : 'none');
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -25,45 +28,79 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔧 AuthProvider: Auth state changed:', event);
+        console.log('🔧 AuthProvider: New session:', session ? 'exists' : 'none');
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🔧 AuthProvider: Cleaning up subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
-  setIsLoading(true);
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) throw error;
+  const signIn = async (email: string, password: string) => {
+    console.log('🔐 AuthContext: signIn called');
+    console.log('📧 Email:', email);
     
-    // Wait for the auth state to be properly set
-    if (data.session) {
+    setIsLoading(true);
+    
+    try {
+      console.log('📤 Calling supabase.auth.signInWithPassword...');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      console.log('📥 Supabase response received');
+      console.log('✅ Data exists:', !!data);
+      console.log('❌ Error exists:', !!error);
+
+      if (error) {
+        console.error('🚨 Supabase auth error:', error);
+        console.error('Error code:', error.message);
+        throw error;
+      }
+
+      if (!data.session) {
+        console.error('🚨 No session returned from Supabase');
+        throw new Error('No session returned from login');
+      }
+      
+      console.log('✅ Session exists, updating state');
+      console.log('User ID:', data.session.user.id);
+      
+      // Update state
       setSession(data.session);
       setUser(data.session.user);
+      
+      console.log('✅ SignIn completed successfully');
+      
+    } catch (error: any) {
+      console.error('🚨 SignIn error caught:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error.message);
+      throw new Error(error.message || 'Login failed');
+    } finally {
+      console.log('🔄 Setting isLoading to false');
+      setIsLoading(false);
     }
-    
-  } catch (error: any) {
-    throw new Error(error.message);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const signUp = async (email: string, password: string, displayName: string, dateOfBirth: string, gender: string, invitationCode?: string) => {
+    console.log('📝 AuthContext: signUp called');
     setIsLoading(true);
+    
     try {
       // First, check if invitation code exists (if provided)
       let inviterId: string | undefined;
       
       if (invitationCode) {
+        console.log('🎫 Checking invitation code:', invitationCode);
         const { data: inviteData, error: inviteError } = await supabase
           .from('invitation_codes')
           .select('user_id')
@@ -72,11 +109,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           .single();
 
         if (inviteError) {
+          console.error('🚨 Invalid invitation code:', inviteError);
           throw new Error('Invalid invitation code');
         }
         inviterId = inviteData.user_id;
+        console.log('✅ Valid invitation code, inviter ID:', inviterId);
       }
 
+      console.log('📤 Creating user account...');
       // Create user account with metadata for trigger
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -91,43 +131,63 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('🚨 SignUp error:', error);
+        throw error;
+      }
 
       if (!data.user) {
+        console.error('🚨 No user returned from signUp');
         throw new Error('Failed to create user account');
       }
 
+      console.log('✅ User created successfully:', data.user.id);
+
       // If invitation code was provided, update the profile with inviter_id after trigger creates it
       if (inviterId) {
+        console.log('⏳ Waiting for profile creation trigger...');
         // Wait a moment for the trigger to create the profile
         await new Promise(resolve => setTimeout(resolve, 1000));
         
+        console.log('📝 Updating profile with inviter ID...');
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ inviter_id: inviterId })
           .eq('id', data.user.id);
 
         if (updateError) {
-          console.error('Error setting inviter:', updateError);
+          console.error('⚠️ Error setting inviter:', updateError);
           // Don't throw error here - profile was created successfully
+        } else {
+          console.log('✅ Inviter ID set successfully');
         }
       }
 
     } catch (error: any) {
+      console.error('🚨 SignUp error caught:', error);
       throw new Error(error.message);
     } finally {
+      console.log('🔄 Setting isLoading to false (signUp)');
       setIsLoading(false);
     }
   };
 
   const signOut = async () => {
+    console.log('🚪 AuthContext: signOut called');
     setIsLoading(true);
+    
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('🚨 SignOut error:', error);
+        throw error;
+      }
+      console.log('✅ SignOut successful');
     } catch (error: any) {
+      console.error('🚨 SignOut error caught:', error);
       throw new Error(error.message);
     } finally {
+      console.log('🔄 Setting isLoading to false (signOut)');
       setIsLoading(false);
     }
   };
@@ -141,6 +201,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
   };
+
+  console.log('🔧 AuthProvider render - isAuthenticated:', !!user, 'isLoading:', isLoading);
 
   return (
     <AuthContext.Provider value={value}>
