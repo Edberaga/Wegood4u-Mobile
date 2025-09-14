@@ -48,7 +48,6 @@ export function UserProvider({ children }: UserProviderProps) {
           affiliate_request_status,
           dob,
           gender,
-          phone,
           created_at,
           updated_at
         `)
@@ -66,8 +65,6 @@ export function UserProvider({ children }: UserProviderProps) {
         id: user.id,
         email: user.email || '',
         emailConfirmedAt: user.email_confirmed_at || null,
-        phone: profile?.phone || user.phone || null, // Try profile phone first, then auth phone
-        phoneConfirmedAt: user.phone_confirmed_at || null,
         
         // Profile data (with defaults if profile doesn't exist)
         username: profile?.username || null,

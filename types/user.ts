@@ -3,8 +3,6 @@ export interface UserData {
   id: string;
   email: string;
   emailConfirmedAt: string | null;
-  phone: string | null;
-  phoneConfirmedAt: string | null;
   dob: string | null; // date field from your schema
   gender: string | null;
 

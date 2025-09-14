@@ -119,12 +119,6 @@ export default function AccountProfileScreen() {
             'Gender',
             userData?.gender
           )}
-          
-          {renderInfoItem(
-            <Phone size={20} color="#64748B" />,
-            'Phone Number',
-            userData?.phone
-          )}
         </View>
 
         {/* Account Status Section */}
@@ -169,23 +163,6 @@ export default function AccountProfileScreen() {
               </Text>
             </View>
           </View>
-        </View>
-
-        {/* Account Details Section */}
-        <View style={styles.accountSection}>
-          <Text style={styles.sectionTitle}>Account Details</Text>
-          
-          {renderInfoItem(
-            <Calendar size={20} color="#64748B" />,
-            'Member Since',
-            userData?.createdAt ? formatDate(userData.createdAt) : 'Not set'
-          )}
-
-          {userData?.updatedAt && renderInfoItem(
-            <Calendar size={20} color="#64748B" />,
-            'Last Updated',
-            formatDate(userData.updatedAt)
-          )}
         </View>
 
         {/* Debug Information (remove in production) */}
