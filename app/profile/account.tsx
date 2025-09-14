@@ -5,25 +5,39 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Mail, Calendar, MapPin, Phone } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Calendar, MapPin, Phone, RefreshCw } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 
 export default function AccountProfileScreen() {
-  const { userData } = useUser();
+  const { userData, isLoading, error, refreshUserData } = useUser();
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Not set';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (err) {
+      return 'Invalid date';
+    }
   };
 
-  const renderInfoItem = (icon: React.ReactNode, label: string, value: string | null) => (
+  const handleRefresh = async () => {
+    try {
+      await refreshUserData();
+    } catch (err: any) {
+      Alert.alert('Error', 'Failed to refresh user data. Please try again.');
+    }
+  };
+
+  const renderInfoItem = (icon: React.ReactNode, label: string, value: string | null | undefined) => (
     <View style={styles.infoItem}>
       <View style={styles.infoIcon}>
         {icon}
@@ -35,6 +49,30 @@ export default function AccountProfileScreen() {
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+          <TouchableOpacity onPress={handleRefresh} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -42,10 +80,13 @@ export default function AccountProfileScreen() {
           <ArrowLeft size={24} color="#1e293b" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Account Profile</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
+          <RefreshCw size={20} color="#1e293b" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Personal Information Section */}
         <View style={styles.profileSection}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
           
@@ -70,7 +111,7 @@ export default function AccountProfileScreen() {
           {renderInfoItem(
             <Calendar size={20} color="#64748B" />,
             'Date of Birth',
-            userData?.dob ? formatDate(userData.dob) : null
+            userData?.dob ? formatDate(userData.dob) : 'Not set'
           )}
           
           {renderInfoItem(
@@ -86,6 +127,7 @@ export default function AccountProfileScreen() {
           )}
         </View>
 
+        {/* Account Status Section */}
         <View style={styles.statusSection}>
           <Text style={styles.sectionTitle}>Account Status</Text>
           
@@ -93,7 +135,7 @@ export default function AccountProfileScreen() {
             <Text style={styles.statusLabel}>Role</Text>
             <View style={[styles.statusBadge, styles.roleBadge]}>
               <Text style={styles.statusBadgeText}>
-                {userData?.role?.charAt(0).toUpperCase() + userData?.role?.slice(1)}
+                {userData?.role?.charAt(0).toUpperCase() + userData?.role?.slice(1) || 'Unknown'}
               </Text>
             </View>
           </View>
@@ -129,15 +171,32 @@ export default function AccountProfileScreen() {
           </View>
         </View>
 
+        {/* Account Details Section */}
         <View style={styles.accountSection}>
           <Text style={styles.sectionTitle}>Account Details</Text>
           
           {renderInfoItem(
             <Calendar size={20} color="#64748B" />,
             'Member Since',
-            userData?.createdAt ? formatDate(userData.createdAt) : null
+            userData?.createdAt ? formatDate(userData.createdAt) : 'Not set'
+          )}
+
+          {userData?.updatedAt && renderInfoItem(
+            <Calendar size={20} color="#64748B" />,
+            'Last Updated',
+            formatDate(userData.updatedAt)
           )}
         </View>
+
+        {/* Debug Information (remove in production) */}
+        {__DEV__ && (
+          <View style={styles.debugSection}>
+            <Text style={styles.sectionTitle}>Debug Info</Text>
+            <Text style={styles.debugText}>
+              {JSON.stringify(userData, null, 2)}
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -165,9 +224,42 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1e293b',
     marginLeft: 16,
-  },
-  headerSpacer: {
     flex: 1,
+  },
+  refreshButton: {
+    padding: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#64748B',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
   content: {
     flex: 1,
@@ -205,6 +297,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  debugSection: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+  },
+  debugText: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: '#64748B',
   },
   sectionTitle: {
     fontSize: 18,
@@ -272,11 +375,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'capitalize',
+    color: '#3b82f6',
   },
   verifiedText: {
     color: '#22C55E',
   },
   unverifiedText: {
+    color: '#EF4444',
+  },
+  pendingText: {
+    color: '#F59E0B',
+  },
+  rejectedText: {
     color: '#EF4444',
   },
 });
