@@ -63,7 +63,7 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
 
   const handleContactUs = () => {
     onClose();
-    router.push('/profile/contact');
+    router.push('./contact');
   };
 
   const handleFAQ = () => {
