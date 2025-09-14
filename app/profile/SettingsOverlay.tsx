@@ -9,18 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  X,
-  User,
-  Settings,
-  Palette,
-  Lock,
-  Info,
-  MessageCircle,
-  HelpCircle,
-  LogOut,
-  ChevronRight,
-} from 'lucide-react-native';
+import { X, User, Settings, Palette, Lock, Info, MessageCircle, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
