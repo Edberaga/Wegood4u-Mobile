@@ -8,24 +8,27 @@ import {
   TextInput,
   Alert,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronDown, Save } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
-import { supabase } from '@/lib/supabase';
 import { countries } from '@/data/countries';
+import DropdownWithOthers from '@/components/DropdownWithOthers';
+import type { UserPreferenceData } from '@/types';
 
 export default function PreferencesScreen() {
-  const { userData, refreshUserData } = useUser();
+  const { preferenceData, updatePreferences, isPreferenceLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [showCountryModal, setShowCountryModal] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   
   // Form state
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<UserPreferenceData>({
     countryOfResidence: '',
-    communicationChannel: 'WhatsApp',
-    communicationDetails: '',
+    preferredCommunicationChannel: 'WhatsApp',
+    communicationContactDetails: '',
     travelDestinationCategory: '',
     travelDestinationDetail: '',
     travelPreference: '',
@@ -33,10 +36,21 @@ export default function PreferencesScreen() {
     travelBudget: '',
   });
 
-  const communicationChannels = ['WhatsApp', 'Telegram', 'Line', 'WeChat'];
+  const [originalPreferences, setOriginalPreferences] = useState<UserPreferenceData>({
+    countryOfResidence: '',
+    preferredCommunicationChannel: 'WhatsApp',
+    communicationContactDetails: '',
+    travelDestinationCategory: '',
+    travelDestinationDetail: '',
+    travelPreference: '',
+    accommodationPreference: '',
+    travelBudget: '',
+  });
+
+  const communicationChannels: ('WhatsApp' | 'Telegram' | 'Line' | 'WeChat')[] = ['WhatsApp', 'Telegram', 'Line', 'WeChat'];
   const travelDestinations = ['Beach Destinations', 'Cultural Destinations', 'Adventure Destinations', 'Urban Destinations'];
   const travelPreferenceOptions = ['Adventure Travel', 'Relaxation Travel', 'Cultural Travel', 'Family Travel', 'Solo Travel', 'Luxury Travel', 'Others'];
-  const accommodationTypes = ['Hotels', 'Hostels', 'Vacation Rentals', 'Resorts', 'Bed and Breakfasts/Guesthouses', 'Alternative Accommodations'];
+  const accommodationTypes = ['Hotels', 'Hostels', 'Vacation Rentals', 'Resorts', 'Bed and Breakfasts/Guesthouses', 'Alternative Accommodations', 'Others'];
   const budgetRanges = [
     'Budget Travel: $500 - $1,000',
     'Mid-range Travel: $1,000 - $3,000',
@@ -46,44 +60,35 @@ export default function PreferencesScreen() {
   ];
 
   useEffect(() => {
-    if (userData) {
-      // Load existing preferences from user data
-      setPreferences({
-        countryOfResidence: userData.countryOfResidence || '',
-        communicationChannel: userData.preferredCommunicationChannel || 'WhatsApp',
-        communicationDetails: userData.communicationContactDetails || '',
-        travelDestinationCategory: userData.travelDestinationCategory || '',
-        travelDestinationDetail: userData.travelDestinationDetail || '',
-        travelPreference: userData.travelPreference || '',
-        accommodationPreference: userData.accommodationPreference || '',
-        travelBudget: userData.travelBudget || '',
-      });
+    if (preferenceData) {
+      const loadedPreferences: UserPreferenceData = {
+        countryOfResidence: preferenceData.countryOfResidence || '',
+        preferredCommunicationChannel: preferenceData.preferredCommunicationChannel || 'WhatsApp',
+        communicationContactDetails: preferenceData.communicationContactDetails || '',
+        travelDestinationCategory: preferenceData.travelDestinationCategory || '',
+        travelDestinationDetail: preferenceData.travelDestinationDetail || '',
+        travelPreference: preferenceData.travelPreference || '',
+        accommodationPreference: preferenceData.accommodationPreference || '',
+        travelBudget: preferenceData.travelBudget || '',
+      };
+      
+      setPreferences(loadedPreferences);
+      setOriginalPreferences(loadedPreferences);
     }
-  }, [userData]);
+  }, [preferenceData]);
 
-  const handleSave = async () => {
+  // Check for changes whenever preferences update
+  useEffect(() => {
+    const hasChangedValues = JSON.stringify(preferences) !== JSON.stringify(originalPreferences);
+    setHasChanges(hasChangedValues);
+  }, [preferences, originalPreferences]);
+
+  const handleUpdatePreferences = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          country_of_residence: preferences.countryOfResidence,
-          preferred_communication_channel: preferences.communicationChannel as any,
-          communication_contact_details: preferences.communicationDetails,
-          travel_destination_category: preferences.travelDestinationCategory,
-          travel_destination_detail: preferences.travelDestinationDetail,
-          travel_preference: preferences.travelPreference,
-          accommodation_preference: preferences.accommodationPreference,
-          travel_budget: preferences.travelBudget,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userData?.id);
-
-      if (error) {
-        throw error;
-      }
-
-      await refreshUserData();
+      await updatePreferences(preferences);
+      setOriginalPreferences(preferences); // Update original to match current
+      setHasChanges(false);
       Alert.alert('Success', 'Your preferences have been updated successfully!');
     } catch (error: any) {
       Alert.alert('Error', 'Failed to update preferences. Please try again.');
@@ -93,7 +98,14 @@ export default function PreferencesScreen() {
     }
   };
 
-  const renderDropdown = (
+  const updatePreference = <K extends keyof UserPreferenceData>(
+    key: K,
+    value: UserPreferenceData[K]
+  ) => {
+    setPreferences(prev => ({ ...prev, [key]: value }));
+  };
+
+  const renderSimpleDropdown = (
     label: string,
     value: string,
     options: string[],
@@ -123,6 +135,17 @@ export default function PreferencesScreen() {
     </View>
   );
 
+  if (isPreferenceLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#206E56" />
+          <Text style={styles.loadingText}>Loading preferences...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -130,10 +153,24 @@ export default function PreferencesScreen() {
           <ArrowLeft size={24} color="#1e293b" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Preferences</Text>
-        <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={isLoading}>
-          <Save size={20} color="#206E56" />
+        <TouchableOpacity 
+          onPress={handleUpdatePreferences} 
+          style={styles.saveButton} 
+          disabled={isLoading || !hasChanges}
+        >
+          {isLoading ? (
+            <ActivityIndicator size={20} color="#206E56" />
+          ) : (
+            <Save size={20} color={hasChanges ? "#206E56" : "#9CA3AF"} />
+          )}
         </TouchableOpacity>
       </View>
+
+      {hasChanges && (
+        <View style={styles.changesIndicator}>
+          <Text style={styles.changesText}>You have unsaved changes</Text>
+        </View>
+      )}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Country of Residence */}
@@ -156,11 +193,11 @@ export default function PreferencesScreen() {
         {/* Communication */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Communication</Text>
-          {renderDropdown(
+          {renderSimpleDropdown(
             'Preferred Communication Channel',
-            preferences.communicationChannel,
+            preferences.preferredCommunicationChannel || '',
             communicationChannels,
-            (value) => setPreferences(prev => ({ ...prev, communicationChannel: value }))
+            (value) => updatePreference('preferredCommunicationChannel', value as any)
           )}
           
           <View style={styles.inputGroup}>
@@ -168,8 +205,8 @@ export default function PreferencesScreen() {
             <TextInput
               style={styles.textInput}
               placeholder="Enter your contact details"
-              value={preferences.communicationDetails}
-              onChangeText={(text) => setPreferences(prev => ({ ...prev, communicationDetails: text }))}
+              value={preferences.communicationContactDetails || ''}
+              onChangeText={(text) => updatePreference('communicationContactDetails', text)}
             />
           </View>
         </View>
@@ -177,11 +214,11 @@ export default function PreferencesScreen() {
         {/* Travel Preferences */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Travel Preferences</Text>
-          {renderDropdown(
+          {renderSimpleDropdown(
             'Travel Destination Category',
-            preferences.travelDestinationCategory,
+            preferences.travelDestinationCategory || '',
             travelDestinations,
-            (value) => setPreferences(prev => ({ ...prev, travelDestinationCategory: value }))
+            (value) => updatePreference('travelDestinationCategory', value)
           )}
           
           <View style={styles.inputGroup}>
@@ -189,31 +226,55 @@ export default function PreferencesScreen() {
             <TextInput
               style={styles.textInput}
               placeholder="Enter specific destinations"
-              value={preferences.travelDestinationDetail}
-              onChangeText={(text) => setPreferences(prev => ({ ...prev, travelDestinationDetail: text }))}
+              value={preferences.travelDestinationDetail || ''}
+              onChangeText={(text) => updatePreference('travelDestinationDetail', text)}
             />
           </View>
           
-          {renderDropdown(
-            'Travel Style',
-            preferences.travelPreference,
-            travelPreferenceOptions,
-            (value) => setPreferences(prev => ({ ...prev, travelPreference: value }))
-          )}
+          <DropdownWithOthers
+            label="Travel Style"
+            value={preferences.travelPreference || ''}
+            options={travelPreferenceOptions}
+            onSelect={(value) => updatePreference('travelPreference', value)}
+            placeholder="Enter your travel style"
+          />
           
-          {renderDropdown(
-            'Accommodation Preference',
-            preferences.accommodationPreference,
-            accommodationTypes,
-            (value) => setPreferences(prev => ({ ...prev, accommodationPreference: value }))
-          )}
+          <DropdownWithOthers
+            label="Accommodation Preference"
+            value={preferences.accommodationPreference || ''}
+            options={accommodationTypes}
+            onSelect={(value) => updatePreference('accommodationPreference', value)}
+            placeholder="Enter your accommodation preference"
+          />
           
-          {renderDropdown(
-            'Travel Budget',
-            preferences.travelBudget,
-            budgetRanges,
-            (value) => setPreferences(prev => ({ ...prev, travelBudget: value }))
-          )}
+          <DropdownWithOthers
+            label="Travel Budget"
+            value={preferences.travelBudget || ''}
+            options={budgetRanges}
+            onSelect={(value) => updatePreference('travelBudget', value)}
+            placeholder="Enter your budget range"
+          />
+        </View>
+
+        {/* Update Button */}
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={[
+              styles.updateButton,
+              (!hasChanges || isLoading) && styles.updateButtonDisabled
+            ]}
+            onPress={handleUpdatePreferences}
+            disabled={!hasChanges || isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size={24} color="white" />
+            ) : (
+              <>
+                <Save size={20} color="white" />
+                <Text style={styles.updateButtonText}>Update Preferences</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -238,7 +299,7 @@ export default function PreferencesScreen() {
                   key={country.code}
                   style={styles.countryOption}
                   onPress={() => {
-                    setPreferences(prev => ({ ...prev, countryOfResidence: country.name }));
+                    updatePreference('countryOfResidence', country.name);
                     setShowCountryModal(false);
                   }}
                 >
@@ -257,6 +318,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#64748B',
   },
   header: {
     flexDirection: 'row',
@@ -281,6 +352,19 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     padding: 4,
+  },
+  changesIndicator: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F59E0B',
+  },
+  changesText: {
+    color: '#92400E',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   content: {
     flex: 1,
@@ -341,6 +425,7 @@ const styles = StyleSheet.create({
     borderColor: '#d1d5db',
     borderRadius: 8,
     backgroundColor: '#ffffff',
+    overflow: 'hidden',
   },
   dropdownOption: {
     paddingHorizontal: 16,
@@ -357,6 +442,24 @@ const styles = StyleSheet.create({
   },
   selectedDropdownOptionText: {
     color: '#206E56',
+    fontWeight: '600',
+  },
+  updateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#206E56',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  updateButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+  },
+  updateButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: '600',
   },
   modalOverlay: {
