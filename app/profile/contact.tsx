@@ -78,7 +78,7 @@ export default function ContactScreen() {
               </View>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Email</Text>
-                <Text style={styles.contactValue}>support@wegood4u.com</Text>
+                <Text style={styles.contactValue}>enquiry@wegood4u.com</Text>
               </View>
             </TouchableOpacity>
 
@@ -88,7 +88,7 @@ export default function ContactScreen() {
               </View>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Phone</Text>
-                <Text style={styles.contactValue}>+60 12-345 6789</Text>
+                <Text style={styles.contactValue}>+60 13-668 3939</Text>
               </View>
             </TouchableOpacity>
 
@@ -98,7 +98,7 @@ export default function ContactScreen() {
               </View>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>WhatsApp</Text>
-                <Text style={styles.contactValue}>+60 12-345 6789</Text>
+                <Text style={styles.contactValue}>+60 13-668 3939</Text>
               </View>
             </TouchableOpacity>
 
@@ -109,8 +109,7 @@ export default function ContactScreen() {
               <View style={styles.contactInfo}>
                 <Text style={styles.contactLabel}>Address</Text>
                 <Text style={styles.contactValue}>
-                  Kuala Lumpur, Malaysia{'\n'}
-                  Chiang Mai, Thailand
+                  No 11, Jln 3/148A Tmn Sg Besi Industrial Park, Malaysia
                 </Text>
               </View>
             </View>
