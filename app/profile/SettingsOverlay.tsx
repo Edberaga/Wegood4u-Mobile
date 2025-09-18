@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, User, Settings, Palette, Lock, Info, MessageCircle, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
+import { X, User, Settings, Bell, Lock, Info, MessageCircle, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
@@ -48,6 +48,11 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
   const handleEditPreferences = () => {
     onClose();
     router.push('/profile/preferences');
+  };
+
+  const handleNotifications = () => {
+    onClose();
+    router.push('/profile/notifications');
   };
 
   const handleChangePassword = () => {
@@ -102,6 +107,12 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
               <Text style={styles.headerTitle}>Settings</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <X size={24} color="#1e293b" />
+              
+              {renderMenuItem(
+                <Bell size={20} color="#64748B" />,
+                'Notifications',
+                handleNotifications
+              )}
               </TouchableOpacity>
             </View>
 
