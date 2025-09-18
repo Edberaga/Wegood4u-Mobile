@@ -26,10 +26,6 @@ export default function LoginScreen() {
   const { signIn } = useAuth();
 
   const handleLogin = async () => {
-    console.log('🔍 Login attempt started');
-    console.log('📧 Email:', email);
-    console.log('🔒 Password length:', password.length);
-
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -42,23 +38,15 @@ export default function LoginScreen() {
 
     try {
       setSubmitting(true);
-      console.log('📤 Calling signIn function...');
-      
       await signIn(email, password);
-      
-      console.log('✅ Sign in successful, navigating to tabs');
       router.replace('/(tabs)');
     } catch (error: any) {
-      console.error('❌ Login error:', error);
       console.error('Error message:', error.message);
-      console.error('Error object:', JSON.stringify(error, null, 2));
-      
       Alert.alert(
         'Login Failed', 
         error.message || 'An unexpected error occurred. Please try again.'
       );
     } finally {
-      console.log('🔄 Setting submitting to false');
       setSubmitting(false);
     }
   };
