@@ -43,48 +43,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔐 AuthContext: signIn called');
-    console.log('📧 Email:', email);
+  console.log('🔐 AuthContext: signIn called');
+  console.log('📧 Email:', email);
+  
+  setIsLoading(true);
+  
+  try {
+    console.log('📤 Calling supabase.auth.signInWithPassword...');
     
-    setIsLoading(true);
-    
-    try {
-      console.log('📤 Calling supabase.auth.signInWithPassword...');
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      console.log('📥 Supabase response received');
-      console.log('✅ Data exists:', !!data);
-      console.log('❌ Error exists:', !!error);
+    console.log('📥 Supabase response received');
+    console.log('✅ Data exists:', !!data);
+    console.log('❌ Error exists:', !!error);
 
-      if (error) {
-        console.error('🚨 Supabase auth error:', error);
-        console.error('Error code:', error.message);
-        throw error;
-      }
-
-      console.log('✅ Login successful');
-      console.log('Session:', data.session ? 'exists' : 'missing');
-      console.log('User:', data.user ? 'exists' : 'missing');
-      
-      // Note: We don't manually set session/user here because 
-      // onAuthStateChange will handle it automatically
-      
-      console.log('✅ SignIn completed successfully');
-      
-    } catch (error: any) {
-      console.error('🚨 SignIn error caught:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error message:', error.message);
-      throw new Error(error.message || 'Login failed');
-    } finally {
-      console.log('🔄 Setting isLoading to false');
-      setIsLoading(false);
+    if (error) {
+      console.error('🚨 Supabase auth error:', error);
+      console.error('Error code:', error.message);
+      setIsLoading(false); // Set loading to false before throwing
+      throw error;
     }
-  };
+
+    console.log('✅ Login successful');
+    console.log('Session:', data.session ? 'exists' : 'missing');
+    console.log('User:', data.user ? 'exists' : 'missing');
+    
+    // Note: We don't manually set session/user here because 
+    // onAuthStateChange will handle it automatically
+    
+    console.log('✅ SignIn completed successfully');
+    
+    // The onAuthStateChange callback will set isLoading to false
+    // when it updates the session/user state
+    
+  } catch (error: any) {
+    console.error('🚨 SignIn error caught:', error);
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error.message);
+    setIsLoading(false); // Make sure to set loading to false on error
+    throw new Error(error.message || 'Login failed');
+  }
+  
+  // Remove the finally block that was setting isLoading to false
+  // Let the onAuthStateChange handle it when the session is updated
+};
 
   const signUp = async (email: string, password: string, displayName: string, dateOfBirth: string, gender: string, invitationCode?: string) => {
     console.log('📝 AuthContext: signUp called');
