@@ -107,12 +107,6 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
               <Text style={styles.headerTitle}>Settings</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <X size={24} color="#1e293b" />
-              
-              {renderMenuItem(
-                <Bell size={20} color="#64748B" />,
-                'Notifications',
-                handleNotifications
-              )}
               </TouchableOpacity>
             </View>
 
@@ -133,6 +127,11 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
                   handleEditPreferences
                 )}
 
+                {renderMenuItem(
+                  <Bell size={20} color="#64748B" />,
+                  'Notifications',
+                  handleNotifications
+                )}
               </View>
 
               {/* Security Section */}
