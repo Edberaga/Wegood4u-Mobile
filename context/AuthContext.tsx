@@ -49,17 +49,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('Supabase response received');
       console.log('Data exists:', !!data);
       console.log('Error exists:', !!error);
-
+      
       if (error) {
-        console.error('Supabase auth error:', error);
-        console.error('Error code:', error.message);
-        setIsLoading(false); // Set loading to false before throwing
         throw error;
       }
       console.log('Login successful');
       console.log('Session:', data.session ? 'exists' : 'missing');
       console.log('User:', data.user ? 'exists' : 'missing');
-      console.log('SignIn completed successfully');
     } catch (error: any) {
       console.error('Error type:', typeof error);
       console.error('Error message:', error.message);
