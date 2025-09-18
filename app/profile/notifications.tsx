@@ -25,7 +25,7 @@ import {
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 import { useNotifications } from '@/hooks/useNotifications';
-import type { Notification } from '@/hooks/useNotifications';
+import type { Notification } from '@/types/notification';
 
 export default function NotificationsScreen() {
   const { userData } = useUser();
