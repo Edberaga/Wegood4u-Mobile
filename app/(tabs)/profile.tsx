@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
 import { useUserSubmissions } from '@/hooks/useSubmissions';
 import { usePendingSubmissions } from '@/hooks/useSubmissions';
-import { uploadProfileImage, updateUserAvatar } from '@/utils/imageUpload';
+import { uploadProfileImage, updateUserAvatar } from '@/services/imageUpload'
 import { router } from 'expo-router';
 import SettingsOverlay from '@/app/profile/SettingsOverlay';
 
