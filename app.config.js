@@ -30,7 +30,8 @@ export default {
       "expo-web-browser",
       "expo-image-picker",
       "expo-location",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-notifications",
     ],
     experiments: {
       typedRoutes: true
