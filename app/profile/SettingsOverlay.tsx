@@ -58,7 +58,6 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
   const handleChangePassword = () => {
     onClose();
     router.push('/profile/change-password');
-  }
 
   const handleAboutApp = () => {
     onClose();

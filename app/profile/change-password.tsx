@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Eye, EyeOff, Lock } from 'lucide-react-native';
@@ -13,10 +14,8 @@ import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
 export default function ChangePasswordScreen() {
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,8 +40,8 @@ export default function ChangePasswordScreen() {
   };
 
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!newPassword || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in both password fields');
       return;
     }
 
@@ -77,8 +76,16 @@ export default function ChangePasswordScreen() {
           { text: 'OK', onPress: () => router.back() }
         ]
       );
+      
+      // Clear form
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to change password');
+      console.error('Change password error:', error);
+      Alert.alert(
+        'Error', 
+        error.message || 'Failed to change password. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -132,18 +139,10 @@ export default function ChangePasswordScreen() {
         </View>
 
         <Text style={styles.description}>
-          Enter your current password and choose a new secure password.
+          Choose a new secure password for your account.
         </Text>
 
         <View style={styles.form}>
-          {renderPasswordInput(
-            'Current Password',
-            currentPassword,
-            setCurrentPassword,
-            showCurrentPassword,
-            () => setShowCurrentPassword(!showCurrentPassword),
-            'Enter current password'
-          )}
 
           {renderPasswordInput(
             'New Password',
@@ -176,9 +175,11 @@ export default function ChangePasswordScreen() {
             onPress={handleChangePassword}
             disabled={isLoading}
           >
-            <Text style={styles.changeButtonText}>
-              {isLoading ? 'Changing Password...' : 'Change Password'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size={20} color="white" />
+            ) : (
+              <Text style={styles.changeButtonText}>Change Password</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
