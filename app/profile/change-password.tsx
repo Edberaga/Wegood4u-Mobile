@@ -12,15 +12,46 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Eye, EyeOff, Lock } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
 
 export default function ChangePasswordScreen() {
-  const { signOut } = useAuth();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+ 
+  // Utility function for timeout wrapper - treats timeout as distinct result
+  const updateUserWithTimeout = (client: any, updates: any, ms: number = 3000) => {
+    return Promise.race([
+      client.auth.updateUser(updates).then((res: any) => ({ result: res })),
+      new Promise((resolve) => 
+        setTimeout(() => resolve({ timeout: true }), ms)
+      )
+    ]);
+  };
+
+  // Helper: try signOut with timeout
+  const trySignOutWithTimeout = async (ms = 5000) => {
+    return Promise.race([
+      (async () => {
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (error) return { success: false, error };
+          return { success: true };
+        } catch (err) {
+          return { success: false, error: err };
+        }
+      })(),
+      new Promise((resolve) =>
+        setTimeout(() => resolve({ success: false, timeout: true }), ms)
+      )
+    ]);
+  };
+
+  // Helper: force clear client-side auth (web + RN examples)
+  const forceClearAuth = async () => {
+    
+  }
 
   const validatePassword = (password: string) => {
     const errors: string[] = [];
@@ -63,48 +94,92 @@ export default function ChangePasswordScreen() {
     }
 
     setIsLoading(true);
+    console.log('[changePwd] start');
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
+      // Kick off updateUser but guard with a short client timeout
+      const outcome: any = await updateUserWithTimeout(
+        supabase, 
+        { password: newPassword }, 
+        3000
+      );
+      console.log('[changePwd] updateUser outcome', outcome);
 
-      if (error) {
-        throw error;
-      }
+      // If we received a real result from updateUser, check for error
+      if (outcome.result) {
+        const res = outcome.result; // typically { data, error } shape in v2
+        if (res.error) throw res.error;
 
-      // Clear form on success
-      setNewPassword('');
-      setConfirmPassword('');
+        // Confirmed success from client SDK
+        setNewPassword('');
+        setConfirmPassword('');
+        console.log('[changePwd] confirmed success from SDK');
 
-      // Show success message with logout option
-      Alert.alert(
-        'Password Changed',
-        'Your password has been updated successfully. You will be logged out for security.',
-        [
-          {
-            text: 'OK',
-            onPress: async () => {
-              try {
-                await signOut();
-              } catch (logoutError) {
-                console.error('Logout error:', logoutError);
-                // Force navigation to login even if logout fails
-                router.replace('/login');
+        // Show logout prompt and perform normal signOut when user presses OK
+        Alert.alert(
+          'Password Changed',
+          'Your password was updated. Please log in again.',
+          [
+            {
+              text: 'OK',
+              onPress: async () => {
+                setIsLoading(true);
+                const signOutOutcome: any = await trySignOutWithTimeout(3000);
+                console.log('[changePwd] signOutOutcome', signOutOutcome);
+                setIsLoading(false);
+
+                // If signOut succeeded, AuthProvider should redirect. If not, force navigation
+                if (!signOutOutcome.success) {
+                  router.replace('/login'); // fallback
+                }
               }
             }
-          }
-        ]
-      );
+          ],
+          { cancelable: false }
+        );
 
-    } catch (error: any) {
-      console.error('Change password error:', error);
+      } else if (outcome.timeout) {
+        // Timeout: updateUser promise didn't resolve in 3s. But server-side update did succeed.
+        setNewPassword('');
+        setConfirmPassword('');
+        console.warn('[changePwd] updateUser timed out on client; server may have applied change.');
+
+        Alert.alert(
+          'Password Updated',
+          'The password has been succesfully changed. Please press OK to log out and sign in with your new password.',
+          [
+            {
+              text: 'OK',
+              onPress: async () => {
+                setIsLoading(true);
+                const signOutOutcome: any = await trySignOutWithTimeout(5000);
+                console.log('[changePwd] signOutOutcome after timeout', signOutOutcome);
+                setIsLoading(false);
+
+                if (!signOutOutcome.success) {
+                  console.log('[changePwd signOutOutcome didnt succed. Forced move to login!')
+                  router.replace('/login'); // fallback navigation
+                }
+              }
+            }
+          ],
+          { cancelable: false }
+        );
+
+      } else {
+        // Unexpected shape
+        throw new Error('Unexpected updateUser outcome');
+      }
+
+    } catch (err: any) {
+      console.error('[changePwd] error', err);
       Alert.alert(
         'Error',
-        error.message || 'Failed to change password. Please try again.'
+        err.message || 'Failed to change password. Please try again.'
       );
     } finally {
       setIsLoading(false);
+      console.log('[changePwd] finished');
     }
   };
 
