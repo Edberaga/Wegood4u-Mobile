@@ -55,11 +55,6 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
     router.push('/profile/notifications');
   };
 
-  const handleNotifications = () => {
-    onClose();
-    router.push('/profile/notifications');
-  };
-
   const handleChangePassword = () => {
     onClose();
     router.push('/profile/change-password');
@@ -130,12 +125,6 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
                   <Settings size={20} color="#64748B" />,
                   'Edit Preferences',
                   handleEditPreferences
-                )}
-
-                {renderMenuItem(
-                  <Bell size={20} color="#64748B" />,
-                  'Notifications',
-                  handleNotifications
                 )}
 
                 {renderMenuItem(
