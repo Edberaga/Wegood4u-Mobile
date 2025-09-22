@@ -15,17 +15,12 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
 export default function ChangePasswordScreen() {
+  const { signOut } = useAuth();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const { signOut } = useAuth();
-
-  const handleLogout = async () => {
-    await signOut
-  }
 
   const validatePassword = (password: string) => {
     const errors: string[] = [];
@@ -44,16 +39,6 @@ export default function ChangePasswordScreen() {
     }
     
     return errors;
-  };
-
-  // Utility function for timeout wrapper
-  const updateUserWithTimeout = (client: any, updates: any, ms: number = 3000) => {
-    return Promise.race([
-      client.auth.updateUser(updates),
-      new Promise((resolve) => 
-        setTimeout(() => resolve({ timeout: true }), ms)
-      )
-    ]);
   };
 
   const handleChangePassword = async () => {
@@ -78,38 +63,35 @@ export default function ChangePasswordScreen() {
     }
 
     setIsLoading(true);
-    console.log('Loading set to true');
 
     try {
-      // Verify session before update
-      console.log('Verifying session before update...');
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log('sessionData', sessionData);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
 
-      // Try update with timeout (3 seconds)
-      const result = await updateUserWithTimeout(supabase, { password: newPassword }, 3000);
-      console.log('Supabase update completed', result);
-
-      // Check for errors in the result
-      if ((result as any).error) {
-        throw (result as any).error;
+      if (error) {
+        throw error;
       }
 
       // Clear form on success
       setNewPassword('');
       setConfirmPassword('');
-      setIsLoading(false);
 
-      // Show success message and logout
+      // Show success message with logout option
       Alert.alert(
         'Password Changed',
-        'Your password has been updated. Please sign in again.',
+        'Your password has been updated successfully. You will be logged out for security.',
         [
           {
             text: 'OK',
             onPress: async () => {
-              setIsLoading(false); // Ensure loading is off
-              handleLogout();
+              try {
+                await signOut();
+              } catch (logoutError) {
+                console.error('Logout error:', logoutError);
+                // Force navigation to login even if logout fails
+                router.replace('/login');
+              }
             }
           }
         ]
@@ -117,36 +99,12 @@ export default function ChangePasswordScreen() {
 
     } catch (error: any) {
       console.error('Change password error:', error);
+      Alert.alert(
+        'Error',
+        error.message || 'Failed to change password. Please try again.'
+      );
+    } finally {
       setIsLoading(false);
-      
-      // Handle timeout vs other errors
-      if (error.message === 'updateUser timeout') {
-        // Clear form since password was likely updated
-        setNewPassword('');
-        setConfirmPassword('');
-        
-        // Show alert with button to continue logout
-        Alert.alert(
-          'Password Updated',
-          'Your password has been updated successfully!',
-          [
-            {
-              text: 'Continue to Log Out',
-              onPress: async () => {
-                console.log('User confirmed logout');
-                handleLogout();
-              }
-            }
-          ],
-          { cancelable: false } // Prevents dismissal by tapping outside
-        );
-        
-      } else {
-        Alert.alert(
-          'Error',
-          error.message || 'Failed to change password. Please try again.'
-        );
-      }
     }
   };
 
