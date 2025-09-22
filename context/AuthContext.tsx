@@ -168,6 +168,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const forceClearAuth = async () => {
+    console.log('AuthContext: forceClearAuth called');
+    try {
+      // Step 1: Clear local auth state immediately
+      setUser(null);
+      setSession(null);
+      setIsLoading(false);
+      
+      // Step 2: Clear Supabase client session without waiting for server response
+      // This bypasses the hanging promise issue
+      supabase.auth.admin.signOut(session?.access_token || '').catch(() => {
+        // Ignore errors - we're force clearing anyway
+        console.log('Force clear: Ignored server signOut error');
+      });
+      
+      console.log('AuthContext: forceClearAuth completed');
+    } catch (error) {
+      console.error('forceClearAuth error:', error);
+      // Even if there's an error, we still clear the local state
+      setUser(null);
+      setSession(null);
+      setIsLoading(false);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -176,6 +201,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signUp,
     signOut,
+    forceClearAuth,
   };
 
   console.log('AuthProvider render - isAuthenticated:', !!user, 'isLoading:', isLoading);
