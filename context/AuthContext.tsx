@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { AuthContextType } from '@/types';
+import { router } from 'expo-router';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -52,11 +53,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         throw error;
       }
+      setIsLoading(false);
+      router.replace('/(tabs)');
+      
       console.log('Login successful');
       console.log('Session:', data.session ? 'exists' : 'missing');
       console.log('User:', data.user ? 'exists' : 'missing');
-      setIsLoading(false);
-      return;
     } catch (error: any) {
       console.error('Error type:', typeof error);
       console.error('Error message:', error.message);
