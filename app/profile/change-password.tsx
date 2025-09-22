@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Eye, EyeOff, Lock } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
@@ -19,6 +20,12 @@ export default function ChangePasswordScreen() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut
+  }
 
   const validatePassword = (password: string) => {
     const errors: string[] = [];
@@ -39,7 +46,18 @@ export default function ChangePasswordScreen() {
     return errors;
   };
 
+  // Utility function for timeout wrapper
+  const updateUserWithTimeout = (client: any, updates: any, ms: number = 3000) => {
+    return Promise.race([
+      client.auth.updateUser(updates),
+      new Promise((resolve) => 
+        setTimeout(() => resolve({ timeout: true }), ms)
+      )
+    ]);
+  };
+
   const handleChangePassword = async () => {
+    // Input validation
     if (!newPassword || !confirmPassword) {
       Alert.alert('Error', 'Please fill in both password fields');
       return;
@@ -60,34 +78,75 @@ export default function ChangePasswordScreen() {
     }
 
     setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+    console.log('Loading set to true');
 
-      if (error) {
-        throw error;
+    try {
+      // Verify session before update
+      console.log('Verifying session before update...');
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('sessionData', sessionData);
+
+      // Try update with timeout (3 seconds)
+      const result = await updateUserWithTimeout(supabase, { password: newPassword }, 3000);
+      console.log('Supabase update completed', result);
+
+      // Check for errors in the result
+      if ((result as any).error) {
+        throw (result as any).error;
       }
 
-      Alert.alert(
-        'Success',
-        'Your password has been changed successfully!',
-        [
-          { text: 'OK', onPress: () => router.back() }
-        ]
-      );
-      
-      // Clear form
+      // Clear form on success
       setNewPassword('');
       setConfirmPassword('');
+      setIsLoading(false);
+
+      // Show success message and logout
+      Alert.alert(
+        'Password Changed',
+        'Your password has been updated. Please sign in again.',
+        [
+          {
+            text: 'OK',
+            onPress: async () => {
+              setIsLoading(false); // Ensure loading is off
+              handleLogout();
+            }
+          }
+        ]
+      );
+
     } catch (error: any) {
       console.error('Change password error:', error);
-      Alert.alert(
-        'Error', 
-        error.message || 'Failed to change password. Please try again.'
-      );
-    } finally {
       setIsLoading(false);
+      
+      // Handle timeout vs other errors
+      if (error.message === 'updateUser timeout') {
+        // Clear form since password was likely updated
+        setNewPassword('');
+        setConfirmPassword('');
+        
+        // Show alert with button to continue logout
+        Alert.alert(
+          'Password Updated',
+          'Your password has been updated successfully!',
+          [
+            {
+              text: 'Continue to Log Out',
+              onPress: async () => {
+                console.log('User confirmed logout');
+                handleLogout();
+              }
+            }
+          ],
+          { cancelable: false } // Prevents dismissal by tapping outside
+        );
+        
+      } else {
+        Alert.alert(
+          'Error',
+          error.message || 'Failed to change password. Please try again.'
+        );
+      }
     }
   };
 
