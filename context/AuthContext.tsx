@@ -18,9 +18,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthProvider: Initial session:', session ? 'exists' : 'none');
       setSession(session);
       setUser(session?.user ?? null);
+      console.log('AuthProvider: Initial session:', session ? session : 'none');
+      console.log('AuthProvider: Initial user:', user ? user : 'none');
       setIsLoading(false);
     });
 
@@ -28,9 +29,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('AuthProvider: Auth state changed:', event);
-        console.log('AuthProvider: New session:', session ? 'exists' : 'none');
         setSession(session);
         setUser(session?.user ?? null);
+        console.log('AuthProvider: New session:', session ? session : 'none');
         setIsLoading(false);
       }
     );
@@ -48,8 +49,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password,
       });
       console.log('Supabase response received');
-      console.log('Data exists:', !!data);
-      console.log('Error exists:', !!error);
       if (error) {
         throw error;
       }
@@ -57,8 +56,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       router.replace('/(tabs)');
       
       console.log('Login successful');
-      console.log('Session:', data.session ? 'exists' : 'missing');
-      console.log('User:', data.user ? 'exists' : 'missing');
+      console.log('Session:', data.session ? data.session : 'missing');
+      console.log('User:', data.user ? data.user : 'missing');
     } catch (error: any) {
       console.error('Error type:', typeof error);
       console.error('Error message:', error.message);
