@@ -10,6 +10,8 @@ import {
   Modal,
   Alert,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -20,15 +22,19 @@ import {
   Heart,
   Share2,
   ArrowLeft,
-  Filter
+  Filter,
+  RefreshCw
 } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useProducts } from '@/hooks/useProducts';
 import type { NFTProduct, StoreFilters } from '@/types';
 
 const { width } = Dimensions.get('window');
 const itemWidth = (width - 60) / 2; // 2 columns with padding
 
 export default function StoreScreen() {
+  const { products, isLoading, error, refetch } = useProducts();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filters, setFilters] = useState<StoreFilters>({
     category: 'all',
     sortBy: 'latest',
@@ -39,84 +45,24 @@ export default function StoreScreen() {
   const [selectedProduct, setSelectedProduct] = useState<NFTProduct | null>(null);
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
 
-  // Sample NFT Products Data
-  const nftProducts: NFTProduct[] = [
-    {
-      id: '1',
-      name: 'Aries',
-      category: 'zodiac',
-      price: 12,
-      image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'The Ram - Bold, ambitious, and energetic. Aries are natural leaders who love to take charge and pioneer new paths.',
-      symbol: '♈',
-      dateRange: 'March 21 - April 19',
-      traits: ['Leadership', 'Courage', 'Determination', 'Confidence'],
-      rarity: 'rare',
-      createdAt: '2024-01-15',
-    },
-    {
-      id: '2',
-      name: 'Leo',
-      category: 'zodiac',
-      price: 15,
-      image: 'https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'The Lion - Charismatic, creative, and generous. Leos are natural performers who love to be in the spotlight.',
-      symbol: '♌',
-      dateRange: 'July 23 - August 22',
-      traits: ['Creativity', 'Generosity', 'Warmth', 'Loyalty'],
-      rarity: 'epic',
-      createdAt: '2024-01-20',
-    },
-    {
-      id: '3',
-      name: 'Dragon',
-      category: 'horoscope',
-      price: 25,
-      image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'The Dragon - Powerful, wise, and ambitious. Dragons are natural leaders with great strength and intelligence.',
-      year: '2024, 2012, 2000, 1988',
-      traits: ['Power', 'Wisdom', 'Ambition', 'Intelligence'],
-      rarity: 'legendary',
-      createdAt: '2024-01-10',
-    },
-    {
-      id: '4',
-      name: 'Rabbit',
-      category: 'horoscope',
-      price: 18,
-      image: 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'The Rabbit - Gentle, quiet, and elegant. Rabbits are known for their kindness and artistic nature.',
-      year: '2023, 2011, 1999, 1987',
-      traits: ['Gentleness', 'Elegance', 'Kindness', 'Artistic'],
-      rarity: 'rare',
-      createdAt: '2024-01-25',
-    },
-    {
-      id: '5',
-      name: 'Scorpio',
-      category: 'zodiac',
-      price: 20,
-      image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'The Scorpion - Intense, passionate, and mysterious. Scorpios are known for their depth and transformative power.',
-      symbol: '♏',
-      dateRange: 'October 23 - November 21',
-      traits: ['Intensity', 'Passion', 'Mystery', 'Transformation'],
-      rarity: 'epic',
-      createdAt: '2024-01-30',
-    },
-    {
-      id: '6',
-      name: 'Tiger',
-      category: 'horoscope',
-      price: 22,
-      image: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=400',
-      description: 'The Tiger - Brave, competitive, and unpredictable. Tigers are natural leaders with great courage.',
-      year: '2022, 2010, 1998, 1986',
-      traits: ['Bravery', 'Competition', 'Leadership', 'Courage'],
-      rarity: 'legendary',
-      createdAt: '2024-02-01',
-    },
-  ];
+  // Transform products from database to NFTProduct format
+  const nftProducts: NFTProduct[] = products.map(product => ({
+    id: product.id.toString(),
+    name: product.title,
+    category: product.category.toLowerCase() as 'zodiac' | 'horoscope',
+    image: product.image_url || 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=400',
+    description: product.description || 'No description available',
+    createdAt: product.created_at,
+  }));
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const zodiacSigns = [
     'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -131,8 +77,6 @@ export default function StoreScreen() {
   const sortOptions = [
     { key: 'latest', label: 'Latest' },
     { key: 'alphabetical', label: 'A-Z' },
-    { key: 'price-low', label: 'Price: Low to High' },
-    { key: 'price-high', label: 'Price: High to Low' },
   ];
 
   // Filter and sort products
@@ -156,12 +100,6 @@ export default function StoreScreen() {
       case 'alphabetical':
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
       case 'latest':
       default:
         filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -183,22 +121,10 @@ export default function StoreScreen() {
     Alert.alert('Share Product', `Share ${product.name} with friends?`);
   };
 
-  const buyProduct = (product: NFTProduct) => {
-    Alert.alert(
-      'Purchase NFT',
-      `Buy ${product.name} for $${product.price}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Buy Now', onPress: () => Alert.alert('Success', 'NFT purchased successfully!') },
-      ]
-    );
-  };
-
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'legendary': return '#FFD700';
-      case 'epic': return '#9333EA';
-      case 'rare': return '#3B82F6';
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'zodiac': return '#3B82F6';
+      case 'horoscope': return '#8B5CF6';
       default: return '#6B7280';
     }
   };
@@ -221,14 +147,13 @@ export default function StoreScreen() {
             fill={likedProducts.includes(product.id) ? '#EF4444' : 'transparent'}
           />
         </TouchableOpacity>
-        <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(product.rarity) }]}>
-          <Text style={styles.rarityText}>{product.rarity}</Text>
+        <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(product.category) }]}>
+          <Text style={styles.categoryBadgeText}>{product.category}</Text>
         </View>
       </View>
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{product.name}</Text>
-        <Text style={styles.productCategory}>{product.category}</Text>
-        <Text style={styles.productPrice}>${product.price}</Text>
+        <Text style={styles.productDescription} numberOfLines={2}>{product.description}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -367,53 +292,58 @@ export default function StoreScreen() {
                 <Text style={styles.productDetailCategory}>{selectedProduct.category}</Text>
                 <Text style={styles.productDetailName}>{selectedProduct.name}</Text>
                 
-                {selectedProduct.symbol && (
-                  <Text style={styles.productDetailSymbol}>{selectedProduct.symbol}</Text>
-                )}
-                
-                {selectedProduct.dateRange && (
-                  <Text style={styles.productDetailDate}>{selectedProduct.dateRange}</Text>
-                )}
-                
-                {selectedProduct.year && (
-                  <Text style={styles.productDetailYear}>Years: {selectedProduct.year}</Text>
-                )}
-
                 <Text style={styles.productDetailDescription}>
                   {selectedProduct.description}
                 </Text>
-
-                <View style={styles.traitsContainer}>
-                  <Text style={styles.traitsTitle}>Traits:</Text>
-                  <View style={styles.traitsGrid}>
-                    {selectedProduct.traits.map((trait, index) => (
-                      <View key={index} style={styles.traitChip}>
-                        <Text style={styles.traitText}>{trait}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
               </View>
             </ScrollView>
 
-            <View style={styles.productDetailFooter}>
-              <TouchableOpacity
-                style={styles.buyButton}
-                onPress={() => buyProduct(selectedProduct)}
-              >
-                <Text style={styles.buyButtonText}>Proceed to Buy</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       )}
     </Modal>
   );
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Store</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#206E56" />
+          <Text style={styles.loadingText}>Loading products...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Store</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <RefreshCw size={16} color="#206E56" />
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Store</Text>
+        <TouchableOpacity style={styles.refreshHeaderButton} onPress={handleRefresh}>
+          <RefreshCw size={20} color="#64748B" />
+        </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
@@ -447,10 +377,31 @@ export default function StoreScreen() {
       </View>
 
       {/* Products Grid */}
-      <ScrollView style={styles.productsContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.productsContainer} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={['#206E56']}
+          />
+        }
+      >
         <View style={styles.productsGrid}>
           {filteredProducts.map(renderProduct)}
         </View>
+        
+        {filteredAndSortedProducts.length === 0 && !isLoading && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No products found</Text>
+            <Text style={styles.emptyStateSubtext}>
+              {filters.searchQuery || filters.category !== 'all' 
+                ? 'Try adjusting your search or filters' 
+                : 'No products available at the moment'}
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* Sort Modal */}
@@ -505,11 +456,56 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: 'white',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1e293b',
+  },
+  refreshHeaderButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#64748B',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#206E56',
+    borderRadius: 8,
+    backgroundColor: '#CBEED2',
+  },
+  retryButtonText: {
+    color: '#206E56',
+    fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -596,7 +592,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  rarityBadge: {
+  categoryBadge: {
     position: 'absolute',
     bottom: 8,
     left: 8,
@@ -604,7 +600,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  rarityText: {
+  categoryBadgeText: {
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
@@ -619,16 +615,26 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 4,
   },
-  productCategory: {
+  productDescription: {
     fontSize: 12,
     color: '#64748B',
-    textTransform: 'capitalize',
+    lineHeight: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#64748B',
     marginBottom: 8,
   },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#206E56',
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#94A3B8',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -818,47 +824,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#64748B',
     lineHeight: 24,
-    marginBottom: 24,
-  },
-  traitsContainer: {
-    marginBottom: 20,
-  },
-  traitsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 12,
-  },
-  traitsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  traitChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 16,
-  },
-  traitText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '500',
-  },
-  productDetailFooter: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
-  buyButton: {
-    backgroundColor: '#206E56',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  buyButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
 });
