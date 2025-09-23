@@ -35,7 +35,7 @@ export default function Badges({
   };
 
   const createBadgeLevels = (currentCount: number): BadgeLevel[] => {
-    const requirements = [1, 5, 10, 25, 50]; // More realistic requirements
+    const requirements = [1, 5, 10]; // More realistic requirements
     return requirements.map((req, index) => ({
       level: index + 1,
       requirement: req,
