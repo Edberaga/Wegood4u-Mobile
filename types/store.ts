@@ -33,7 +33,7 @@ export interface NFTProduct {
 }
 
 export interface StoreFilters {
-  category: 'all' | 'zodiac' | 'horoscope';
+  category: 'all' | 'Zodiac' | 'Horoscope';
   sortBy: 'latest' | 'alphabetical' | 'price-low' | 'price-high';
   searchQuery: string;
   selectedZodiac?: string;

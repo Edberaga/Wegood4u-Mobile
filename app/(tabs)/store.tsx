@@ -820,31 +820,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 24,
   },
-  traitsContainer: {
-    marginBottom: 20,
-  },
-  traitsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 12,
-  },
-  traitsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  traitChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 16,
-  },
-  traitText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '500',
-  },
   productDetailFooter: {
     padding: 20,
     borderTopWidth: 1,
