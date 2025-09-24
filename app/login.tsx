@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
@@ -23,7 +24,15 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [activeTab, setActiveTab] = useState('email'); // 'email' or 'phone'
   
-  const { signIn } = useAuth();
+  const { signIn, isAuthenticated, isLoading } = useAuth();
+
+  // Auto-redirect if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      console.log('LoginScreen: Already authenticated, redirecting to tabs');
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, isLoading]);
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -58,6 +67,19 @@ export default function LoginScreen() {
   const goToRegister = () => {
     router.push('/register');
   };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#4A9B8E" />
+        <Text style={{ marginTop: 10, fontSize: 16 }}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <KeyboardAvoidingView

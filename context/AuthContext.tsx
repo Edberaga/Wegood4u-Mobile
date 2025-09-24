@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { AuthContextType } from '@/types';
-import { router } from 'expo-router';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -16,13 +15,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let initialized = false;
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
-      console.log('AuthProvider: Initial session:', session ? session : 'none');
-      console.log('AuthProvider: Initial user:', user ? user : 'none');
-      setIsLoading(false);
+      setUser (session?.user ?? null);
+      console.log('AuthProvider: Initial session:', session ? 'present' : 'none');
+      console.log('AuthProvider: Initial user:', session?.user ? 'present' : 'none');
+
+      if (!initialized) {
+        setIsLoading(false);
+        initialized = true;
+      }
+    }).catch(err => {
+      console.error('Initial session error:', err);
+      if (!initialized) setIsLoading(false);
     });
 
     // Listen for auth changes
@@ -30,12 +38,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       async (event, session) => {
         console.log('AuthProvider: Auth state changed:', event);
         setSession(session);
-        setUser(session?.user ?? null);
-        console.log('AuthProvider: New session:', session ? session : 'none');
-        setIsLoading(false);
+        setUser (session?.user ?? null);
+        console.log('AuthProvider: New session:', session ? 'present' : 'none');
       }
     );
-
     return () => {
       subscription.unsubscribe();
     };
@@ -48,12 +54,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email,
         password,
       });
-      console.log('Supabase response received');
+      console.log('Supabase data response received: ', data);
       if (error) {
+        console.log('Supabase error response received: ', error);
         throw error;
       }
       setIsLoading(false);
-      router.replace('/(tabs)');
       
       console.log('Login successful');
       console.log('Session:', data.session ? data.session : 'missing');
