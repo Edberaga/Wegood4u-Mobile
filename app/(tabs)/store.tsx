@@ -16,16 +16,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Search, 
-  SlidersHorizontal, 
   ArrowUpDown, 
-  X, 
   Heart,
   Share2,
   ArrowLeft,
   Filter,
   RefreshCw
 } from 'lucide-react-native';
-import { router } from 'expo-router';
 import { useProducts } from '@/hooks/useProducts';
 import type { NFTProduct, StoreFilters } from '@/types';
 
@@ -93,6 +90,20 @@ export default function StoreScreen() {
     // Filter by category
     if (filters.category !== 'all') {
       filtered = filtered.filter(product => product.category === filters.category);
+    }
+
+    // Filter by specific zodiac sign
+    if (filters.selectedZodiac) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(filters.selectedZodiac!.toLowerCase())
+      );
+    }
+
+    // Filter by specific horoscope animal
+    if (filters.selectedHoroscope) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(filters.selectedHoroscope!.toLowerCase())
+      );
     }
 
     // Sort products
@@ -392,7 +403,7 @@ export default function StoreScreen() {
           {filteredProducts.map(renderProduct)}
         </View>
         
-        {filteredAndSortedProducts.length === 0 && !isLoading && (
+        {filteredProducts.length === 0 && !isLoading && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>No products found</Text>
             <Text style={styles.emptyStateSubtext}>
@@ -804,20 +815,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1e293b',
-    marginBottom: 16,
-  },
-  productDetailSymbol: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  productDetailDate: {
-    fontSize: 16,
-    color: '#64748B',
-    marginBottom: 8,
-  },
-  productDetailYear: {
-    fontSize: 16,
-    color: '#64748B',
     marginBottom: 16,
   },
   productDetailDescription: {
