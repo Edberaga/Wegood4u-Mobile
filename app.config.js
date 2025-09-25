@@ -6,7 +6,7 @@ export default {
     slug: "wegood4u-mobile",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./assets/images/Wegood4u_Icon.png",
     scheme: "wegood4u",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -15,14 +15,14 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/icon.png",
+        foregroundImage: "./assets/images/Wegood4u_Icon.png",
         backgroundColor: "#8B5CF6"
       }
     },
     web: {
       bundler: "metro",
       output: "single",
-      favicon: "./assets/images/favicon.png"
+      icon: "./assets/images/Wegood4u_Icon.png"
     },
     plugins: [
       "expo-router",

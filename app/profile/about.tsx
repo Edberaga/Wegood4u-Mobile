@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Info, Users, Target, Award } from 'lucide-react-native';
@@ -24,7 +25,7 @@ export default function AboutScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.logoSection}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>Wegood4u</Text>
+            <Image source={require('@/assets/images/wegood4u.png')} style={styles.logo} alt="Wegood4u"/>
           </View>
           <Text style={styles.version}>Version 1.0.0</Text>
         </View>
@@ -52,54 +53,6 @@ export default function AboutScreen() {
             local businesses, fostering authentic experiences and meaningful connections 
             through travel and exploration.
           </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Award size={24} color="#206E56" />
-            <Text style={styles.sectionTitle}>Key Features</Text>
-          </View>
-          <View style={styles.featuresList}>
-            <Text style={styles.featureItem}>• Role-based membership system</Text>
-            <Text style={styles.featureItem}>• Proof of visit submissions</Text>
-            <Text style={styles.featureItem}>• Badge and reward system</Text>
-            <Text style={styles.featureItem}>• Affiliate referral program</Text>
-            <Text style={styles.featureItem}>• Partner store discovery</Text>
-            <Text style={styles.featureItem}>• Admin approval workflow</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Users size={24} color="#206E56" />
-            <Text style={styles.sectionTitle}>User Roles</Text>
-          </View>
-          <View style={styles.rolesList}>
-            <View style={styles.roleItem}>
-              <Text style={styles.roleName}>Subscriber</Text>
-              <Text style={styles.roleDescription}>
-                Default role after registration. Can view partner stores and blogs.
-              </Text>
-            </View>
-            <View style={styles.roleItem}>
-              <Text style={styles.roleName}>Member</Text>
-              <Text style={styles.roleDescription}>
-                Can participate in core activities like uploading proof of visits.
-              </Text>
-            </View>
-            <View style={styles.roleItem}>
-              <Text style={styles.roleName}>Affiliate Member</Text>
-              <Text style={styles.roleDescription}>
-                Approved members with unique invitation codes and referral tracking.
-              </Text>
-            </View>
-            <View style={styles.roleItem}>
-              <Text style={styles.roleName}>Admin</Text>
-              <Text style={styles.roleDescription}>
-                Manages approval workflows and the affiliate system.
-              </Text>
-            </View>
-          </View>
         </View>
 
         <View style={styles.footer}>
@@ -150,13 +103,11 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#206E56',
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 16,
+  },
+  logo: {
+    width: 188,
+    height: 54
   },
   logoText: {
     fontSize: 18,
