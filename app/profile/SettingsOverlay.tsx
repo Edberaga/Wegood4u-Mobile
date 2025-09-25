@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, User, Settings, Bell, Lock, Info, MessageCircle, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
 interface SettingsOverlayProps {
@@ -21,6 +21,8 @@ interface SettingsOverlayProps {
 
 export default function SettingsOverlay({ visible, onClose, userData }: SettingsOverlayProps) {
   const { signOut } = useAuth();
+  const router = useRouter();
+  const isSubscriber = userData?.role === 'subscriber'; // Conditional check
 
   const handleLogout = async () => {
     Alert.alert(
@@ -121,13 +123,13 @@ export default function SettingsOverlay({ visible, onClose, userData }: Settings
                   handleAccountProfile
                 )}
                 
-                {renderMenuItem(
+                {!isSubscriber && renderMenuItem(
                   <Settings size={20} color="#64748B" />,
                   'Edit Preferences',
                   handleEditPreferences
                 )}
 
-                {renderMenuItem(
+                {!isSubscriber && renderMenuItem(
                   <Bell size={20} color="#64748B" />,
                   'Notifications',
                   handleNotifications
