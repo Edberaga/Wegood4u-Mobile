@@ -38,7 +38,7 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'wegood4u://reset-password',
+        redirectTo: `wegood4u://reset-password?type=recovery`,
       });
 
       if (error) {
@@ -48,7 +48,7 @@ export default function ForgotPasswordScreen() {
       setEmailSent(true);
       Alert.alert(
         'Reset Email Sent',
-        'We have sent a password reset link to your email. Please check your inbox and follow the instructions.',
+        'We have sent a password reset link to your email. Please check your inbox and tap the link to reset your password.',
         [
           { text: 'OK' }
         ]
@@ -133,7 +133,7 @@ export default function ForgotPasswordScreen() {
             <>
               <Text style={styles.title}>Check Your Email</Text>
               <Text style={styles.description}>
-                We've sent a password reset link to {email}. Please check your inbox and follow the instructions to reset your password.
+                We've sent a password reset link to {email}. Please check your inbox and tap the link to reset your password.
               </Text>
 
               <View style={styles.successActions}>
