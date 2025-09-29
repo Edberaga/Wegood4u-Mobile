@@ -153,7 +153,7 @@ export default function Badges({
       </View>
 
       <ScrollView style={styles.rewardsContainer} showsVerticalScrollIndicator={false}>
-        {/* Debug Info - Remove this in production */}
+        {/* Debug Info - Remove this in production 
         <View style={styles.debugCard}>
           <Text style={styles.debugTitle}>Debug Info (Remove in production)</Text>
           <Text style={styles.debugText}>Total Approved: {approvedCounts.total}</Text>
@@ -163,7 +163,8 @@ export default function Badges({
           <Text style={styles.debugText}>Total Submissions: {submissions.length}</Text>
           <Text style={styles.debugText}>User ID: {userData?.id || 'Not set'}</Text>
         </View>
-
+        */}
+        
         {/* Achievement Summary */}
         <View style={styles.achievementSummary}>
           <Text style={styles.sectionTitle}>Achievement Progress</Text>

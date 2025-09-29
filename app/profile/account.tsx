@@ -165,7 +165,7 @@ export default function AccountProfileScreen() {
           </View>
         </View>
 
-        {/* Debug Information (remove in production) */}
+        {/* Debug Information (remove in production)
         {__DEV__ && (
           <View style={styles.debugSection}>
             <Text style={styles.sectionTitle}>Debug Info</Text>
@@ -174,6 +174,7 @@ export default function AccountProfileScreen() {
             </Text>
           </View>
         )}
+        */}
       </ScrollView>
     </SafeAreaView>
   );

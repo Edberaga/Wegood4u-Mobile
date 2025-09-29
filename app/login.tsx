@@ -160,8 +160,8 @@ export default function LoginScreen() {
               {submitting ? 'Logging in...' : 'Login'}
             </Text>
           </TouchableOpacity>
-
-          {/* Debug info - remove this in production */}
+{/*
+          //Debug info - remove this in production
           <View style={styles.debugContainer}>
             <Text style={styles.debugText}>
               Debug: Submitting = {submitting.toString()}
@@ -170,10 +170,10 @@ export default function LoginScreen() {
               Email valid: {email.includes('@').toString()}
             </Text>
           </View>
-
+*/}
           <Text style={styles.orText}>Or sign in with</Text>
 
-          <SocialAuthButtons />
+          {/* <SocialAuthButtons /> Will be used later*/}
 
           <TouchableOpacity style={styles.registerLink} onPress={goToRegister}>
             <Text style={styles.registerLinkText}>
