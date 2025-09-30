@@ -187,6 +187,8 @@ export default function ConfirmEmailScreen() {
         </Text>
       </TouchableOpacity>
 
+      <Text style={styles.message}>Once you have clicked the confirm email address. Head back to Login</Text>
+
       <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/login')}>
         <Text style={styles.backText}>Back to Login</Text>
       </TouchableOpacity>
