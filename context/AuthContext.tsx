@@ -20,7 +20,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser (session?.user ?? null);
+      setUser(session?.user ?? null);
       console.log('AuthProvider: Initial session:', session ? 'present' : 'none');
       console.log('AuthProvider: Initial user:', session?.user ? 'present' : 'none');
 
@@ -38,14 +38,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       async (event, session) => {
         console.log('AuthProvider: Auth state changed:', event);
         setSession(session);
-        setUser (session?.user ?? null);
+        setUser  (session?.user ?? null);
         console.log('AuthProvider: New session:', session ? 'present' : 'none');
+        
+        // Ensure loading state resolves after auth changes (quick transitions)
+        setIsLoading(false);
       }
     );
     return () => {
       subscription.unsubscribe();
     };
   }, []);
+
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
@@ -59,11 +63,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('Supabase error response received: ', error);
         throw error;
       }
+      
+      // Manual state update for immediate sync
+      setSession(data.session);
+      setUser (data.user ?? null);
       setIsLoading(false);
       
       console.log('Login successful');
       console.log('Session:', data.session ? data.session : 'missing');
-      console.log('User:', data.user ? data.user : 'missing');
+      console.log('User :', data.user ? data.user : 'missing');
     } catch (error: any) {
       console.error('Error type:', typeof error);
       console.error('Error message:', error.message);
@@ -79,7 +87,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // First, check if invitation code exists (if provided)
       let inviterId: string | undefined;
-      
       if (invitationCode) {
         console.log('Checking invitation code:', invitationCode);
         const { data: inviteData, error: inviteError } = await supabase
@@ -122,7 +129,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Failed to create user account');
       }
 
-      console.log('User created successfully:', data.user.id);
+      // Manual state update for immediate sync (session may be null for email confirm flow)
+      setSession(data.session);
+      setUser (data.user ?? null);
+      console.log('User  created successfully:', data.user.id);
 
       // If invitation code was provided, update the profile with inviter_id after trigger creates it
       if (inviterId) {
@@ -137,7 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           .eq('id', data.user.id);
 
         if (updateError) {
-          console.error('Error setting inviter:', updateError);
+          console.log('Error setting inviter:', updateError);
           // Don't throw error here - profile was created successfully
         } else {
           console.log('Inviter ID set successfully');
@@ -152,6 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(false);
     }
   };
+
 
   const signOut = async () => {
     console.log('AuthContext: signOut called');
