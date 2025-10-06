@@ -1,0 +1,16 @@
+{
+  "build": {
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./wegood4u-mobile-app-c435a1ce4e81.json"
+      }
+    }
+  }
+}
