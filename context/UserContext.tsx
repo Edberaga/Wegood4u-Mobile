@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/lib/supabase';
 import type { UserData, UserPreferenceData, UserContextType } from '@/types';
+import { useAuth } from './AuthContext';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -11,27 +12,31 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
+  const { user: authUser, isLoading: authLoading } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [preferenceData, setPreferenceData] = useState<UserPreferenceData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isPreferenceLoading, setIsPreferenceLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
 
-  const fetchUserData = async () => {
+  const fetchUserData = async (userId: string) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Get current user from auth
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      console.log('user: ', user);
-      
+      console.log('UserContext: Fetching data for user:', userId);
+
+      // Get auth user details
+      const { data: { user: authUserData }, error: authError } = await supabase.auth.getUser();
+
       if (authError) {
+        console.error('Auth error while fetching user:', authError);
         throw authError;
       }
 
-      if (!user) {
+      if (!authUserData) {
+        console.log('UserContext: No authenticated user found');
         setUserData(null);
         setPreferenceData(null);
         return;
@@ -54,7 +59,7 @@ export function UserProvider({ children }: UserProviderProps) {
           created_at,
           updated_at
         `)
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
@@ -65,10 +70,10 @@ export function UserProvider({ children }: UserProviderProps) {
       // Combine auth and profile data (without preferences)
       const combinedUserData: UserData = {
         // Auth data
-        id: user.id,
-        email: user.email || '',
-        emailConfirmedAt: user.email_confirmed_at || null,
-        
+        id: authUserData.id,
+        email: authUserData.email || '',
+        emailConfirmedAt: authUserData.email_confirmed_at || null,
+
         // Profile data (with defaults if profile doesn't exist)
         username: profile?.username || null,
         fullName: profile?.full_name || null,
@@ -79,15 +84,15 @@ export function UserProvider({ children }: UserProviderProps) {
         affiliateRequestStatus: profile?.affiliate_request_status || null,
         dob: profile?.dob || null,
         gender: profile?.gender || null,
-        createdAt: profile?.created_at || user.created_at,
+        createdAt: profile?.created_at || authUserData.created_at,
         updatedAt: profile?.updated_at || null,
       };
 
-      console.log('Combined user data:', combinedUserData);
+      console.log('UserContext: Combined user data:', combinedUserData);
       setUserData(combinedUserData);
-      
+
       // Fetch preferences separately
-      await fetchPreferenceData(user.id);
+      await fetchPreferenceData(userId);
       
     } catch (err: any) {
       console.error('Error fetching user data:', err);
@@ -151,8 +156,12 @@ export function UserProvider({ children }: UserProviderProps) {
   };
 
   const refreshUserData = async () => {
-    console.log('Refreshing user data...');
-    await fetchUserData();
+    if (!authUser?.id) {
+      console.log('UserContext: Cannot refresh - no authenticated user');
+      return;
+    }
+    console.log('UserContext: Refreshing user data...');
+    await fetchUserData(authUser.id);
   };
 
   const refreshPreferenceData = async () => {
@@ -307,55 +316,33 @@ export function UserProvider({ children }: UserProviderProps) {
     };
   }, [userData?.id]);
 
-  // Set up real-time subscription for auth changes (email confirmation)
+  // Main effect: Only fetch user data when auth is ready and user is authenticated
   useEffect(() => {
-    if (!userData?.id) return;
+    // Don't do anything while auth is still loading
+    if (authLoading) {
+      console.log('UserContext: Waiting for auth to finish loading...');
+      return;
+    }
 
-    // Listen for auth changes that might affect email confirmation
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event);
-        if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'SIGNED_IN') {
-          // Refresh user data when auth state changes
-          await fetchUserData();
-        }
-      }
-    );
+    // If no authenticated user, clear user data
+    if (!authUser) {
+      console.log('UserContext: No authenticated user, clearing data');
+      setUserData(null);
+      setPreferenceData(null);
+      setIsLoading(false);
 
-    return () => subscription.unsubscribe();
-  }, [userData?.id]);
-
-  // Initial data fetch and auth state listener
-  useEffect(() => {
-    fetchUserData();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event);
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          await fetchUserData();
-        } else if (event === 'SIGNED_OUT') {
-          setUserData(null);
-          setPreferenceData(null);
-          setIsLoading(false);
-          // Clean up realtime subscription
-          if (realtimeChannel) {
-            supabase.removeChannel(realtimeChannel);
-            setRealtimeChannel(null);
-          }
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-      // Clean up realtime subscription on unmount
+      // Clean up realtime subscription
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
+        setRealtimeChannel(null);
       }
-    };
-  }, []);
+      return;
+    }
+
+    // User is authenticated, fetch their data
+    console.log('UserContext: User authenticated, fetching data');
+    fetchUserData(authUser.id);
+  }, [authUser, authLoading]);
 
   const value: UserContextType = {
     userData,
