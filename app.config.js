@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Wegood4u",
     slug: "wegood4u-mobile",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/Wegood4u_Icon.png",
     scheme: "wegood4u",
@@ -14,6 +14,8 @@ export default {
       supportsTablet: true
     },
     android: {
+      versionCode: 2,
+      package: "com.saysheji.wegood4u",
       adaptiveIcon: {
         foregroundImage: "./assets/images/Wegood4u_Icon.png",
         backgroundColor: "#8B5CF6"
@@ -39,6 +41,9 @@ export default {
     extra: {
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      eas: {
+        projectId: "b764c837-f472-4d94-89ff-a3800542422c"
+      }
     },
     env: {
       EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
