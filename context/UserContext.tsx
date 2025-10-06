@@ -25,21 +25,22 @@ export function UserProvider({ children }: UserProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      console.log('UserContext: Fetching data for user:', userId);
+      console.log('User Context: Fetching data for user:', userId);
 
-      // Get auth user details
-      const { data: { user: authUserData }, error: authError } = await supabase.auth.getUser();
-
-      if (authError) {
-        console.error('Auth error while fetching user:', authError);
-        throw authError;
-      }
+      // Use authUser  from context directly (no redundant API call)
+      const authUserData = authUser ; // authUser  comes from useAuth()
 
       if (!authUserData) {
-        console.log('UserContext: No authenticated user found');
+        console.log('User Context: No authenticated user found');
         setUserData(null);
         setPreferenceData(null);
         return;
+      }
+
+      // Verify userId matches authUser  to prevent mismatches
+      if (authUserData.id !== userId) {
+        console.warn('User Context: Mismatched userId; using authUser .id');
+        // Optionally, return or throw; here we proceed with authUser .id for safety
       }
 
       // Fetch profile data with basic fields (excluding preferences)
@@ -61,7 +62,6 @@ export function UserProvider({ children }: UserProviderProps) {
         `)
         .eq('id', userId)
         .single();
-
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Profile fetch error:', profileError);
         throw profileError;
@@ -84,11 +84,11 @@ export function UserProvider({ children }: UserProviderProps) {
         affiliateRequestStatus: profile?.affiliate_request_status || null,
         dob: profile?.dob || null,
         gender: profile?.gender || null,
-        createdAt: profile?.created_at || authUserData.created_at,
+        createdAt: profile?.created_at || authUserData.created_at || null, // Added null fallback for safety
         updatedAt: profile?.updated_at || null,
       };
 
-      console.log('UserContext: Combined user data:', combinedUserData);
+      console.log('User Context: Combined user data:', combinedUserData);
       setUserData(combinedUserData);
 
       // Fetch preferences separately
@@ -101,6 +101,7 @@ export function UserProvider({ children }: UserProviderProps) {
       setIsLoading(false);
     }
   };
+
 
   const fetchPreferenceData = async (userId?: string) => {
     try {
@@ -226,12 +227,12 @@ export function UserProvider({ children }: UserProviderProps) {
   };
 
   // Set up real-time subscription for profile changes
+  // Set up real-time subscription for profile changes
   const setupRealtimeSubscription = (userId: string) => {
     // Clean up existing subscription
     if (realtimeChannel) {
       supabase.removeChannel(realtimeChannel);
     }
-
     // Create new subscription for profile changes
     const channel = supabase
       .channel(`profile-changes-${userId}`)
@@ -243,16 +244,20 @@ export function UserProvider({ children }: UserProviderProps) {
           table: 'profiles',
           filter: `id=eq.${userId}`,
         },
-        (payload: any) => {
+        async (payload: any) => { // Note: Added 'async' for await support
           console.log('Profile updated in real-time:', payload);
-          // Refresh both user data and preferences when profile changes
-          fetchUserData();
+          try {
+            // Refresh both user data and preferences when profile changes
+            await fetchUserData(userId); // Fixed: Pass userId and await
+          } catch (err: any) {
+            console.error('Realtime refresh failed:', err.message || err);
+            // Optionally, setError(err.message) if you want to expose to UI
+          }
         }
       )
       .subscribe((status) => {
         console.log('Realtime subscription status:', status);
       });
-
     setRealtimeChannel(channel);
   };
 
