@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Wegood4u",
     slug: "wegood4u-mobile",
-    version: "1.0.1",
+    version: "1.0.12",
     orientation: "portrait",
     icon: "./assets/images/Wegood4u_Icon.png",
     scheme: "wegood4u",
@@ -14,7 +14,7 @@ export default {
       supportsTablet: true
     },
     android: {
-      versionCode: 2,
+      versionCode: 3,
       package: "com.saysheji.wegood4u",
       adaptiveIcon: {
         foregroundImage: "./assets/images/Wegood4u_Icon.png",
