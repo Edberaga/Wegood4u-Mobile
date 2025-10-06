@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { UserProvider } from '@/context/UserContext';
 
 export default function RootLayout() {
@@ -13,19 +13,33 @@ export default function RootLayout() {
   useEffect(() => {
     // Handle deep links
     const handleDeepLink = (url: string) => {
-      console.log('Deep link received:', url);
-      
-      // Parse the URL
-      const parsedUrl = Linking.parse(url);
-      
-      // Check if it's a password reset link
-      if (parsedUrl.path === 'reset-password') {
-        const { type, token } = parsedUrl.queryParams || {};
+      try {
+        console.log('Deep link received:', url);
         
-        if (type === 'recovery' && token) {
-          console.log('Password reset deep link detected');
-          router.push(`/reset-confirm?token=${token}&type=${type}`);
+        // Parse the URL
+        const parsedUrl = Linking.parse(url);
+        
+        // Check if it's a password reset link
+        if (parsedUrl.path === 'reset-password') {
+          const { type, token } = parsedUrl.queryParams || {};
+          
+          if (type === 'recovery' && token) {
+            console.log('Password reset deep link detected');
+            
+            // Only navigate if user is not authenticated (avoids confusing logged-in users)
+            const { isAuthenticated } = useAuth();
+            if (!isAuthenticated) {
+              router.push(`/reset-confirm?token=${token}&type=${type}`);
+            } else {
+              console.warn('Deep link ignored: User already authenticated');
+              // Optional: Redirect to home or show a toast: router.push('/(tabs)');
+            }
+          }
         }
+        // Add more path handlers here if needed (e.g., for other deep links)
+      } catch (error) {
+        console.error('Error handling deep link:', error);
+        // Optional: Show user-friendly error (e.g., via toast) or ignore silently
       }
     };
 
@@ -44,7 +58,8 @@ export default function RootLayout() {
     return () => {
       subscription?.remove();
     };
-  }, []);
+  }, []); // Empty deps: Runs once on mount
+
   return (
     <AuthProvider>
       <UserProvider>
