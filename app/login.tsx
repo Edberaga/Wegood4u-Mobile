@@ -54,7 +54,7 @@ export default function LoginScreen() {
       await signIn(email, password);
       router.replace('/(tabs)');
     } catch (error: any) {
-      console.error('Error message:', error.message);
+      console.log('Error message:', error.message);
       Alert.alert(
         'Login Failed', 
         error.message || 'An unexpected error occurred. Please try again.'
