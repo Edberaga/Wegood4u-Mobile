@@ -44,11 +44,6 @@ export default function ConfirmEmailScreen() {
       // Get current user from Supabase
       const { data: { user }, error } = await supabase.auth.getUser();
       
-      if (error) {
-        console.error('Error checking user:', error);
-        return;
-      }
-      
       // Check if email is confirmed
       if (user && user.email_confirmed_at) {
         console.log('Email confirmed at:', user.email_confirmed_at);
