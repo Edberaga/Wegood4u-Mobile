@@ -59,3 +59,12 @@ Two-Level Referral Tracking: The system tracks referrals two levels deep, allowi
 - Direct Referrals (Level 1): The list of users who signed up directly using their invitation code.
 
 - Indirect Referrals (Level 2): The list of users who were invited by their direct referrals.
+
+=======================================================================================================
+
+COMMAND LIST:
+
+-- Start app: ```npx expo start --clear```
+-- Update app: ```npx expo install --check```
+-- Check app health: ```npx expo-doctor```
+-- build app bundle: ```eas build --platform android --profile production``` 
