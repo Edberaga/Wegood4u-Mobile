@@ -10,19 +10,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as ImagePicker from 'expo-image-picker';
 import {
-  Camera,
   Star,
   MapPin,
-  Gift,
-  Upload,
-  Share2,
-  Trophy,
-  Clock,
   ChevronRight as ChevronRightIcon,
-  UtensilsCrossed,
-  Coffee,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
@@ -33,7 +24,6 @@ import type { PartnerStore } from '@/types';
 export default function HomeScreen() {
   const { user } = useAuth();
   const { userData } = useUser();
-  const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
   const [recommendedRestaurants, setRecommendedRestaurants] = useState<PartnerStore[]>([]);
   const [recommendedCafes, setRecommendedCafes] = useState<PartnerStore[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +37,6 @@ export default function HomeScreen() {
     try {
       setIsLoading(true);
       const stores = await fetchPartnerStores();
-      setPartnerStores(stores);
 
       // Filter and sort restaurants by rating (top 6)
       const restaurants = stores

@@ -196,7 +196,7 @@ export default function ResetConfirmScreen() {
 
           <Text style={styles.title}>Reset Your Password</Text>
           <Text style={styles.description}>
-            Enter your new password below. Make sure it's secure and easy to remember.
+            Enter your new password below. Make sure it&apos;s secure and easy to remember.
           </Text>
 
           <View style={styles.form}>
@@ -245,7 +245,7 @@ export default function ResetConfirmScreen() {
           <View style={styles.helpSection}>
             <Text style={styles.helpTitle}>Need Help?</Text>
             <Text style={styles.helpText}>
-              If you're having trouble resetting your password, please contact our support team.
+              If you&apos;re having trouble resetting your password, please contact our support team.
             </Text>
             <TouchableOpacity
               style={styles.contactButton}

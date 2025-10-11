@@ -1,14 +1,15 @@
-import { Stack } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
-import { router } from 'expo-router';
+
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { UserProvider } from '@/context/UserContext';
 
-export default function RootLayout() {
-  useFrameworkReady();
+// Deep Link Handler Component
+function DeepLinkHandler() {
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     // Handle deep links
@@ -27,7 +28,6 @@ export default function RootLayout() {
             console.log('Password reset deep link detected');
             
             // Only navigate if user is not authenticated (avoids confusing logged-in users)
-            const { isAuthenticated } = useAuth();
             if (!isAuthenticated) {
               router.push(`/reset-confirm?token=${token}&type=${type}`);
             } else {
@@ -58,11 +58,18 @@ export default function RootLayout() {
     return () => {
       subscription?.remove();
     };
-  }, []); // Empty deps: Runs once on mount
+  }, [isAuthenticated]); // Include isAuthenticated in dependencies
+
+  return null; // This component doesn't render anything
+}
+
+export default function RootLayout() {
+  useFrameworkReady();
 
   return (
     <AuthProvider>
       <UserProvider>
+        <DeepLinkHandler />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="login" />
           <Stack.Screen name="register" />

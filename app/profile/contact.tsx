@@ -68,7 +68,7 @@ export default function ContactScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Get in Touch</Text>
           <Text style={styles.sectionDescription}>
-            We'd love to hear from you! Reach out to us through any of the following channels:
+            We&apos;d love to hear from you! Reach out to us through any of the following channels:
           </Text>
 
           <View style={styles.contactMethods}>

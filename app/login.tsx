@@ -89,7 +89,7 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Sign In</Text>
-          <Text style={styles.subtitle}>Welcome back, you've been missed</Text>
+          <Text style={styles.subtitle}>Welcome back, you&apos;ve been missed</Text>
         </View>
 
         <View style={styles.formContainer}>
@@ -177,7 +177,7 @@ export default function LoginScreen() {
 
           <TouchableOpacity style={styles.registerLink} onPress={goToRegister}>
             <Text style={styles.registerLinkText}>
-              Don't have an account? <Text style={styles.registerLinkHighlight}>Sign Up</Text> now!
+              Don&apos;t have an account? <Text style={styles.registerLinkHighlight}>Sign Up</Text> now!
             </Text>
           </TouchableOpacity>
         </View>

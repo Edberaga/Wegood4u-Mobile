@@ -269,7 +269,7 @@ export default function NotificationsScreen() {
             <Bell size={48} color="#94A3B8" />
             <Text style={styles.emptyTitle}>No Notifications</Text>
             <Text style={styles.emptyDescription}>
-              You'll see notifications here when there are updates about your submissions, badges, and other activities.
+              You&apos;ll see notifications here when there are updates about your submissions, badges, and other activities.
             </Text>
           </View>
         ) : (

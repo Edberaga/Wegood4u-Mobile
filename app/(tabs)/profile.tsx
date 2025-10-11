@@ -11,11 +11,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { Menu, Share2, Camera, SquareCheckBig, Trophy, SquareLibrary, Clock, ChevronRight, LogOut, RefreshCw } from 'lucide-react-native';
+import { Menu, Share2, Camera, SquareCheckBig, Trophy, SquareLibrary, Clock, ChevronRight, RefreshCw } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
-import { useUserSubmissions } from '@/hooks/useSubmissions';
-import { usePendingSubmissions } from '@/hooks/useSubmissions';
+import { useUserSubmissions , usePendingSubmissions } from '@/hooks/useSubmissions';
+
 import { uploadProfileImage, updateUserAvatar } from '@/services/imageUpload'
 import { router } from 'expo-router';
 import SettingsOverlay from '@/app/profile/SettingsOverlay';

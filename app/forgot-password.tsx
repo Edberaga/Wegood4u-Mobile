@@ -91,7 +91,7 @@ export default function ForgotPasswordScreen() {
             <>
               <Text style={styles.title}>Reset Your Password</Text>
               <Text style={styles.description}>
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset your password.
               </Text>
 
               <View style={styles.form}>
@@ -133,7 +133,7 @@ export default function ForgotPasswordScreen() {
             <>
               <Text style={styles.title}>Check Your Email</Text>
               <Text style={styles.description}>
-                We've sent a password reset link to {email}. Please check your inbox and tap the link to reset your password.
+                We&apos;ve sent a password reset link to {email}. Please check your inbox and tap the link to reset your password.
               </Text>
 
               <View style={styles.successActions}>
@@ -162,7 +162,7 @@ export default function ForgotPasswordScreen() {
           <View style={styles.helpSection}>
             <Text style={styles.helpTitle}>Need Help?</Text>
             <Text style={styles.helpText}>
-              If you don't receive the email within a few minutes, please check your spam folder or contact our support team.
+              If you don&apos;t receive the email within a few minutes, please check your spam folder or contact our support team.
             </Text>
           </View>
         </View>

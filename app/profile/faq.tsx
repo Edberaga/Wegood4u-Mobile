@@ -145,7 +145,7 @@ export default function FAQScreen() {
         <View style={styles.introSection}>
           <Text style={styles.introTitle}>Frequently Asked Questions</Text>
           <Text style={styles.introDescription}>
-            Find answers to common questions about Wegood4u. If you can't find what you're looking for, feel free to contact us.
+            Find answers to common questions about Wegood4u. If you can&apos;t find what you&apos;re looking for, feel free to contact us.
           </Text>
         </View>
 
@@ -164,7 +164,7 @@ export default function FAQScreen() {
         <View style={styles.contactSection}>
           <Text style={styles.contactTitle}>Still have questions?</Text>
           <Text style={styles.contactDescription}>
-            Can't find the answer you're looking for? Our support team is here to help.
+            Can&apos;t find the answer you&apos;re looking for? Our support team is here to help.
           </Text>
           <TouchableOpacity
             style={styles.contactButton}

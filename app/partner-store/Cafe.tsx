@@ -210,7 +210,7 @@ export default function CafeScreen() {
 
         {filteredAndSortedCafes.length > 0 && (
           <View style={styles.endMessage}>
-            <Text style={styles.endMessageText}>You've reached the end!</Text>
+            <Text style={styles.endMessageText}>You&apos;ve reached the end!</Text>
           </View>
         )}
       </ScrollView>

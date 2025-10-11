@@ -17,7 +17,7 @@ import { fetchPartnerStores, groupStoresByCity } from '@/data/partnerStore';
 import type { PartnerStore } from '@/types';
 
 export default function MapScreen() {
-  const [userLocation, setUserLocation] = useState<{
+  const [, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);

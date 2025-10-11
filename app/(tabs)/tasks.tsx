@@ -224,7 +224,7 @@ export default function TasksScreen() {
               {/* No Results Message */}
               {Object.keys(filteredGroupedStores).length === 0 && storeSearchQuery.length > 0 && (
                 <View style={styles.noResultsContainer}>
-                  <Text style={[styles.noResultsText, { color: '#64748B' }]}>No stores found matching "{storeSearchQuery}"</Text>
+                  <Text style={[styles.noResultsText, { color: '#64748B' }]}>No stores found matching &quot;{storeSearchQuery}&quot;</Text>
                   <TouchableOpacity 
                     style={[styles.clearSearchButton, { backgroundColor: '#206E56' }]}
                     onPress={() => setStoreSearchQuery('')}
