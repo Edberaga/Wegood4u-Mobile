@@ -9,13 +9,21 @@ export default {
     icon: "./assets/images/Wegood4u_Icon.png",
     scheme: "wegood4u",
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
+    newArchEnabled: false,
     ios: {
       supportsTablet: true
     },
     android: {
       versionCode: 3,
       package: "com.saysheji.wegood4u",
+      permissions: [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ],
       adaptiveIcon: {
         foregroundImage: "./assets/images/Wegood4u_Icon.png",
         backgroundColor: "#8B5CF6"
