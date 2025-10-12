@@ -4,17 +4,17 @@ export default {
   expo: {
     name: "Wegood4u",
     slug: "wegood4u-mobile",
-    version: "1.0.12",
+    version: "1.0.2",
     orientation: "portrait",
     icon: "./assets/images/Wegood4u_Icon.png",
     scheme: "wegood4u",
     userInterfaceStyle: "automatic",
-    newArchEnabled: false,
+    newArchEnabled: true,
     ios: {
       supportsTablet: true
     },
     android: {
-      versionCode: 3,
+      versionCode: 4,
       package: "com.saysheji.wegood4u",
       permissions: [
         "ACCESS_FINE_LOCATION",
