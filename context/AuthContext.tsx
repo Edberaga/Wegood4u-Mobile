@@ -213,14 +213,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     session,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!user.email_confirmed_at,
     signIn,
     signUp,
     signOut,
     forceClearAuth,
   };
 
-  console.log('AuthProvider render - isAuthenticated:', !!user, 'isLoading:', isLoading);
+  console.log('AuthProvider render - isAuthenticated:', !!user && !!user.email_confirmed_at, 'isLoading:', isLoading);
 
   return (
     <AuthContext.Provider value={value}>
