@@ -15,6 +15,8 @@ import MapView, { Marker, Callout } from 'react-native-maps';
 import { MapPin, Star, Phone, Clock, Navigation, ChevronDown } from 'lucide-react-native';
 import { fetchPartnerStores, groupStoresByCity } from '@/data/partnerStore';
 import type { PartnerStore } from '@/types';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { FallbackMap } from '@/components/FallbackMap';
 
 export default function MapScreen() {
   const [, setUserLocation] = useState<{
@@ -34,6 +36,10 @@ export default function MapScreen() {
   const cities = Object.keys(groupedStores).sort();
 
   const getFilteredStores = () => {
+    if (!partnerStores || partnerStores.length === 0) {
+      return [];
+    }
+    
     if (selectedFilter === 'All') {
       return partnerStores;
     }
@@ -65,7 +71,7 @@ export default function MapScreen() {
   const getMapRegion = () => {
     // If a specific store is selected, center on that store
     const specificStore = partnerStores.find(store => store.name === selectedFilter);
-    if (specificStore) {
+    if (specificStore && specificStore.latitude !== 0 && specificStore.longitude !== 0) {
       return {
         latitude: specificStore.latitude,
         longitude: specificStore.longitude,
@@ -76,7 +82,7 @@ export default function MapScreen() {
     
     // Check if it's a city filter
     if (cities.includes(selectedFilter)) {
-      const cityStores = partnerStores.filter(store => store.city === selectedFilter);
+      const cityStores = partnerStores.filter(store => store.city === selectedFilter && store.latitude !== 0 && store.longitude !== 0);
       if (cityStores.length > 0) {
         // Calculate center of city stores
         const avgLat = cityStores.reduce((sum, store) => sum + store.latitude, 0) / cityStores.length;
@@ -90,10 +96,11 @@ export default function MapScreen() {
       }
     }
     
-    // Show all stores
-    if (partnerStores.length > 0) {
-      const avgLat = partnerStores.reduce((sum, store) => sum + store.latitude, 0) / partnerStores.length;
-      const avgLng = partnerStores.reduce((sum, store) => sum + store.longitude, 0) / partnerStores.length;
+    // Show all stores with valid coordinates
+    const validStores = partnerStores.filter(store => store.latitude !== 0 && store.longitude !== 0);
+    if (validStores.length > 0) {
+      const avgLat = validStores.reduce((sum, store) => sum + store.latitude, 0) / validStores.length;
+      const avgLng = validStores.reduce((sum, store) => sum + store.longitude, 0) / validStores.length;
       return {
         latitude: avgLat,
         longitude: avgLng,
@@ -102,12 +109,12 @@ export default function MapScreen() {
       };
     }
     
-    // Fallback to Southeast Asia region
+    // Fallback to Thailand region
     return {
-      latitude: 10.9,
-      longitude: 100.3,
-      latitudeDelta: 20,
-      longitudeDelta: 20,
+      latitude: 18.79210626514222,
+      longitude: 98.99534619999957,
+      latitudeDelta: 5,
+      longitudeDelta: 5,
     };
   };
   
@@ -135,6 +142,12 @@ export default function MapScreen() {
       setLoading(true);
       setError(null);
       const stores = await fetchPartnerStores();
+      
+      // Validate stores data
+      if (!Array.isArray(stores)) {
+        throw new Error('Invalid stores data received');
+      }
+      
       setPartnerStores(stores);
       
       // Initialize expanded cities state
@@ -146,7 +159,10 @@ export default function MapScreen() {
       setExpandedCities(initialExpandedState);
     } catch (err) {
       console.error('Error loading partner stores:', err);
-      setError('Failed to load partner stores');
+      setError('Failed to load partner stores. Please check your internet connection and try again.');
+      
+      // Set empty stores array to prevent crashes
+      setPartnerStores([]);
     } finally {
       setLoading(false);
     }
@@ -156,11 +172,18 @@ export default function MapScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Location access is required to show your position on the map.');
+        console.log('Location permission denied, using fallback coordinates');
+        // Don't show alert to avoid blocking the UI
+        setUserLocation({
+          latitude: 18.79210626514222, 
+          longitude: 98.99534619999957,
+        });
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({});
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
       setUserLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -211,34 +234,39 @@ export default function MapScreen() {
   // Show loading state
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading partner stores...</Text>
-        </View>
-      </SafeAreaView>
+      <ErrorBoundary>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading partner stores...</Text>
+          </View>
+        </SafeAreaView>
+      </ErrorBoundary>
     );
   }
 
   // Show error state
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadPartnerStores}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <ErrorBoundary>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={loadPartnerStores}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </ErrorBoundary>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Partner Stores</Text>
-        <Text style={styles.subtitle}>{getSubtitleText()}</Text>
-      </View>
+    <ErrorBoundary>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Partner Stores</Text>
+          <Text style={styles.subtitle}>{getSubtitleText()}</Text>
+        </View>
 
       <View style={styles.filterContainer}>
         <TouchableOpacity 
@@ -251,40 +279,46 @@ export default function MapScreen() {
       </View>
 
       <View style={styles.mapContainer}>
-        <MapView
-          style={styles.map}
-          region={getMapRegion()}
-          showsUserLocation={true}
-          showsMyLocationButton={true}
-        >
-          {filteredStores.map((store) => (
-            <Marker
-              key={store.id}
-              coordinate={{
-                latitude: store.latitude,
-                longitude: store.longitude,
-              }}
-              onPress={() => setSelectedStore(store)}
-            >
-              <View style={styles.markerContainer}>
-                <View style={styles.marker}>
-                  <MapPin size={20} color="#F33F32" />
-                </View>
-              </View>
-              <Callout>
-                <View style={styles.calloutContainer}>
-                  <Text style={styles.calloutTitle}>{store.name}</Text>
-                  <Text style={styles.calloutType}>{store.type}</Text>
-                  <Text style={styles.calloutCity}>{store.city}</Text>
-                  <View style={styles.calloutRating}>
-                    <Star size={12} color="#FFD700" />
-                    <Text style={styles.calloutRatingText}>{store.rating}</Text>
+        {filteredStores.filter(store => store.latitude !== 0 && store.longitude !== 0).length > 0 ? (
+          <MapView
+            style={styles.map}
+            region={getMapRegion()}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+          >
+            {filteredStores
+              .filter(store => store.latitude !== 0 && store.longitude !== 0)
+              .map((store) => (
+              <Marker
+                key={store.id}
+                coordinate={{
+                  latitude: store.latitude,
+                  longitude: store.longitude,
+                }}
+                onPress={() => setSelectedStore(store)}
+              >
+                <View style={styles.markerContainer}>
+                  <View style={styles.marker}>
+                    <MapPin size={20} color="#F33F32" />
                   </View>
                 </View>
-              </Callout>
-            </Marker>
-          ))}
-        </MapView>
+                <Callout>
+                  <View style={styles.calloutContainer}>
+                    <Text style={styles.calloutTitle}>{store.name}</Text>
+                    <Text style={styles.calloutType}>{store.type}</Text>
+                    <Text style={styles.calloutCity}>{store.city}</Text>
+                    <View style={styles.calloutRating}>
+                      <Star size={12} color="#FFD700" />
+                      <Text style={styles.calloutRatingText}>{store.rating}</Text>
+                    </View>
+                  </View>
+                </Callout>
+              </Marker>
+            ))}
+          </MapView>
+        ) : (
+          <FallbackMap message="No partner stores available" />
+        )}
       </View>
 
       {selectedStore && (
@@ -457,7 +491,8 @@ export default function MapScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 
