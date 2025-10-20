@@ -270,6 +270,9 @@ export function UserProvider({ children }: UserProviderProps) {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: userData.email,
+        options: {
+          emailRedirectTo: 'wegood4u://confirm-email',
+        },
       });
 
       if (error) throw error;
