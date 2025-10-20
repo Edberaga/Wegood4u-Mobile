@@ -36,6 +36,21 @@ function DeepLinkHandler() {
             }
           }
         }
+        // Check if it's an email confirmation link
+        else if (parsedUrl.path === 'confirm-email') {
+          const { access_token, refresh_token, type } = parsedUrl.queryParams || {};
+          
+          if (type === 'signup' && access_token) {
+            console.log('Email confirmation deep link detected');
+            
+            // Only navigate if user is not authenticated
+            if (!isAuthenticated) {
+              router.push(`/confirm-email?access_token=${access_token}&refresh_token=${refresh_token}&type=${type}`);
+            } else {
+              console.warn('Deep link ignored: User already authenticated');
+            }
+          }
+        }
         // Add more path handlers here if needed (e.g., for other deep links)
       } catch (error) {
         console.error('Error handling deep link:', error);

@@ -6,7 +6,12 @@ import { useAuth } from '@/context/AuthContext';
 import { CheckCircle } from 'lucide-react-native';
 
 export default function ConfirmEmailScreen() {
-  const { email } = useLocalSearchParams<{ email?: string }>();
+  const { email, access_token, refresh_token, type } = useLocalSearchParams<{ 
+    email?: string;
+    access_token?: string;
+    refresh_token?: string;
+    type?: string;
+  }>();
   const { signIn } = useAuth();
   const [secondsLeft, setSecondsLeft] = useState<number>(60);
   const [isResending, setIsResending] = useState<boolean>(false);
@@ -16,6 +21,12 @@ export default function ConfirmEmailScreen() {
   const confirmationCheckRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // If we have tokens from deep link, handle them immediately
+    if (access_token && refresh_token && type === 'signup') {
+      handleDeepLinkConfirmation();
+      return;
+    }
+
     // Start checking for email confirmation
     startConfirmationCheck();
     
@@ -34,7 +45,7 @@ export default function ConfirmEmailScreen() {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (confirmationCheckRef.current) clearInterval(confirmationCheckRef.current);
     };
-  }, []);
+  }, [access_token, refresh_token, type]);
 
   // Function to check email confirmation status
   const checkEmailConfirmation = useCallback(async () => {
@@ -76,6 +87,41 @@ export default function ConfirmEmailScreen() {
       checkEmailConfirmation();
     }, 3000);
   }, [checkEmailConfirmation]);
+
+  // Function to handle deep link confirmation
+  const handleDeepLinkConfirmation = async () => {
+    try {
+      console.log('Handling deep link confirmation with tokens');
+      setIsEmailConfirmed(true);
+      
+      // Set the session with the tokens from the deep link
+      const { data, error } = await supabase.auth.setSession({
+        access_token: access_token!,
+        refresh_token: refresh_token!,
+      });
+
+      if (error) {
+        console.error('Error setting session:', error);
+        throw error;
+      }
+
+      console.log('Session set successfully, user confirmed');
+      
+      // Auto-login after a short delay to show the success message
+      setTimeout(() => {
+        handleAutoLogin();
+      }, 2000);
+    } catch (error) {
+      console.error('Deep link confirmation error:', error);
+      Alert.alert(
+        'Confirmation Error',
+        'There was an issue confirming your email. Please try again.',
+        [
+          { text: 'OK', onPress: () => router.replace('/login') }
+        ]
+      );
+    }
+  };
 
   // Function to handle auto-login
   const handleAutoLogin = async () => {
@@ -120,6 +166,9 @@ export default function ConfirmEmailScreen() {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
+        options: {
+          emailRedirectTo: 'wegood4u://confirm-email',
+        },
       });
       if (error) throw error;
       Alert.alert('Email sent', 'We have re-sent a confirmation email.');
