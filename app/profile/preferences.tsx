@@ -9,12 +9,103 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronDown, Save } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
-import { countries } from '@/data/countries';
+// Import countries with error handling
+let importedCountries: any[] = [];
+try {
+  const countriesModule = require('@/data/countries');
+  importedCountries = countriesModule.countries || [];
+  console.log('Countries imported successfully:', importedCountries.length);
+} catch (error) {
+  console.log('Failed to import countries, using fallback:', error);
+}
+
+// Debug the import
+console.log('Countries import at module level:', importedCountries);
+console.log('Countries length at module level:', importedCountries?.length);
+
+// Fallback for production builds
+const getCountries = () => {
+  console.log('getCountries called - countries import:', importedCountries);
+  console.log('countries length:', importedCountries?.length);
+  
+  if (importedCountries && importedCountries.length > 0) {
+    console.log('Using imported countries:', importedCountries.length, 'countries');
+    return importedCountries;
+  }
+  
+  console.log('Using fallback countries');
+  // Comprehensive fallback countries if import fails in production
+  return [
+    // Prioritized countries (Malaysia and Thailand first)
+    { name: 'Malaysia', code: 'MY', phoneCode: '+60' },
+    { name: 'Thailand', code: 'TH', phoneCode: '+66' },
+    
+    // Other Southeast Asian countries
+    { name: 'Brunei', code: 'BN', phoneCode: '+673' },
+    { name: 'Cambodia', code: 'KH', phoneCode: '+855' },
+    { name: 'East Timor', code: 'TL', phoneCode: '+670' },
+    { name: 'Indonesia', code: 'ID', phoneCode: '+62' },
+    { name: 'Laos', code: 'LA', phoneCode: '+856' },
+    { name: 'Myanmar', code: 'MM', phoneCode: '+95' },
+    { name: 'Philippines', code: 'PH', phoneCode: '+63' },
+    { name: 'Singapore', code: 'SG', phoneCode: '+65' },
+    { name: 'Vietnam', code: 'VN', phoneCode: '+84' },
+    
+    // Major international countries
+    { name: 'Argentina', code: 'AR', phoneCode: '+54' },
+    { name: 'Australia', code: 'AU', phoneCode: '+61' },
+    { name: 'Austria', code: 'AT', phoneCode: '+43' },
+    { name: 'Bahrain', code: 'BH', phoneCode: '+973' },
+    { name: 'Belgium', code: 'BE', phoneCode: '+32' },
+    { name: 'Brazil', code: 'BR', phoneCode: '+55' },
+    { name: 'Canada', code: 'CA', phoneCode: '+1' },
+    { name: 'Chile', code: 'CL', phoneCode: '+56' },
+    { name: 'China', code: 'CN', phoneCode: '+86' },
+    { name: 'Colombia', code: 'CO', phoneCode: '+57' },
+    { name: 'Denmark', code: 'DK', phoneCode: '+45' },
+    { name: 'Egypt', code: 'EG', phoneCode: '+20' },
+    { name: 'Fiji', code: 'FJ', phoneCode: '+679' },
+    { name: 'Finland', code: 'FI', phoneCode: '+358' },
+    { name: 'France', code: 'FR', phoneCode: '+33' },
+    { name: 'Germany', code: 'DE', phoneCode: '+49' },
+    { name: 'India', code: 'IN', phoneCode: '+91' },
+    { name: 'Israel', code: 'IL', phoneCode: '+972' },
+    { name: 'Italy', code: 'IT', phoneCode: '+39' },
+    { name: 'Japan', code: 'JP', phoneCode: '+81' },
+    { name: 'Jordan', code: 'JO', phoneCode: '+962' },
+    { name: 'Kenya', code: 'KE', phoneCode: '+254' },
+    { name: 'Kuwait', code: 'KW', phoneCode: '+965' },
+    { name: 'Lebanon', code: 'LB', phoneCode: '+961' },
+    { name: 'Mexico', code: 'MX', phoneCode: '+52' },
+    { name: 'Morocco', code: 'MA', phoneCode: '+212' },
+    { name: 'Netherlands', code: 'NL', phoneCode: '+31' },
+    { name: 'New Zealand', code: 'NZ', phoneCode: '+64' },
+    { name: 'Nigeria', code: 'NG', phoneCode: '+234' },
+    { name: 'Norway', code: 'NO', phoneCode: '+47' },
+    { name: 'Oman', code: 'OM', phoneCode: '+968' },
+    { name: 'Papua New Guinea', code: 'PG', phoneCode: '+675' },
+    { name: 'Peru', code: 'PE', phoneCode: '+51' },
+    { name: 'Qatar', code: 'QA', phoneCode: '+974' },
+    { name: 'Russia', code: 'RU', phoneCode: '+7' },
+    { name: 'Saudi Arabia', code: 'SA', phoneCode: '+966' },
+    { name: 'South Africa', code: 'ZA', phoneCode: '+27' },
+    { name: 'South Korea', code: 'KR', phoneCode: '+82' },
+    { name: 'Spain', code: 'ES', phoneCode: '+34' },
+    { name: 'Sweden', code: 'SE', phoneCode: '+46' },
+    { name: 'Switzerland', code: 'CH', phoneCode: '+41' },
+    { name: 'Taiwan', code: 'TW', phoneCode: '+886' },
+    { name: 'Turkey', code: 'TR', phoneCode: '+90' },
+    { name: 'United Arab Emirates', code: 'AE', phoneCode: '+971' },
+    { name: 'United Kingdom', code: 'GB', phoneCode: '+44' },
+    { name: 'United States', code: 'US', phoneCode: '+1' },
+  ];
+};
 import DropdownWithOthers from '@/components/DropdownWithOthers';
 import type { UserPreferenceData } from '@/types';
 
@@ -23,6 +114,12 @@ export default function PreferencesScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCountryModal, setShowCountryModal] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [countrySearch, setCountrySearch] = useState('');
+
+  // Filter countries based on search
+  const filteredCountries = getCountries().filter(country =>
+    country.name.toLowerCase().includes(countrySearch.toLowerCase())
+  );
   
   // Form state
   const [preferences, setPreferences] = useState<UserPreferenceData>({
@@ -180,7 +277,11 @@ export default function PreferencesScreen() {
             <Text style={styles.inputLabel}>Country of Residence</Text>
             <TouchableOpacity
               style={styles.dropdownButton}
-              onPress={() => setShowCountryModal(true)}
+              onPress={() => {
+                console.log('Opening country modal');
+                setCountrySearch(''); // Clear search when opening modal
+                setShowCountryModal(true);
+              }}
             >
               <Text style={styles.dropdownText}>
                 {preferences.countryOfResidence || 'Select Country'}
@@ -283,30 +384,59 @@ export default function PreferencesScreen() {
         visible={showCountryModal}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowCountryModal(false)}
+        onRequestClose={() => {
+          console.log('Modal close requested');
+          setShowCountryModal(false);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Country</Text>
-              <TouchableOpacity onPress={() => setShowCountryModal(false)}>
+              <TouchableOpacity onPress={() => {
+                console.log('Modal Done button pressed');
+                setShowCountryModal(false);
+                setCountrySearch(''); // Clear search when closing
+              }}>
                 <Text style={styles.modalClose}>Done</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.countryList}>
-              {countries.map((country) => (
-                <TouchableOpacity
-                  key={country.code}
-                  style={styles.countryOption}
-                  onPress={() => {
-                    updatePreference('countryOfResidence', country.name);
-                    setShowCountryModal(false);
-                  }}
-                >
-                  <Text style={styles.countryName}>{country.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            
+            {/* Search Input */}
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search countries..."
+                value={countrySearch}
+                onChangeText={setCountrySearch}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <View style={styles.countryList}>
+              <FlatList
+                data={filteredCountries}
+                keyExtractor={(item) => item.code}
+                renderItem={({ item: country, index }) => {
+                  console.log(`Rendering country ${index + 1}:`, country.name);
+                  return (
+                    <TouchableOpacity
+                      style={styles.countryOption}
+                      onPress={() => {
+                        console.log('Country selected:', country.name);
+                        updatePreference('countryOfResidence', country.name);
+                        setShowCountryModal(false);
+                        setCountrySearch(''); // Clear search when selecting
+                      }}
+                    >
+                      <Text style={styles.countryName}>{country.name}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+                showsVerticalScrollIndicator={true}
+                style={{ flex: 1 }}
+              />
+            </View>
           </View>
         </View>
       </Modal>
@@ -472,6 +602,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
+    minHeight: 300, // Ensure minimum height
   },
   modalHeader: {
     flexDirection: 'row',
@@ -492,8 +623,25 @@ const styles = StyleSheet.create({
     color: '#206E56',
     fontWeight: '600',
   },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+  },
   countryList: {
     flex: 1,
+    maxHeight: 400,
+    backgroundColor: 'white', // Ensure background
   },
   countryOption: {
     paddingHorizontal: 20,

@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronDown, ChevronLeft, Search, X } from 'lucide-react-native';
@@ -18,7 +19,88 @@ import Animated, {
   FadeOutUp, 
   Layout 
 } from 'react-native-reanimated';
-import { countries } from '@/data/countries';
+// Import countries with error handling
+let importedCountries: any[] = [];
+try {
+  const countriesModule = require('@/data/countries');
+  importedCountries = countriesModule.countries || [];
+  console.log('Question: Countries imported successfully:', importedCountries.length);
+} catch (error) {
+  console.log('Question: Failed to import countries, using fallback:', error);
+}
+
+// Fallback countries if import fails in production
+const getCountries = () => {
+  if (importedCountries && importedCountries.length > 0) {
+    return importedCountries;
+  }
+  
+  // Comprehensive fallback countries
+  return [
+    // Prioritized countries (Malaysia and Thailand first)
+    { name: 'Malaysia', code: 'MY', phoneCode: '+60' },
+    { name: 'Thailand', code: 'TH', phoneCode: '+66' },
+    
+    // Other Southeast Asian countries
+    { name: 'Brunei', code: 'BN', phoneCode: '+673' },
+    { name: 'Cambodia', code: 'KH', phoneCode: '+855' },
+    { name: 'East Timor', code: 'TL', phoneCode: '+670' },
+    { name: 'Indonesia', code: 'ID', phoneCode: '+62' },
+    { name: 'Laos', code: 'LA', phoneCode: '+856' },
+    { name: 'Myanmar', code: 'MM', phoneCode: '+95' },
+    { name: 'Philippines', code: 'PH', phoneCode: '+63' },
+    { name: 'Singapore', code: 'SG', phoneCode: '+65' },
+    { name: 'Vietnam', code: 'VN', phoneCode: '+84' },
+    
+    // Major international countries
+    { name: 'Argentina', code: 'AR', phoneCode: '+54' },
+    { name: 'Australia', code: 'AU', phoneCode: '+61' },
+    { name: 'Austria', code: 'AT', phoneCode: '+43' },
+    { name: 'Bahrain', code: 'BH', phoneCode: '+973' },
+    { name: 'Belgium', code: 'BE', phoneCode: '+32' },
+    { name: 'Brazil', code: 'BR', phoneCode: '+55' },
+    { name: 'Canada', code: 'CA', phoneCode: '+1' },
+    { name: 'Chile', code: 'CL', phoneCode: '+56' },
+    { name: 'China', code: 'CN', phoneCode: '+86' },
+    { name: 'Colombia', code: 'CO', phoneCode: '+57' },
+    { name: 'Denmark', code: 'DK', phoneCode: '+45' },
+    { name: 'Egypt', code: 'EG', phoneCode: '+20' },
+    { name: 'Fiji', code: 'FJ', phoneCode: '+679' },
+    { name: 'Finland', code: 'FI', phoneCode: '+358' },
+    { name: 'France', code: 'FR', phoneCode: '+33' },
+    { name: 'Germany', code: 'DE', phoneCode: '+49' },
+    { name: 'India', code: 'IN', phoneCode: '+91' },
+    { name: 'Israel', code: 'IL', phoneCode: '+972' },
+    { name: 'Italy', code: 'IT', phoneCode: '+39' },
+    { name: 'Japan', code: 'JP', phoneCode: '+81' },
+    { name: 'Jordan', code: 'JO', phoneCode: '+962' },
+    { name: 'Kenya', code: 'KE', phoneCode: '+254' },
+    { name: 'Kuwait', code: 'KW', phoneCode: '+965' },
+    { name: 'Lebanon', code: 'LB', phoneCode: '+961' },
+    { name: 'Mexico', code: 'MX', phoneCode: '+52' },
+    { name: 'Morocco', code: 'MA', phoneCode: '+212' },
+    { name: 'Netherlands', code: 'NL', phoneCode: '+31' },
+    { name: 'New Zealand', code: 'NZ', phoneCode: '+64' },
+    { name: 'Nigeria', code: 'NG', phoneCode: '+234' },
+    { name: 'Norway', code: 'NO', phoneCode: '+47' },
+    { name: 'Oman', code: 'OM', phoneCode: '+968' },
+    { name: 'Papua New Guinea', code: 'PG', phoneCode: '+675' },
+    { name: 'Peru', code: 'PE', phoneCode: '+51' },
+    { name: 'Qatar', code: 'QA', phoneCode: '+974' },
+    { name: 'Russia', code: 'RU', phoneCode: '+7' },
+    { name: 'Saudi Arabia', code: 'SA', phoneCode: '+966' },
+    { name: 'South Africa', code: 'ZA', phoneCode: '+27' },
+    { name: 'South Korea', code: 'KR', phoneCode: '+82' },
+    { name: 'Spain', code: 'ES', phoneCode: '+34' },
+    { name: 'Sweden', code: 'SE', phoneCode: '+46' },
+    { name: 'Switzerland', code: 'CH', phoneCode: '+41' },
+    { name: 'Taiwan', code: 'TW', phoneCode: '+886' },
+    { name: 'Turkey', code: 'TR', phoneCode: '+90' },
+    { name: 'United Arab Emirates', code: 'AE', phoneCode: '+971' },
+    { name: 'United Kingdom', code: 'GB', phoneCode: '+44' },
+    { name: 'United States', code: 'US', phoneCode: '+1' },
+  ];
+};
 import type { Country, FormData } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/context/UserContext';
@@ -66,7 +148,7 @@ export default function QuestionnairePage() {
     'Other (please specify)'
   ];
 
-  const filteredCountries = countries.filter(country =>
+  const filteredCountries = getCountries().filter(country =>
     country.name.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
@@ -294,10 +376,11 @@ export default function QuestionnairePage() {
             />
           </View>
 
-          <ScrollView style={styles.countryList}>
-            {filteredCountries.map((country) => (
+          <FlatList
+            data={filteredCountries}
+            keyExtractor={(item) => item.code}
+            renderItem={({ item: country }) => (
               <TouchableOpacity
-                key={country.code}
                 style={styles.countryOption}
                 onPress={() => {
                   if (showCountryModal) {
@@ -311,8 +394,10 @@ export default function QuestionnairePage() {
                   {showCountryModal ? country.name : `${country.name} ${country.phoneCode}`}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            )}
+            style={styles.countryList}
+            showsVerticalScrollIndicator={true}
+          />
         </View>
       </View>
     </Modal>
@@ -814,6 +899,7 @@ const styles = StyleSheet.create({
   },
   countryList: {
     flex: 1,
+    backgroundColor: 'white',
   },
   countryOption: {
     paddingHorizontal: 20,
