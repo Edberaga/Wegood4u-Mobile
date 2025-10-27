@@ -14,7 +14,7 @@ import {
 import { router } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
-import SocialAuthButtons from '@/components/auth/SocialAuthButtons';
+// import SocialAuthButtons from '@/components/auth/SocialAuthButtons'; // Temporarily commented - not used
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -22,7 +22,6 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [activeTab, setActiveTab] = useState('email'); // 'email' or 'phone'
   
   const { signIn, isAuthenticated, isLoading } = useAuth();
 
@@ -220,18 +219,10 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     alignItems: 'center',
   },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#4A9B8E',
-  },
   tabText: {
     fontSize: 16,
     color: '#666',
     fontWeight: '500',
-  },
-  activeTabText: {
-    color: '#4A9B8E',
-    fontWeight: '600',
   },
   formContainer: {
     flex: 1,
