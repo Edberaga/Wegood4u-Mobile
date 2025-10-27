@@ -19,20 +19,15 @@ import Animated, {
   FadeOutUp, 
   Layout 
 } from 'react-native-reanimated';
-// Import countries with error handling
-let importedCountries: any[] = [];
-try {
-  const countriesModule = require('@/data/countries');
-  importedCountries = countriesModule.countries || [];
-  console.log('Question: Countries imported successfully:', importedCountries.length);
-} catch (error) {
-  console.log('Question: Failed to import countries, using fallback:', error);
-}
+import type { FormData } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/context/UserContext';
+import { countries } from '@/data/countries';
 
-// Fallback countries if import fails in production
+// Get countries with fallback
 const getCountries = () => {
-  if (importedCountries && importedCountries.length > 0) {
-    return importedCountries;
+  if (countries && countries.length > 0) {
+    return countries;
   }
   
   // Comprehensive fallback countries
@@ -101,9 +96,6 @@ const getCountries = () => {
     { name: 'United States', code: 'US', phoneCode: '+1' },
   ];
 };
-import type { Country, FormData } from '@/types';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/context/UserContext';
 
 export default function QuestionnairePage() {
   const { userData, refreshUserData } = useUser();

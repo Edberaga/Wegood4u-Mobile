@@ -15,32 +15,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronDown, Save } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
-// Import countries with error handling
-let importedCountries: any[] = [];
-try {
-  const countriesModule = require('@/data/countries');
-  importedCountries = countriesModule.countries || [];
-  console.log('Countries imported successfully:', importedCountries.length);
-} catch (error) {
-  console.log('Failed to import countries, using fallback:', error);
-}
+import DropdownWithOthers from '@/components/DropdownWithOthers';
+import type { UserPreferenceData } from '@/types';
+import { countries } from '@/data/countries';
 
-// Debug the import
-console.log('Countries import at module level:', importedCountries);
-console.log('Countries length at module level:', importedCountries?.length);
-
-// Fallback for production builds
+// Get countries with fallback
 const getCountries = () => {
-  console.log('getCountries called - countries import:', importedCountries);
-  console.log('countries length:', importedCountries?.length);
-  
-  if (importedCountries && importedCountries.length > 0) {
-    console.log('Using imported countries:', importedCountries.length, 'countries');
-    return importedCountries;
+  if (countries && countries.length > 0) {
+    return countries;
   }
   
-  console.log('Using fallback countries');
-  // Comprehensive fallback countries if import fails in production
+  // Comprehensive fallback countries if import fails
   return [
     // Prioritized countries (Malaysia and Thailand first)
     { name: 'Malaysia', code: 'MY', phoneCode: '+60' },
@@ -106,8 +91,6 @@ const getCountries = () => {
     { name: 'United States', code: 'US', phoneCode: '+1' },
   ];
 };
-import DropdownWithOthers from '@/components/DropdownWithOthers';
-import type { UserPreferenceData } from '@/types';
 
 export default function PreferencesScreen() {
   const { preferenceData, updatePreferences, isPreferenceLoading } = useUser();
