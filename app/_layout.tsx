@@ -85,15 +85,47 @@ export default function RootLayout() {
     <AuthProvider>
       <UserProvider>
         <DeepLinkHandler />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="login" />
-          <Stack.Screen name="register" />
-          <Stack.Screen name="forgot-password" />
-          <Stack.Screen name="reset-confirm" />
-          <Stack.Screen name="confirm-email/index" />
-          <Stack.Screen name="question/index" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="+not-found" />
+        <Stack 
+          screenOptions={{ 
+            headerShown: false,
+            headerBackVisible: false,
+            headerLeft: () => null,
+            headerRight: () => null,
+            headerTitle: () => null,
+          }}
+        >
+          <Stack.Screen 
+            name="login" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="register" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="forgot-password" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="reset-confirm" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="confirm-email/index" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="question/index" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="(tabs)" 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="+not-found" 
+            options={{ headerShown: false }}
+          />
         </Stack>
         <StatusBar style="auto" />
       </UserProvider>
