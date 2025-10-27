@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useAuth } from '@/context/AuthContext';
+import { View, StyleSheet, Alert } from 'react-native';
 import GoogleAuthButton from './GoogleAuthButton';
 import FacebookAuthButton from './FacebookAuthButton';
 import AppleAuthButton from './AppleAuthButton';
