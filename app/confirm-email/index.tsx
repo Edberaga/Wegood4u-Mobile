@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/AuthContext';
 import { CheckCircle } from 'lucide-react-native';
 
 export default function ConfirmEmailScreen() {
@@ -12,13 +11,88 @@ export default function ConfirmEmailScreen() {
     refresh_token?: string;
     type?: string;
   }>();
-  const { signIn } = useAuth();
   const [secondsLeft, setSecondsLeft] = useState<number>(60);
   const [isResending, setIsResending] = useState<boolean>(false);
   const [isEmailConfirmed, setIsEmailConfirmed] = useState<boolean>(false);
-  const [isCheckingConfirmation, setIsCheckingConfirmation] = useState<boolean>(false);
   const intervalRef = useRef<number | null>(null);
   const confirmationCheckRef = useRef<number | null>(null);
+
+  // Function to check email confirmation status
+  const checkEmailConfirmation = useCallback(async () => {
+    try {
+      // Get current user from Supabase
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error('Error getting user:', error);
+        return;
+      }
+      
+      // Check if email is confirmed
+      if (user && user.email_confirmed_at) {
+        console.log('Email confirmed at:', user.email_confirmed_at);
+        setIsEmailConfirmed(true);
+        
+        // Stop the confirmation checking
+        if (confirmationCheckRef.current) {
+          clearInterval(confirmationCheckRef.current);
+        }
+        
+        // Auto-login after a short delay to show the success message
+        setTimeout(() => {
+          handleAutoLogin();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error('Error checking email confirmation:', err);
+    }
+  }, []);
+
+  // Function to start periodic confirmation checking
+  const startConfirmationCheck = useCallback(() => {
+    // Check immediately
+    checkEmailConfirmation();
+    
+    // Then check every 3 seconds
+    confirmationCheckRef.current = setInterval(() => {
+      checkEmailConfirmation();
+    }, 3000);
+  }, [checkEmailConfirmation]);
+
+  // Function to handle deep link confirmation
+  const handleDeepLinkConfirmation = useCallback(async () => {
+    try {
+      console.log('Handling deep link confirmation with tokens');
+      setIsEmailConfirmed(true);
+      
+      // Set the session with the tokens from the deep link
+      const { error } = await supabase.auth.setSession({
+        access_token: access_token!,
+        refresh_token: refresh_token!,
+      });
+
+      if (error) {
+        console.error('Error setting session:', error);
+        throw error;
+      }
+
+      console.log('Session set successfully, user confirmed');
+      
+      // Auto-login after a short delay to show the success message
+      setTimeout(() => {
+        handleAutoLogin();
+      }, 2000);
+    } catch (error: any) {
+      console.error('Deep link confirmation error:', error);
+      Alert.alert(
+        'Confirmation Error',
+        error?.message || 'There was an issue confirming your email. Please try again.',
+        [
+          { text: 'OK', onPress: () => router.replace('/login') }
+        ]
+      );
+    }
+  }, [access_token, refresh_token]);
 
   useEffect(() => {
     // If we have tokens from deep link, handle them immediately
@@ -45,83 +119,7 @@ export default function ConfirmEmailScreen() {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (confirmationCheckRef.current) clearInterval(confirmationCheckRef.current);
     };
-  }, [access_token, refresh_token, type]);
-
-  // Function to check email confirmation status
-  const checkEmailConfirmation = useCallback(async () => {
-    try {
-      setIsCheckingConfirmation(true);
-      
-      // Get current user from Supabase
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      // Check if email is confirmed
-      if (user && user.email_confirmed_at) {
-        console.log('Email confirmed at:', user.email_confirmed_at);
-        setIsEmailConfirmed(true);
-        
-        // Stop the confirmation checking
-        if (confirmationCheckRef.current) {
-          clearInterval(confirmationCheckRef.current);
-        }
-        
-        // Auto-login after a short delay to show the success message
-        setTimeout(() => {
-          handleAutoLogin();
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Error checking email confirmation:', error);
-    } finally {
-      setIsCheckingConfirmation(false);
-    }
-  }, []);
-
-  // Function to start periodic confirmation checking
-  const startConfirmationCheck = useCallback(() => {
-    // Check immediately
-    checkEmailConfirmation();
-    
-    // Then check every 3 seconds
-    confirmationCheckRef.current = setInterval(() => {
-      checkEmailConfirmation();
-    }, 3000);
-  }, [checkEmailConfirmation]);
-
-  // Function to handle deep link confirmation
-  const handleDeepLinkConfirmation = async () => {
-    try {
-      console.log('Handling deep link confirmation with tokens');
-      setIsEmailConfirmed(true);
-      
-      // Set the session with the tokens from the deep link
-      const { data, error } = await supabase.auth.setSession({
-        access_token: access_token!,
-        refresh_token: refresh_token!,
-      });
-
-      if (error) {
-        console.error('Error setting session:', error);
-        throw error;
-      }
-
-      console.log('Session set successfully, user confirmed');
-      
-      // Auto-login after a short delay to show the success message
-      setTimeout(() => {
-        handleAutoLogin();
-      }, 2000);
-    } catch (error) {
-      console.error('Deep link confirmation error:', error);
-      Alert.alert(
-        'Confirmation Error',
-        'There was an issue confirming your email. Please try again.',
-        [
-          { text: 'OK', onPress: () => router.replace('/login') }
-        ]
-      );
-    }
-  };
+  }, [access_token, refresh_token, type, handleDeepLinkConfirmation, startConfirmationCheck]);
 
   // Function to handle auto-login
   const handleAutoLogin = async () => {
