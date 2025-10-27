@@ -15,58 +15,14 @@ export default function ConfirmEmailScreen() {
   const [isResending, setIsResending] = useState<boolean>(false);
   const [isEmailConfirmed, setIsEmailConfirmed] = useState<boolean>(false);
   const intervalRef = useRef<number | null>(null);
-  const confirmationCheckRef = useRef<number | null>(null);
-
-  // Function to check email confirmation status
-  const checkEmailConfirmation = useCallback(async () => {
-    try {
-      // Get current user from Supabase
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error) {
-        console.error('Error getting user:', error);
-        return;
-      }
-      
-      // Check if email is confirmed
-      if (user && user.email_confirmed_at) {
-        console.log('Email confirmed at:', user.email_confirmed_at);
-        setIsEmailConfirmed(true);
-        
-        // Stop the confirmation checking
-        if (confirmationCheckRef.current) {
-          clearInterval(confirmationCheckRef.current);
-        }
-        
-        // Auto-login after a short delay to show the success message
-        setTimeout(() => {
-          handleAutoLogin();
-        }, 2000);
-      }
-    } catch (err) {
-      console.error('Error checking email confirmation:', err);
-    }
-  }, []);
-
-  // Function to start periodic confirmation checking
-  const startConfirmationCheck = useCallback(() => {
-    // Check immediately
-    checkEmailConfirmation();
-    
-    // Then check every 3 seconds
-    confirmationCheckRef.current = setInterval(() => {
-      checkEmailConfirmation();
-    }, 3000);
-  }, [checkEmailConfirmation]);
 
   // Function to handle deep link confirmation
   const handleDeepLinkConfirmation = useCallback(async () => {
     try {
       console.log('Handling deep link confirmation with tokens');
-      setIsEmailConfirmed(true);
       
       // Set the session with the tokens from the deep link
-      const { error } = await supabase.auth.setSession({
+      const { data, error } = await supabase.auth.setSession({
         access_token: access_token!,
         refresh_token: refresh_token!,
       });
@@ -78,10 +34,18 @@ export default function ConfirmEmailScreen() {
 
       console.log('Session set successfully, user confirmed');
       
-      // Auto-login after a short delay to show the success message
-      setTimeout(() => {
-        handleAutoLogin();
-      }, 2000);
+      // Check if email is confirmed after setting session
+      if (data.session?.user?.email_confirmed_at) {
+        setIsEmailConfirmed(true);
+        
+        // Auto-login after a short delay to show the success message
+        setTimeout(() => {
+          handleAutoLogin();
+        }, 2000);
+      } else {
+        console.log('Session set but email not confirmed yet');
+        // No automatic checking - user must click email link
+      }
     } catch (error: any) {
       console.error('Deep link confirmation error:', error);
       Alert.alert(
@@ -101,8 +65,7 @@ export default function ConfirmEmailScreen() {
       return;
     }
 
-    // Start checking for email confirmation
-    startConfirmationCheck();
+    // Removed automatic email confirmation checking
     
     // Start countdown timer
     intervalRef.current = setInterval(() => {
@@ -117,9 +80,8 @@ export default function ConfirmEmailScreen() {
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (confirmationCheckRef.current) clearInterval(confirmationCheckRef.current);
     };
-  }, [access_token, refresh_token, type, handleDeepLinkConfirmation, startConfirmationCheck]);
+  }, [access_token, refresh_token, type, handleDeepLinkConfirmation]);
 
   // Function to handle auto-login
   const handleAutoLogin = async () => {
@@ -161,19 +123,31 @@ export default function ConfirmEmailScreen() {
 
     try {
       setIsResending(true);
+      
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: 'wegood4u://confirm-email',
+          emailRedirectTo: 'https://wegood4u.com/email-confirmed',
         },
       });
-      if (error) throw error;
-      Alert.alert('Email sent', 'We have re-sent a confirmation email.');
+      
+      if (error) {
+        console.log('Error resending email:', error);
+      }
+      
+      // If no error, email was sent successfully
+      Alert.alert(
+        'Email sent', 
+        'We have re-sent a confirmation email. If no confirmation email has been sent, which means your email has already been confirmed! Please try to login.',
+        [
+          { text: 'OK', style: 'cancel' },
+          { text: 'Go to Login', onPress: () => router.replace('/login') }
+        ]
+      );
       setSecondsLeft(60);
       if (intervalRef.current) clearInterval(intervalRef.current);
-      // Restart confirmation checking after resend
-      startConfirmationCheck();
+      // Restart timer
       intervalRef.current = setInterval(() => {
         setSecondsLeft(prev => {
           if (prev <= 1) {
@@ -183,6 +157,7 @@ export default function ConfirmEmailScreen() {
           return prev - 1;
         });
       }, 1000);
+      
     } catch (err: any) {
       Alert.alert('Resend failed', err.message || 'Please try again later.');
     } finally {
