@@ -16,9 +16,9 @@ import {
   Search, 
   ArrowUpDown, 
   MapPin, 
-  Star,
-  SlidersHorizontal,
-  Globe
+  Star
+  // SlidersHorizontal, // Temporarily commented - filter UI hidden
+  // Globe // Temporarily commented - filter UI hidden
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { fetchPartnerStores } from '@/data/partnerStore';
@@ -126,14 +126,16 @@ export default function CafeScreen() {
       <Image source={{ uri: cafe.image }} style={styles.cafeImage} />
       <View style={styles.cafeInfo}>
         <Text style={styles.cafeName}>{cafe.name}</Text>
-        <View style={styles.cafeMeta}>
-          <Text style={styles.cafeType}>{cafe.type}</Text>
-          <Text style={styles.cafeDistance}>25km+</Text>
-        </View>
-        <View style={styles.cafeRating}>
-          <Star size={16} color="#FFD700" fill="#FFD700" />
-          <Text style={styles.ratingText}>{cafe.rating}</Text>
-          <Text style={styles.priceRange}>$$$</Text>
+        <View style={styles.cafeBottomContent}>
+          <View style={styles.cafeMeta}>
+            <Text style={styles.cafeType}>{cafe.type}</Text>
+            <Text style={styles.cafeDistance}>25km+</Text>
+          </View>
+          <View style={styles.cafeRating}>
+            <Star size={16} color="#FFD700" fill="#FFD700" />
+            <Text style={styles.ratingText}>{cafe.rating}</Text>
+            <Text style={styles.priceRange}>$$$</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -467,6 +469,9 @@ const styles = StyleSheet.create({
   },
   cafeInfo: {
     padding: 12,
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   cafeName: {
     fontSize: 16,
@@ -474,10 +479,14 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 4,
   },
+  cafeBottomContent: {
+    marginTop: 'auto',
+  },
   cafeMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
+    gap: 8,
   },
   cafeType: {
     fontSize: 12,
