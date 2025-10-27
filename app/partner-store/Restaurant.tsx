@@ -16,9 +16,9 @@ import {
   Search, 
   ArrowUpDown, 
   MapPin, 
-  Star,
-  SlidersHorizontal,
-  Globe
+  Star
+  // SlidersHorizontal, // Temporarily commented - filter UI hidden
+  // Globe // Temporarily commented - filter UI hidden
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { fetchPartnerStores } from '@/data/partnerStore';
@@ -128,14 +128,16 @@ export default function RestaurantScreen() {
       <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
       <View style={styles.restaurantInfo}>
         <Text style={styles.restaurantName}>{restaurant.name}</Text>
-        <View style={styles.restaurantMeta}>
-          <Text style={styles.restaurantType}>{restaurant.type}</Text>
-          <Text style={styles.restaurantDistance}>25km+</Text>
-        </View>
-        <View style={styles.restaurantRating}>
-          <Star size={16} color="#FFD700" fill="#FFD700" />
-          <Text style={styles.ratingText}>{restaurant.rating}</Text>
-          <Text style={styles.priceRange}>$$$</Text>
+        <View style={styles.restaurantBottomContent}>
+          <View style={styles.restaurantMeta}>
+            <Text style={styles.restaurantType}>{restaurant.type}</Text>
+            <Text style={styles.restaurantDistance}>25km+</Text>
+          </View>
+          <View style={styles.restaurantRating}>
+            <Star size={16} color="#FFD700" fill="#FFD700" />
+            <Text style={styles.ratingText}>{restaurant.rating}</Text>
+            <Text style={styles.priceRange}>$$$</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -469,6 +471,9 @@ const styles = StyleSheet.create({
   },
   restaurantInfo: {
     padding: 12,
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   restaurantName: {
     fontSize: 16,
@@ -476,10 +481,14 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 4,
   },
+  restaurantBottomContent: {
+    marginTop: 'auto',
+  },
   restaurantMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
+    gap: 8,
   },
   restaurantType: {
     fontSize: 12,

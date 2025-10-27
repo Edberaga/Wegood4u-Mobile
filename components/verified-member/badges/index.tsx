@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { CircleCheck as CheckCircle, Star, Coffee, UtensilsCrossed, Store } from 'lucide-react-native';
 
@@ -27,8 +27,9 @@ export default function Badges({
     try {
       await fetchSubmissions(true);
       Alert.alert('Success', `Badges updated! Found ${approvedCounts.total} approved submissions.`);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to refresh badges. Please try again.');
+    } catch (error: any) {
+      console.error('Badge refresh error:', error);
+      Alert.alert('Error', error?.message || 'Failed to refresh badges. Please try again.');
     } finally {
       setIsRefreshing(false);
     }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CircleCheck as CheckCircle, Mail, FileText, X, RefreshCw } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, Mail, FileText, X } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 

@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Mail, Calendar, MapPin, Phone, RefreshCw } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Calendar, RefreshCw } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';
 
@@ -25,6 +25,7 @@ export default function AccountProfileScreen() {
         day: 'numeric'
       });
     } catch (err) {
+      console.error('Date formatting error:', err);
       return 'Invalid date';
     }
   };
@@ -33,7 +34,8 @@ export default function AccountProfileScreen() {
     try {
       await refreshUserData();
     } catch (err: any) {
-      Alert.alert('Error', 'Failed to refresh user data. Please try again.');
+      console.error('Refresh error:', err);
+      Alert.alert('Error', err?.message || 'Failed to refresh user data. Please try again.');
     }
   };
 
@@ -129,7 +131,7 @@ export default function AccountProfileScreen() {
             <Text style={styles.statusLabel}>Role</Text>
             <View style={[styles.statusBadge, styles.roleBadge]}>
               <Text style={styles.statusBadgeText}>
-                {userData?.role?.charAt(0).toUpperCase() + userData?.role?.slice(1) || 'Unknown'}
+                {userData?.role ? userData.role.charAt(0).toUpperCase() + userData.role.slice(1) : 'Unknown'}
               </Text>
             </View>
           </View>

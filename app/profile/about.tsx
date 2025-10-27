@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Info, Users, Target, Award } from 'lucide-react-native';
+import { ArrowLeft, Info, Target } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function AboutScreen() {

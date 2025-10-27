@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Upload, Camera, ChevronDown, CircleCheck as CheckCircle, Clock, X } from 'lucide-react-native';
 import { supabase } from '@/lib/supabase';
-import type { TransformedSubmission, PartnerStore } from '@/types';
+import type { TransformedSubmission, PartnerStore, Submission } from '@/types';
 
 interface SubmissionProps {
   userData: any;
@@ -24,7 +24,7 @@ interface SubmissionProps {
   fetchSubmissions: (showRefreshIndicator?: boolean) => Promise<void>;
 }
 
-export default function Submission({ 
+export default function SubmissionComponent({ 
   userData, 
   selectedStore, 
   setSelectedStore, 

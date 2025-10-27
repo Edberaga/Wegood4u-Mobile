@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, User, Settings, Bell, Lock, Info, MessageCircle, CircleHelp as HelpCircle, LogOut, ChevronRight } from 'lucide-react-native';
-import { router, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
 interface SettingsOverlayProps {

@@ -20,7 +20,7 @@ export default function TasksScreen() {
   const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
   const [partnerStores, setPartnerStores] = useState<PartnerStore[]>([]);
   const [storesLoading, setStoresLoading] = useState(true);
-  const [storesError, setStoresError] = useState<string | null>(null);
+  const [, setStoresError] = useState<string | null>(null);
   
   // Store selection states
   const [selectedStore, setSelectedStore] = useState<PartnerStore | null>(null);

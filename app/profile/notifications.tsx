@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -16,11 +15,9 @@ import {
   CheckCheck, 
   Trash2, 
   RefreshCw,
-  User,
   FileText,
   Store,
   Award,
-  Clock
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useUser } from '@/context/UserContext';

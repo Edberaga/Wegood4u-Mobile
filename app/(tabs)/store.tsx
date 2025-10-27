@@ -16,11 +16,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Search, 
-  ArrowUpDown, 
+  // ArrowUpDown, // Temporarily commented - filter UI hidden
   Heart,
   Share2,
   ArrowLeft,
-  Filter,
+  // Filter, // Temporarily commented - filter UI hidden
   RefreshCw
 } from 'lucide-react-native';
 import { useProducts } from '@/hooks/useProducts';
@@ -368,8 +368,8 @@ export default function StoreScreen() {
         />
       </View>
 
-      {/* Filter Controls */}
-      <View style={styles.filterContainer}>
+      {/* Filter Controls - Temporarily Hidden */}
+      {/* <View style={styles.filterContainer}>
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setShowSortModal(true)}
@@ -385,7 +385,7 @@ export default function StoreScreen() {
           <Filter size={16} color="#64748B" />
           <Text style={styles.filterButtonText}>Category</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       {/* Products Grid */}
       <ScrollView 
