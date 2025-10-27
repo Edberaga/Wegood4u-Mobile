@@ -15,14 +15,12 @@ import {
   MapPin,
   ChevronRight as ChevronRightIcon,
 } from 'lucide-react-native';
-import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
 import { fetchPartnerStores } from '@/data/partnerStore';
 import { router } from 'expo-router';
 import type { PartnerStore } from '@/types';
 
 export default function HomeScreen() {
-  const { user } = useAuth();
   const { userData } = useUser();
   const [recommendedRestaurants, setRecommendedRestaurants] = useState<PartnerStore[]>([]);
   const [recommendedCafes, setRecommendedCafes] = useState<PartnerStore[]>([]);

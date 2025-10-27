@@ -12,7 +12,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Menu, Share2, Camera, SquareCheckBig, Trophy, SquareLibrary, Clock, ChevronRight, RefreshCw } from 'lucide-react-native';
-import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@/context/UserContext';
 import { useUserSubmissions , usePendingSubmissions } from '@/hooks/useSubmissions';
 
@@ -21,8 +20,7 @@ import { router } from 'expo-router';
 import SettingsOverlay from '@/app/profile/SettingsOverlay';
 
 export default function ProfileScreen() {
-  const { signOut } = useAuth();
-  const { userData, isLoading: userLoading, refreshUserData, resendEmailConfirmation } = useUser();
+  const { userData, isLoading: userLoading, refreshUserData } = useUser();
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showSettingsOverlay, setShowSettingsOverlay] = useState(false);
   
@@ -122,46 +120,12 @@ export default function ProfileScreen() {
     Alert.alert('Share Profile', 'Share your profile with friends!');
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
-          style: 'destructive', 
-          onPress: async () => {
-            await signOut();
-          }
-        },
-      ]
-    );
-  };
 
   const handleBecomeMember = () => {
     router.push('/tasks');
   };
 
-  const getRoleDisplayName = (role: string) => {
-    switch (role) {
-      case 'subscriber': return 'Subscriber';
-      case 'member': return 'Member';
-      case 'affiliate': return 'Affiliate Member';
-      case 'admin': return 'Admin';
-      default: return 'User';
-    }
-  };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'subscriber': return '#64748B';
-      case 'member': return '#22C55E';
-      case 'affiliate': return '#F59E0B';
-      case 'admin': return '#EF4444';
-      default: return '#64748B';
-    }
-  };
 
   const getGreeting = () => {
     if (userData.role === 'admin') {
