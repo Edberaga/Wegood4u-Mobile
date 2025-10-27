@@ -225,6 +225,23 @@ export default function RegisterScreen() {
                 )}
               </TouchableOpacity>
             </View>
+            {/* Password Requirements Display */}
+            {formData.password.length > 0 && passwordErrors.length > 0 && (
+              <View style={styles.passwordRequirements}>
+                <Text style={styles.passwordRequirementsTitle}>Password must contain:</Text>
+                {passwordErrors.map((error, index) => (
+                  <Text key={index} style={styles.passwordRequirementItem}>
+                    • {error}
+                  </Text>
+                ))}
+              </View>
+            )}
+            {/* Password Success Display */}
+            {formData.password.length > 0 && passwordErrors.length === 0 && formData.password.length >= 6 && (
+              <View style={styles.passwordSuccess}>
+                <Text style={styles.passwordSuccessText}>✓ Password meets all requirements</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
@@ -503,6 +520,38 @@ const styles = StyleSheet.create({
   modalCloseButtonText: {
     fontSize: 16,
     color: '#64748b',
+    fontWeight: '600',
+  },
+  passwordRequirements: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 8,
+  },
+  passwordRequirementsTitle: {
+    fontSize: 12,
+    color: '#DC2626',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  passwordRequirementItem: {
+    fontSize: 11,
+    color: '#DC2626',
+    marginLeft: 8,
+  },
+  passwordSuccess: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 8,
+  },
+  passwordSuccessText: {
+    fontSize: 12,
+    color: '#15803D',
     fontWeight: '600',
   },
 });
