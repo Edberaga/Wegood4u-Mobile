@@ -271,7 +271,7 @@ export function UserProvider({ children }: UserProviderProps) {
         type: 'signup',
         email: userData.email,
         options: {
-          emailRedirectTo: 'wegood4u://confirm-email',
+          emailRedirectTo: 'https://wegood4u.com/email-confirmed',
         },
       });
 

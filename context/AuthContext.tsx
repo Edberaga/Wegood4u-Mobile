@@ -116,7 +116,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             dob: dateOfBirth,
             gender: gender,
           },
-          emailRedirectTo: 'wegood4u://confirm-email',
+          emailRedirectTo: 'https://wegood4u.com/email-confirmed',
         },
       });
 
