@@ -8,6 +8,8 @@ import {
   ScrollView,
   Image,
   Modal,
+  Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
@@ -210,7 +212,24 @@ export default function MapScreen() {
       `Open directions to ${store.name}?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Open', onPress: () => Alert.alert('Opening directions...') },
+        { 
+          text: 'Open', 
+          onPress: async () => {
+            try {
+              const url = `https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`;
+              const supported = await Linking.canOpenURL(url);
+              
+              if (supported) {
+                await Linking.openURL(url);
+              } else {
+                Alert.alert('Error', 'Unable to open Google Maps. Please install Google Maps app.');
+              }
+            } catch (error) {
+              console.error('Error opening directions:', error);
+              Alert.alert('Error', 'Unable to open directions. Please try again.');
+            }
+          }
+        },
       ]
     );
   };
@@ -226,7 +245,66 @@ export default function MapScreen() {
       `Call ${phone}?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Call', onPress: () => Alert.alert('Calling...') },
+        { 
+          text: 'Call', 
+          onPress: async () => {
+            try {
+              // Try different phone URL formats for better compatibility
+              const phoneUrl = `tel:${phone}`;
+              const supported = await Linking.canOpenURL(phoneUrl);
+              
+              if (supported) {
+                await Linking.openURL(phoneUrl);
+              } else {
+                // If tel: doesn't work, try alternative methods
+                if (Platform.OS === 'android') {
+                  // For Android, try opening the dialer with the number
+                  const dialerUrl = `tel:${phone}`;
+                  try {
+                    await Linking.openURL(dialerUrl);
+                  } catch (dialerError) {
+                    // If that fails, show instructions
+                    Alert.alert(
+                      'Call Instructions',
+                      `To call this store, please dial: ${phone}\n\nOr copy the number and use your phone app.`,
+                      [
+                        { text: 'Copy Number', onPress: () => {
+                          // You could add clipboard functionality here if needed
+                          Alert.alert('Number Copied', `Phone number: ${phone}`);
+                        }},
+                        { text: 'OK' }
+                      ]
+                    );
+                  }
+                } else {
+                  // For iOS, show instructions
+                  Alert.alert(
+                    'Call Instructions',
+                    `To call this store, please dial: ${phone}\n\nOr copy the number and use your phone app.`,
+                    [
+                      { text: 'Copy Number', onPress: () => {
+                        Alert.alert('Number Copied', `Phone number: ${phone}`);
+                      }},
+                      { text: 'OK' }
+                    ]
+                  );
+                }
+              }
+            } catch (error) {
+              console.error('Error opening phone dialer:', error);
+              Alert.alert(
+                'Call Instructions',
+                `To call this store, please dial: ${phone}\n\nOr copy the number and use your phone app.`,
+                [
+                  { text: 'Copy Number', onPress: () => {
+                    Alert.alert('Number Copied', `Phone number: ${phone}`);
+                  }},
+                  { text: 'OK' }
+                ]
+              );
+            }
+          }
+        },
       ]
     );
   };
