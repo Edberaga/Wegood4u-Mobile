@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Upload, Gift } from 'lucide-react-native';
 import Submission from './submission';
 import Badges from './badges';
@@ -23,7 +23,8 @@ export default function VerifiedMember({
   partnerStores
 }: VerifiedMemberProps) {
   const [activeTab, setActiveTab] = useState<'submit' | 'rewards'>('submit');
-  
+  const insets = useSafeAreaInsets();
+
   // Use the custom hook for fetching user submissions
   const {
     submissions,
@@ -34,7 +35,7 @@ export default function VerifiedMember({
   } = useUserSubmissions(userData?.id);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Travel Proof</Text>
         <View style={styles.stats}>
@@ -71,7 +72,11 @@ export default function VerifiedMember({
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
+        showsVerticalScrollIndicator={false}
+      >
         {activeTab === 'submit' ? (
           <Submission
             userData={userData}
@@ -84,7 +89,7 @@ export default function VerifiedMember({
             fetchSubmissions={fetchSubmissions}
           />
         ) : (
-          <Badges 
+          <Badges
             userData={userData}
             submissions={submissions}
             approvedCounts={approvedCounts}

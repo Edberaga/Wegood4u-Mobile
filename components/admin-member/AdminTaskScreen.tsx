@@ -10,7 +10,7 @@ import {
   RefreshControl,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleCheck as CheckCircle, Circle as XCircle, Clock, User, Calendar, Store, Eye, RefreshCw } from 'lucide-react-native';
 import { usePendingSubmissions } from '@/hooks/useSubmissions';
 
@@ -21,6 +21,7 @@ interface AdminTaskScreenProps {
 export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   // Use the custom hook for pending submissions
   const {
@@ -103,7 +104,7 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
           <RefreshCw size={32} color="#F33F32" />
           <Text style={styles.loadingText}>Loading pending submissions...</Text>
@@ -113,7 +114,7 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Admin Dashboard</Text>
         <View style={styles.headerStats}>
@@ -125,8 +126,9 @@ export default function AdminTaskScreen({ userData }: AdminTaskScreenProps) {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.content}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
         refreshControl={
           <RefreshControl
             refreshing={false}
