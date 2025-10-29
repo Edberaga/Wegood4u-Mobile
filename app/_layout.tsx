@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -82,8 +83,9 @@ export default function RootLayout() {
   useFrameworkReady();
 
   return (
-    <AuthProvider>
-      <UserProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <UserProvider>
         <DeepLinkHandler />
         <Stack 
           screenOptions={{ 
@@ -128,7 +130,8 @@ export default function RootLayout() {
           />
         </Stack>
         <StatusBar style="auto" />
-      </UserProvider>
-    </AuthProvider>
+        </UserProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

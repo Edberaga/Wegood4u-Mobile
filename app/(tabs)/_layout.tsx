@@ -3,21 +3,16 @@ import { CircleEllipsis as Home, MapPin, Store, SquareCheck as CheckSquare, User
 import { AuthGuard } from '@/components/AuthGuard';
 
 export default function TabLayout() {
-
   return (
     <AuthGuard>
       <Tabs
         screenOptions={{
-          headerShown: false,
           tabBarActiveTintColor: '#FFFFFF',
           tabBarInactiveTintColor: '#B8D4C1',
           tabBarStyle: {
             backgroundColor: '#206E56',
-            borderTopWidth: 1,
             borderTopColor: '#CBEED2',
             paddingTop: 8,
-            paddingBottom: 8,
-            height: 70,
           },
           tabBarLabelStyle: {
             fontSize: 12,
