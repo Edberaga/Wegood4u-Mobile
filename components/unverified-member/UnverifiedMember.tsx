@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CircleCheck as CheckCircle, Mail, FileText, X } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -17,7 +17,7 @@ export default function UnverifiedMember({
   resendEmailConfirmation
 }: UnverifiedMemberProps) {
   const [isResendingEmail, setIsResendingEmail] = useState(false);
-  const insets = useSafeAreaInsets();
+  // Removed insets usage
 
   const isEmailConfirmed = !!userData?.emailConfirmedAt;
   const isQuestionnaireComplete = userData.verificationCompleted;
@@ -85,14 +85,14 @@ export default function UnverifiedMember({
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Unverified Member</Text>
       </View>
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 90 }}
+        contentContainerStyle={{ paddingBottom: 90 }}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.verificationContainer}>

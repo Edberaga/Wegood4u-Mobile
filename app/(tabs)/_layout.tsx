@@ -1,11 +1,8 @@
 import { Tabs } from 'expo-router';
 import { CircleEllipsis as Home, MapPin, Store, SquareCheck as CheckSquare, User } from 'lucide-react-native';
 import { AuthGuard } from '@/components/AuthGuard';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
-
   return (
     <AuthGuard>
       <Tabs
@@ -17,8 +14,7 @@ export default function TabLayout() {
             backgroundColor: '#206E56',
             borderTopColor: '#CBEED2',
             paddingTop: 8,
-            paddingBottom: insets.bottom + 8, // ← ADD THIS
-            height: 70 + insets.bottom, // ← ADD THIS
+            height: 110,
           },
           tabBarLabelStyle: {
             fontSize: 12,
