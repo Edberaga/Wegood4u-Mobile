@@ -210,7 +210,7 @@ export default function ProfileScreen() {
                 <Text style={styles.adminStatNumber}>
                   {isLoadingPending ? '...' : pendingSubmissions.length}
                 </Text>
-                <Text style={styles.adminStatLabel}>Pending Submissions HEY NOTICE ME CHANGING</Text>
+                <Text style={styles.adminStatLabel}>Pending Submissions</Text>
               </View>
             </View>
           </View>
