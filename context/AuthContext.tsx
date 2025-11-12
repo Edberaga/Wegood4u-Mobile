@@ -1,7 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { AuthContextType } from '@/types';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -192,20 +196,78 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setSession(null);
       setIsLoading(false);
-      
+
       // Step 2: Clear Supabase client session without waiting for server response
       // This bypasses the hanging promise issue
       supabase.auth.admin.signOut(session?.access_token || '').catch(() => {
         // Ignore errors - we're force clearing anyway
         console.log('Force clear: Ignored server signOut error');
       });
-      
+
       console.log('AuthContext: forceClearAuth completed');
     } catch (error) {
       console.error('forceClearAuth error:', error);
       // Even if there's an error, we still clear the local state
       setUser(null);
       setSession(null);
+      setIsLoading(false);
+    }
+  };
+
+  const signInWithProvider = async (provider: 'google' | 'facebook' | 'apple') => {
+    console.log('AuthContext: signInWithProvider called with provider:', provider);
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: Platform.OS === 'web'
+            ? `${window.location.origin}/auth/callback`
+            : 'wegood4u://auth/callback',
+          skipBrowserRedirect: Platform.OS !== 'web',
+        },
+      });
+
+      if (error) {
+        console.error('OAuth sign in error:', error);
+        throw error;
+      }
+
+      console.log('OAuth sign in data:', data);
+
+      if (Platform.OS !== 'web' && data.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          'wegood4u://auth/callback'
+        );
+
+        console.log('WebBrowser result:', result);
+
+        if (result.type === 'success' && result.url) {
+          const url = new URL(result.url);
+          const accessToken = url.searchParams.get('access_token');
+          const refreshToken = url.searchParams.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+            if (sessionError) throw sessionError;
+
+            setSession(sessionData.session);
+            setUser(sessionData.user ?? null);
+            console.log('OAuth session set successfully');
+          }
+        }
+      }
+
+    } catch (error: any) {
+      console.error('signInWithProvider error:', error);
+      throw new Error(error.message || 'OAuth authentication failed');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -219,6 +281,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
     forceClearAuth,
+    signInWithProvider,
   };
 
   console.log('AuthProvider render - isAuthenticated:', !!user && !!user.email_confirmed_at, 'isLoading:', isLoading);

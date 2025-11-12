@@ -14,7 +14,7 @@ import {
 import { router } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
-// import SocialAuthButtons from '@/components/auth/SocialAuthButtons'; // Temporarily commented - not used
+import SocialAuthButtons from '@/components/auth/SocialAuthButtons';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -172,7 +172,7 @@ export default function LoginScreen() {
 */}
           <Text style={styles.orText}>Or sign in with</Text>
 
-          {/* <SocialAuthButtons /> Will be used later*/}
+          <SocialAuthButtons />
 
           <TouchableOpacity style={styles.registerLink} onPress={goToRegister}>
             <Text style={styles.registerLinkText}>

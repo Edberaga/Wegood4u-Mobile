@@ -1,15 +1,17 @@
 import React from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import GoogleAuthButton from './GoogleAuthButton';
-import FacebookAuthButton from './FacebookAuthButton';
-import AppleAuthButton from './AppleAuthButton';
+import { useAuth } from '@/context/AuthContext';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function SocialAuthButtons() {
-//   const { signInWithProvider } = useAuth();
+  const { signInWithProvider } = useAuth();
 
-  const handleSocialAuth = async (provider: 'google' | 'facebook' | 'apple') => {
+  const handleGoogleAuth = async () => {
     try {
-    //   await signInWithProvider(provider);
+      await signInWithProvider('google');
     } catch (error: any) {
       Alert.alert('Authentication Failed', error.message);
     }
@@ -17,9 +19,7 @@ export default function SocialAuthButtons() {
 
   return (
     <View style={styles.container}>
-      <FacebookAuthButton onPress={() => handleSocialAuth('facebook')} />
-      <AppleAuthButton onPress={() => handleSocialAuth('apple')} />
-      <GoogleAuthButton onPress={() => handleSocialAuth('google')} />
+      <GoogleAuthButton onPress={handleGoogleAuth} />
     </View>
   );
 }

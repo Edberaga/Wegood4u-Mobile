@@ -22,4 +22,5 @@ export interface AuthContextType {
   signUp: (email: string, password: string, displayName: string, dateOfBirth: string, gender: string, invitationCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
   forceClearAuth: () => Promise<void>;
+  signInWithProvider: (provider: 'google' | 'facebook' | 'apple') => Promise<void>;
 }
